@@ -85,7 +85,7 @@ internal fun DragDropContent(
                     .padding(24.dp),
             )
             DroppedFiles(
-                files = state.dragDropItems,
+                files = state.videos,
                 onDelete = {
                     vm.trySend(DragDropContract.Inputs.DeleteFile(it))
                 }

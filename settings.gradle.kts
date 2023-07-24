@@ -21,10 +21,16 @@ rootProject.name = "AutoYtVid"
 include(
     ":app",
     ":ui",
+)
+include(
     ":yt",
     ":ai",
     ":api",
+    ":processor",
     ":repository",
+)
+
+include(
     ":feature:root",
     ":feature:router",
     ":feature:video-list",

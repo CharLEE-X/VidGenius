@@ -1,11 +1,11 @@
-package com.charleex.autoytvid.feature.videodetail
+package src.charleex.autoytvid.processor.model
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.io.File
 import java.util.UUID
 
-data class DragDropItem(
+data class Video(
     val id: String = UUID.randomUUID().toString(),
     val file: File,
     val name: String = file.name,
@@ -15,9 +15,9 @@ data class DragDropItem(
     val timestamp: Instant = Clock.System.now(),
 )
 
-enum class VideoType {
-    MP4,
-    MKV,
-    AVI,
-    UNKNOWN;
+internal fun File.toVideo(): Video {
+    return Video(
+        file = this,
+        videoType = this.videoType(),
+    )
 }

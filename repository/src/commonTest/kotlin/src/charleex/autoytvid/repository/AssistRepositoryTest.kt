@@ -37,9 +37,7 @@ class TranscriptionServiceTest : KoinTest {
     fun `test english audio transcription should output correct text and language name`() =
         runTest(timeout = 60.seconds) {
             val answer = sut.sendMessage(
-                filePath = "$commonResourcesPrefix/test-pl.wav",
                 crashId = "crashId",
-                userId = "userId",
             )
             println("ANSWER: $answer")
 

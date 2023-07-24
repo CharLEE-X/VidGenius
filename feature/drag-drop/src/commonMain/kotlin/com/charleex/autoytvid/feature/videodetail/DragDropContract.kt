@@ -1,19 +1,21 @@
 package com.charleex.autoytvid.feature.videodetail
 
+import src.charleex.autoytvid.processor.model.Video
+
 object DragDropContract {
     data class State(
-        val dragDropItems: List<DragDropItem> = emptyList(),
+        val videos: List<Video> = emptyList(),
         val loading: Boolean = false,
     )
 
     sealed interface Inputs {
         sealed interface Update : Inputs {
-            data class SetFiles(val dragDropItems: List<DragDropItem>) : Update
+            data class SetFiles(val videos: List<Video>) : Update
             data class SetLoading(val loading: Boolean) : Update
         }
 
         data class GetFiles(val anyList: List<*>) : Inputs
-        data class DeleteFile(val dragDropItem: DragDropItem) : Inputs
+        data class DeleteFile(val video: Video) : Inputs
     }
 
     sealed interface Events {
