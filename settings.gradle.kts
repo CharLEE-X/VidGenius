@@ -36,4 +36,5 @@ include(
     ":feature:video-list",
     ":feature:video-detail",
     ":feature:drag-drop",
+    ":feature:video-screenshots",
 )

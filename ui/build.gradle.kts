@@ -18,6 +18,8 @@ kotlin {
                 implementation(projects.feature.videoList)
                 implementation(projects.feature.videoDetail)
                 implementation(projects.feature.dragDrop)
+                implementation(projects.feature.videoScreenshots)
+
                 implementation(compose.desktop.common)
                 implementation(compose.desktop.components.splitPane)
                 implementation(compose.desktop.components.animatedImage)
@@ -34,6 +36,7 @@ kotlin {
                 implementation(libs.ballast.navigation)
                 implementation(libs.ktor.io.core)
                 implementation("com.github.tkuenneth:nativeparameterstoreaccess:0.1.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.2.1")
             }
         }
         val jvmMain by getting {

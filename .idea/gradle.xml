@@ -17,6 +17,7 @@
             <option value="$PROJECT_DIR$/feature/router" />
             <option value="$PROJECT_DIR$/feature/video-detail" />
             <option value="$PROJECT_DIR$/feature/video-list" />
+            <option value="$PROJECT_DIR$/feature/video-screenshots" />
             <option value="$PROJECT_DIR$/processor" />
             <option value="$PROJECT_DIR$/repository" />
             <option value="$PROJECT_DIR$/ui" />

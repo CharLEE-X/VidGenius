@@ -1,11 +1,13 @@
-package com.charleex.autoytvid.feature.videodetail
+package com.charleex.autoytvid.feature.dragdrop
 
 import com.copperleaf.ballast.InputHandler
 import com.copperleaf.ballast.InputHandlerScope
+import com.copperleaf.ballast.core.PrintlnLogger
 import com.copperleaf.ballast.postInput
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import src.charleex.autoytvid.processor.FileProcessor
+import src.charleex.autoytvid.processor.file.FileProcessor
+import src.charleex.autoytvid.processor.screenshot.VideoScreenshotCapturing
 import src.charleex.autoytvid.repository.YoutubeRepository
 
 private typealias DragDropInputScope = InputHandlerScope<
@@ -34,12 +36,14 @@ internal class DragDropInputHandler :
 }
 
 private suspend fun DragDropInputScope.deleteFile(dragDropItem: DragDropItem) {
+    PrintlnLogger().debug("Deleting file")
     val dragDropItems = getCurrentState().dragDropItems
     val newDragDropItems = dragDropItems - dragDropItem
     postInput(DragDropContract.Inputs.Update.SetFiles(newDragDropItems))
 }
 
 private suspend fun DragDropInputScope.getFiles(anyList: List<*>, fileProcessor: FileProcessor) {
+    PrintlnLogger().debug("Getting files")
     try {
         val currentDragDropItems = getCurrentState().dragDropItems
         val videos = fileProcessor.processFileSystemItems(anyList)

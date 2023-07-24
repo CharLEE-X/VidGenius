@@ -1,4 +1,4 @@
-package com.charleex.autoytvid.feature.videodetail
+package com.charleex.autoytvid.feature.dragdrop
 
 import com.copperleaf.ballast.BallastViewModelConfiguration
 import com.copperleaf.ballast.build

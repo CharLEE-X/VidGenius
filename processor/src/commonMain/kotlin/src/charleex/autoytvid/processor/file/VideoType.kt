@@ -1,4 +1,4 @@
-package src.charleex.autoytvid.processor.model
+package src.charleex.autoytvid.processor.file
 
 import java.io.File
 

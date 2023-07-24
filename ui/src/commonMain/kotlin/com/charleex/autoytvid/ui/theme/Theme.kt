@@ -21,7 +21,9 @@ import com.hackathon.cda.ui.theme.secondary
 
 private val DarkColorPalette = darkColors(
     primary = primary,
+    onPrimary = Color.White,
     secondary = secondary,
+    onSecondary = Color.White,
     surface = Neutral6,
     onSurface = Color.White,
     background = Neutral7,
@@ -30,7 +32,9 @@ private val DarkColorPalette = darkColors(
 
 private val LightColorPalette = lightColors(
     primary = primary,
+    onPrimary = Color.White,
     secondary = secondary,
+    onSecondary = Color.White,
     background = Neutral2,
     onBackground = Color.DarkGray,
     surface = Color.White,

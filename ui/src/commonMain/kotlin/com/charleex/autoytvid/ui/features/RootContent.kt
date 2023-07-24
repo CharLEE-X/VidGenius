@@ -20,6 +20,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import com.charleex.autoytvid.feature.root.RootViewModel
 import com.charleex.autoytvid.ui.AppState
+import com.charleex.autoytvid.ui.components.KXSnackBarHost
 import com.charleex.autoytvid.ui.theme.AutoYtVidTheme
 import com.charleex.autoytvid.ui.util.Breakpoint
 import kotlinx.coroutines.launch
@@ -30,6 +31,7 @@ fun RootContent(
     window: ComposeWindow
 ) {
     val scope = rememberCoroutineScope()
+
     val snackbarHostState = remember { SnackbarHostState() }
     val vm = remember(scope) {
         RootViewModel(
@@ -60,7 +62,6 @@ fun RootContent(
         ) {
             RouterContent(
                 modifier = modifier,
-                snackbarHostState = snackbarHostState,
                 isAuthenticated = state.isAuthenticated,
                 breakpoint = currentBreakpoint,
                 displayMessage = {
@@ -70,11 +71,9 @@ fun RootContent(
                 },
                 window = window,
             )
-            SnackbarHost(
-                snackbarHostState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
+            KXSnackBarHost(
+                snackbarHostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
     }

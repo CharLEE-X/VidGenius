@@ -1,6 +1,5 @@
 package com.charleex.autoytvid.ui.features
 
-import androidx.compose.material.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -12,7 +11,6 @@ import androidx.compose.ui.awt.ComposeWindow
 import com.charleex.autoytvid.feature.router.RouterScreen
 import com.charleex.autoytvid.feature.router.RouterViewModel
 import com.charleex.autoytvid.ui.components.AppScaffold
-import com.charleex.autoytvid.ui.components.KXSnackBarHost
 import com.charleex.autoytvid.ui.components.AppTopBar
 import com.charleex.autoytvid.ui.util.Breakpoint
 import com.copperleaf.ballast.navigation.routing.Backstack
@@ -28,7 +26,6 @@ import com.copperleaf.ballast.navigation.vm.Router
 @Composable
 internal fun RouterContent(
     modifier: Modifier,
-    snackbarHostState: SnackbarHostState,
     isAuthenticated: Boolean,
     breakpoint: Breakpoint,
     displayMessage: (String) -> Unit,
@@ -72,7 +69,6 @@ internal fun RouterContent(
                 extrasEnd = {},
             )
         },
-        snackbarHost = { KXSnackBarHost(snackbarHostState = snackbarHostState) },
         modifier = Modifier
     ) {
         routerState.renderCurrentDestination(
@@ -117,6 +113,7 @@ internal fun RouterContent(
                             )
                         },
                     )
+
                     RouterScreen.Login -> LoginContent(
                         modifier = modifier,
                         breakpoint = breakpoint,
@@ -160,7 +157,26 @@ internal fun RouterContent(
                         breakpoint = breakpoint,
                         displayMessage = displayMessage,
                         window = window,
+                        goToVideoScreenshots = { path ->
+                            router.trySend(
+                                RouterContract.Inputs.GoToDestination(
+                                    RouterScreen.VideoScreenshots
+                                        .directions()
+                                        .pathParameter("path", path)
+                                        .build()
+                                )
+                            )
+                        },
                     )
+
+                    RouterScreen.VideoScreenshots -> {
+                        val path: String by stringPath()
+                        VideoScreenshotsContent(
+                            breakpoint = breakpoint,
+                            displayMessage = displayMessage,
+                            filePath = path,
+                        )
+                    }
                 }
             },
             notFound = { },

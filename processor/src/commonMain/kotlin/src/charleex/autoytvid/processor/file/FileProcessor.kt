@@ -1,33 +1,32 @@
-package src.charleex.autoytvid.processor
+package src.charleex.autoytvid.processor.file
 
 import co.touchlab.kermit.Logger
-import src.charleex.autoytvid.processor.model.Video
-import src.charleex.autoytvid.processor.model.toVideo
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 
 interface FileProcessor {
-    fun processFileSystemItems(items: List<*>): List<Video>
+    fun processFileSystemItems(items: List<*>): List<VideoFile>
 }
 
 internal class FileProcessorImpl(
     private val logger: Logger,
 ) : FileProcessor {
-    override fun processFileSystemItems(items: List<*>): List<Video> {
-        val videos = mutableListOf<Video>()
+    override fun processFileSystemItems(items: List<*>): List<VideoFile> {
+        logger.d("Processing file system items")
+        val videoFiles = mutableListOf<VideoFile>()
         items.forEach { item ->
             try {
                 val file = item as File
                 when {
                     file.isFile -> {
                         handleFile(file)?.let {
-                            videos.add(it.toVideo())
+                            videoFiles.add(it.toVideo())
                         }
                     }
 
                     file.isDirectory -> {
-                        videos += handleDirectory(file)
+                        videoFiles += handleDirectory(file)
                     }
 
                     else -> {
@@ -38,10 +37,11 @@ internal class FileProcessorImpl(
                 logger.d("Error while processing file system item: ${e.message}")
             }
         }
-        return videos
+        logger.d("Processed ${videoFiles.size} video files")
+        return videoFiles
     }
 
-    private fun handleDirectory(file: File): List<Video> {
+    private fun handleDirectory(file: File): List<VideoFile> {
         val filesInDirectory = file.listFiles()
         return if (filesInDirectory != null) {
             processFileSystemItems(filesInDirectory.toList())
@@ -52,16 +52,14 @@ internal class FileProcessorImpl(
     }
 
     private fun handleFile(file: File): File? {
-        val readable = if (!file.canRead()) {
-            file.setReadable(true)
-        } else false
-        val video = isVideoFile(file.absolutePath)
-        return if (readable && video) file else null
-    }
-
-    private fun isVideoFile(filePath: String): Boolean {
-        val contentType = Files.probeContentType(Paths.get(filePath))
-        return contentType?.startsWith("video/") ?: false
+        val contentType = Files.probeContentType(Paths.get(file.absolutePath))
+        val isVideoFile = contentType?.startsWith("video/") ?: false
+        return if (isVideoFile) {
+            file
+        } else {
+            logger.d("File is not a video file.")
+            null
+        }
     }
 }
 

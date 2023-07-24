@@ -10,6 +10,7 @@ private const val LOGIN = "/login"
 private const val VIDEO_LIST = "/videos"
 private const val VIDEO_DETAIL = "/videos/{id}"
 private const val DRAG_AND_DROP = "/drag-and-drop"
+private const val VIDEO_SCREENSHOTS = "/video-screenshots/{path}"
 
 enum class RouterScreen(
     routeFormat: String,
@@ -19,17 +20,9 @@ enum class RouterScreen(
     Login(ROOT + LOGIN),
     VideoList(ROOT + VIDEO_LIST),
     VideoDetail(ROOT + VIDEO_DETAIL),
-    DragDrop(ROOT + DRAG_AND_DROP)
+    DragDrop(ROOT + DRAG_AND_DROP),
+    VideoScreenshots(ROOT + VIDEO_SCREENSHOTS)
     ;
 
     override val matcher: RouteMatcher = RouteMatcher.create(routeFormat)
-}
-
-
-fun RouterScreen.label() = when (this) {
-    RouterScreen.FeatureList -> "Feature List"
-    RouterScreen.Login -> "Login"
-    RouterScreen.VideoList -> "Video List"
-    RouterScreen.VideoDetail -> "Video Detail ${this.matcher.path.last()} "
-    RouterScreen.DragDrop -> "Drag and Drop"
 }

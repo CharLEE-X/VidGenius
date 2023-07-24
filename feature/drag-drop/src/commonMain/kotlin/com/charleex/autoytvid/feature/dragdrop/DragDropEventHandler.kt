@@ -1,4 +1,4 @@
-package com.charleex.autoytvid.feature.videodetail
+package com.charleex.autoytvid.feature.dragdrop
 
 import com.copperleaf.ballast.EventHandler
 import com.copperleaf.ballast.EventHandlerScope

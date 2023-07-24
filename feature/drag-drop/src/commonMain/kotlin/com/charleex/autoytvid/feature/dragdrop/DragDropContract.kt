@@ -1,4 +1,4 @@
-package com.charleex.autoytvid.feature.videodetail
+package com.charleex.autoytvid.feature.dragdrop
 
 object DragDropContract {
     data class State(
