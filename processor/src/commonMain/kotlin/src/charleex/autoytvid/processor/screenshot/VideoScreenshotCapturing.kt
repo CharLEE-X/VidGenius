@@ -1,6 +1,9 @@
 package src.charleex.autoytvid.processor.screenshot
 
 import co.touchlab.kermit.Logger
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import net.bramp.ffmpeg.FFprobe
 import org.bytedeco.javacv.FFmpegFrameGrabber
 import org.bytedeco.javacv.Java2DFrameConverter
@@ -13,7 +16,7 @@ interface VideoScreenshotCapturing {
     fun captureScreenshots(
         file: File,
         percentages: List<Double>
-    ): List<File>
+    ): Flow<File>
 
     fun getVideoDuration(file: File): Double?
 }
@@ -29,12 +32,12 @@ internal class VideoScreenshotCapturingImpl(
         createOutputFolder(outputFolder)
     }
 
-    override fun captureScreenshots(file: File, percentages: List<Double>): List<File> {
+    override fun captureScreenshots(file: File, percentages: List<Double>): Flow<File> = flow {
         logger.d { "Capturing screenshots" }
-        val screenshots = percentages.mapIndexed { index, percentage ->
-            captureScreenshot(file, percentage, index)
+        percentages.forEachIndexed { index, percentage ->
+            val screenshot = captureScreenshot(file, percentage, index)
+            emit(screenshot)
         }
-        return screenshots
     }
 
     override fun getVideoDuration(file: File): Double {

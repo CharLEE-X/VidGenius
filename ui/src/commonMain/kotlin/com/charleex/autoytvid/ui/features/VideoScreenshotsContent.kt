@@ -89,7 +89,7 @@ internal fun VideoScreenshotsContent(
                     )
                 }
             }
-            AnimatedVisibility(visible = state.processing) {
+            AnimatedVisibility(visible = state.processing && state.screenshots.isEmpty()) {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -109,10 +109,11 @@ internal fun VideoScreenshotsContent(
                 state.screenshots.forEach { screenshot ->
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        elevation = 8.dp,
+                        elevation = 0.dp,
                         modifier = Modifier
-                            .width(200.dp)
-                            .height(400.dp)
+                            .width(250.dp)
+                            .height(500.dp)
+                            .padding(24.dp)
                     ) {
                         ImageFromBufferedImage(
                             file = screenshot,

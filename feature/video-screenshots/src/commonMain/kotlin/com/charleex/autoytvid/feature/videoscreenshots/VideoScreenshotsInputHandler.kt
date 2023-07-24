@@ -54,17 +54,20 @@ internal class VideoScreenshotsInputHandler(
     ) {
         PrintlnLogger().debug("Getting screenshots")
         val percentages = getCurrentState().percentages
+        val screenshots = getCurrentState().screenshots.toMutableList()
         sideJob("getScreenshots") {
             postInput(VideoScreenshotsContract.Inputs.Update.Processing(processing = true))
             val file = File(filePath)
-            val screenshots = try {
-                videoScreenshotCapturing.captureScreenshots(file, percentages)
+            try {
+                videoScreenshotCapturing.captureScreenshots(file, percentages).collect { screenshot ->
+                    screenshots.add(screenshot)
+                    postInput(VideoScreenshotsContract.Inputs.Update.Screenshots(images = screenshots))
+                }
             } catch (e: Exception) {
                 postEvent(VideoScreenshotsContract.Events.ShowError(message = e.message ?: "Error getting screenshots"))
                 postInput(VideoScreenshotsContract.Inputs.Update.Processing(processing = false))
                 return@sideJob
             }
-            postInput(VideoScreenshotsContract.Inputs.Update.Screenshots(images = screenshots))
             postInput(VideoScreenshotsContract.Inputs.Update.Processing(processing = false))
         }
     }
