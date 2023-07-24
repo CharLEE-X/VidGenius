@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/ai" />
+            <option value="$PROJECT_DIR$/api" />
+            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/feature" />
+            <option value="$PROJECT_DIR$/feature/drag-drop" />
+            <option value="$PROJECT_DIR$/feature/root" />
+            <option value="$PROJECT_DIR$/feature/router" />
+            <option value="$PROJECT_DIR$/feature/video-detail" />
+            <option value="$PROJECT_DIR$/feature/video-list" />
+            <option value="$PROJECT_DIR$/repository" />
+            <option value="$PROJECT_DIR$/ui" />
+            <option value="$PROJECT_DIR$/yt" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

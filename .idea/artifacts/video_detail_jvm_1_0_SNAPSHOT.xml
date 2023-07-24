@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="video-detail-jvm-1.0-SNAPSHOT">
+    <output-path>$PROJECT_DIR$/feature/video-detail/build/libs</output-path>
+    <root id="archive" name="video-detail-jvm-1.0-SNAPSHOT.jar">
+      <element id="module-output" name="AutoYtVid.feature.video-detail.jvmMain" />
+    </root>
+  </artifact>
+</component>

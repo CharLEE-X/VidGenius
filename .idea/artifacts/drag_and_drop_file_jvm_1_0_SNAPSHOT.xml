@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="drag-and-drop-file-jvm-1.0-SNAPSHOT">
+    <output-path>$PROJECT_DIR$/feature/drag-and-drop-file/build/libs</output-path>
+    <root id="archive" name="drag-and-drop-file-jvm-1.0-SNAPSHOT.jar">
+      <element id="module-output" name="AutoYtVid.feature.drag-and-drop-file.jvmMain" />
+    </root>
+  </artifact>
+</component>
