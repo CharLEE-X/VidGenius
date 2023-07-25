@@ -16,7 +16,7 @@ dependencyResolutionManagement {
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "AutoYtVid"
+rootProject.name = "VidGenius"
 
 include(
     ":app",

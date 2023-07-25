@@ -10,8 +10,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import com.charleex.autoytvid.ui.features.RootContent
-import com.charleex.autoytvid.ui.initKoin
+import com.charleex.vidgenius.ui.features.RootContent
+import com.charleex.vidgenius.ui.initKoin
 
 @ExperimentalComposeUiApi
 @ExperimentalMaterialApi
