@@ -1,1 +1,1 @@
-# AutoYtVid
+# VidGenius
