@@ -12,7 +12,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(projects.feature.router)
-                implementation(projects.repository)
+                implementation(projects.datasource)
                 implementation(libs.ballast.core)
                 implementation(libs.ballast.savedState)
                 implementation(libs.koin.core)

@@ -8,7 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 
 class VideoScreenshotsViewModel(
     scope: CoroutineScope,
-    filePath: String,
+    videoId: String,
     showMessage: (String) -> Unit,
 ) : BasicViewModel<
         VideoScreenshotsContract.Inputs,
@@ -22,7 +22,7 @@ class VideoScreenshotsViewModel(
         .withViewModel(
             initialState = VideoScreenshotsContract.State(),
             inputHandler = VideoScreenshotsInputHandler(
-                filePath = filePath,
+                videoId = videoId,
             ),
             name = "VideoListViewModel",
         )

@@ -11,7 +11,7 @@ private const val LOGIN = "/login"
 private const val VIDEO_LIST = "/videos"
 private const val VIDEO_DETAIL = "/videos/{id}"
 private const val DRAG_AND_DROP = "/drag-and-drop"
-private const val VIDEO_SCREENSHOTS = "/video-screenshots/{path}"
+private const val VIDEO_SCREENSHOTS = "/video-screenshots/{id}"
 
 @Serializable
 enum class RouterScreen(

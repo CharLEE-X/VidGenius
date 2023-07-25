@@ -11,7 +11,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(projects.repository)
+                implementation(projects.datasource)
                 implementation(projects.processor)
                 implementation(libs.ballast.core)
                 implementation(libs.ballast.savedState)

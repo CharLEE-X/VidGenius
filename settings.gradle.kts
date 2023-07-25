@@ -11,9 +11,8 @@ include(
     ":ai",
     ":api",
     ":processor",
-    ":repository",
+    ":datasource",
     ":settings",
-    ":database",
 )
 
 include(

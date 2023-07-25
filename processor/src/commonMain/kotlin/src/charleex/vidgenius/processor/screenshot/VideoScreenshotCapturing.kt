@@ -1,8 +1,6 @@
 package src.charleex.vidgenius.processor.screenshot
 
 import co.touchlab.kermit.Logger
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import net.bramp.ffmpeg.FFprobe
 import org.bytedeco.javacv.FFmpegFrameGrabber
 import org.bytedeco.javacv.Java2DFrameConverter
@@ -15,27 +13,27 @@ interface VideoScreenshotCapturing {
     fun captureScreenshots(
         file: File,
         percentages: List<Double>
-    ): Flow<File>
+    ): List<File>
 
     fun getVideoDuration(file: File): Double?
 }
 
 internal class VideoScreenshotCapturingImpl(
     private val logger: Logger,
+    private val appDataDir: File,
 ) : VideoScreenshotCapturing {
     private val outputFolder: File by lazy {
-        File(System.getProperty("java.io.tmpdir"), "video_screenshots")
+        appDataDir.resolve("screenshots")
     }
 
     init {
         createOutputFolder(outputFolder)
     }
 
-    override fun captureScreenshots(file: File, percentages: List<Double>): Flow<File> = flow {
+    override fun captureScreenshots(file: File, percentages: List<Double>): List<File> {
         logger.d { "Capturing screenshots" }
-        percentages.forEachIndexed { index, percentage ->
-            val screenshot = captureScreenshot(file, percentage, index)
-            emit(screenshot)
+        return percentages.mapIndexed { index, percentage ->
+            captureScreenshot(file, percentage, index)
         }
     }
 
@@ -53,7 +51,8 @@ internal class VideoScreenshotCapturingImpl(
 
     private fun captureScreenshot(inputFile: File, timestamp: Double, index: Int): File {
         logger.d { "Capturing screenshot $index" }
-        val outputFile = File(outputFolder, "screenshot_${index + 1}.png")
+        val fileName = inputFile.nameWithoutExtension
+        val outputFile = File(outputFolder, "${fileName}_${index + 1}.png")
 
         try {
             val frameGrabber = FFmpegFrameGrabber(inputFile)
@@ -67,7 +66,7 @@ internal class VideoScreenshotCapturingImpl(
             val length = frameGrabber.lengthInTime
             logger.d { "Video length $length" }
             val time = (length * timestamp).toLong()
-            logger.d { "Video time $time/$length ratio ${length/time}" }
+            logger.d { "Video time $time/$length ratio ${length / time}" }
             frameGrabber.timestamp = time
 
             val frame = frameGrabber.grabImage() ?: throw java.lang.Exception("Frame is NULL!")

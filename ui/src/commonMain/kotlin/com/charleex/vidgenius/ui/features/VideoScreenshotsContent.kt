@@ -33,18 +33,19 @@ import com.charleex.vidgenius.feature.videoscreenshots.VideoScreenshotsViewModel
 import com.charleex.vidgenius.ui.components.AppCard
 import com.charleex.vidgenius.ui.components.ImageFromBufferedImage
 import com.charleex.vidgenius.ui.util.Breakpoint
+import java.io.File
 
 @Composable
 internal fun VideoScreenshotsContent(
     breakpoint: Breakpoint,
     displayMessage: (String) -> Unit,
-    filePath: String,
+    videoId: String,
 ) {
     val scope = rememberCoroutineScope()
     val vm = remember(scope) {
         VideoScreenshotsViewModel(
             scope = scope,
-            filePath = filePath,
+            videoId = videoId,
             showMessage = displayMessage,
         )
     }
@@ -62,21 +63,23 @@ internal fun VideoScreenshotsContent(
             modifier = Modifier.fillMaxSize()
         ) {
             Text(
-                text = state.name,
+                text = state.video.path,
                 color = MaterialTheme.colors.onSurface,
             )
             Text(
-                text = state.path,
-                color = MaterialTheme.colors.onSurface,
-            )
-            Text(
-                text = "${state.duration}s",
+                text = "${state.video.duration}s",
                 color = MaterialTheme.colors.onSurface,
                 modifier = Modifier.padding(bottom = 24.dp)
             )
-            AnimatedVisibility(visible = !state.processing && state.screenshots.isEmpty()) {
+            state.video.description?.let { description ->
+                Text(
+                    text = description,
+                    color = MaterialTheme.colors.onSurface,
+                )
+            }
+            AnimatedVisibility(visible = !state.processing && state.video.screenshots.isEmpty()) {
                 Button(
-                    onClick = { vm.trySend(VideoScreenshotsContract.Inputs.GetScreenshots) },
+                    onClick = { vm.trySend(VideoScreenshotsContract.Inputs.CaptureScreenshots) },
                     modifier = Modifier
                 ) {
                     Icon(
@@ -89,7 +92,7 @@ internal fun VideoScreenshotsContent(
                     )
                 }
             }
-            AnimatedVisibility(visible = state.processing && state.screenshots.isEmpty()) {
+            AnimatedVisibility(visible = state.processing && state.video.screenshots.isEmpty()) {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -106,7 +109,9 @@ internal fun VideoScreenshotsContent(
                     .fillMaxWidth()
                     .animateContentSize()
             ) {
-                state.screenshots.forEach { screenshot ->
+                state.video.screenshots.forEach { screenshot ->
+                    val file = File(screenshot.path)
+
                     Surface(
                         shape = RoundedCornerShape(10.dp),
                         elevation = 0.dp,
@@ -116,7 +121,7 @@ internal fun VideoScreenshotsContent(
                             .padding(24.dp)
                     ) {
                         ImageFromBufferedImage(
-                            file = screenshot,
+                            file = file,
                             modifier = Modifier
                                 .fillMaxSize()
                         )

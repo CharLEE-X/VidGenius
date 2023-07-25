@@ -29,7 +29,6 @@ fun ImageFromBufferedImage(
     modifier: Modifier = Modifier,
     file: File,
     contentScale: ContentScale = ContentScale.Crop,
-
 ) {
     var bitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 

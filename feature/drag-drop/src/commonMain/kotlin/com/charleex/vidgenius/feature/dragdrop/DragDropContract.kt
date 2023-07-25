@@ -1,5 +1,7 @@
 package com.charleex.vidgenius.feature.dragdrop
 
+import com.charleex.vidgenius.feature.dragdrop.model.DragDropItem
+
 object DragDropContract {
     data class State(
         val dragDropItems: List<DragDropItem> = emptyList(),
@@ -12,6 +14,7 @@ object DragDropContract {
             data class SetLoading(val loading: Boolean) : Update
         }
 
+        object ObserveFiles : Inputs
         data class GetFiles(val anyList: List<*>) : Inputs
         data class DeleteFile(val dragDropItem: DragDropItem) : Inputs
     }

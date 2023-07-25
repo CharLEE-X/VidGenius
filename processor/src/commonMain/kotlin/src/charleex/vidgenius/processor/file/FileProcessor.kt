@@ -6,22 +6,23 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 interface FileProcessor {
-    fun processFileSystemItems(items: List<*>): List<VideoFile>
+    fun filterVideoFiles(items: List<*>): List<File>
+    fun deleteFile(path: String)
 }
 
 internal class FileProcessorImpl(
     private val logger: Logger,
 ) : FileProcessor {
-    override fun processFileSystemItems(items: List<*>): List<VideoFile> {
+    override fun filterVideoFiles(items: List<*>): List<File> {
         logger.d("Processing file system items")
-        val videoFiles = mutableListOf<VideoFile>()
+        val videoFiles = mutableListOf<File>()
         items.forEach { item ->
             try {
                 val file = item as File
                 when {
                     file.isFile -> {
                         handleFile(file)?.let {
-                            videoFiles.add(it.toVideo())
+                            videoFiles.add(it)
                         }
                     }
 
@@ -41,10 +42,20 @@ internal class FileProcessorImpl(
         return videoFiles
     }
 
-    private fun handleDirectory(file: File): List<VideoFile> {
+    override fun deleteFile(path: String) {
+        logger.d("Deleting file: ${path}")
+        try {
+            val file = File(path)
+            file.delete()
+        } catch (e: Exception) {
+            logger.d("Error deleting file: ${e.message}")
+        }
+    }
+
+    private fun handleDirectory(file: File): List<File> {
         val filesInDirectory = file.listFiles()
         return if (filesInDirectory != null) {
-            processFileSystemItems(filesInDirectory.toList())
+            filterVideoFiles(filesInDirectory.toList())
         } else {
             logger.d("files in directory is null.")
             emptyList()

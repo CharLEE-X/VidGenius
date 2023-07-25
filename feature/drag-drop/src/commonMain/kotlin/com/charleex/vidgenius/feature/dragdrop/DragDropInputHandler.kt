@@ -1,13 +1,15 @@
 package com.charleex.vidgenius.feature.dragdrop
 
+import com.charleex.vidgenius.datasource.ScreenshotRepository
+import com.charleex.vidgenius.feature.dragdrop.model.DragDropItem
+import com.charleex.vidgenius.feature.dragdrop.model.toDragDropItem
+import com.charleex.vidgenius.feature.dragdrop.model.video
 import com.copperleaf.ballast.InputHandler
 import com.copperleaf.ballast.InputHandlerScope
 import com.copperleaf.ballast.core.PrintlnLogger
-import com.copperleaf.ballast.postInput
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import src.charleex.vidgenius.processor.file.FileProcessor
-import src.charleex.vidgenius.repository.YoutubeRepository
+import java.io.File
 
 private typealias DragDropInputScope = InputHandlerScope<
         DragDropContract.Inputs,
@@ -18,38 +20,48 @@ internal class DragDropInputHandler :
     KoinComponent,
     InputHandler<DragDropContract.Inputs, DragDropContract.Events, DragDropContract.State> {
 
-    private val repository: YoutubeRepository by inject()
-    private val fileProcessor: FileProcessor by inject()
+    private val screenshotRepository: ScreenshotRepository by inject()
 
     override suspend fun DragDropInputScope.handleInput(
         input: DragDropContract.Inputs,
     ) = when (input) {
-        is DragDropContract.Inputs.GetFiles -> getFiles(input.anyList, fileProcessor)
         is DragDropContract.Inputs.Update -> when (input) {
             is DragDropContract.Inputs.Update.SetFiles -> updateState { it.copy(dragDropItems = input.dragDropItems) }
             is DragDropContract.Inputs.Update.SetLoading -> updateState { it.copy(loading = input.loading) }
         }
 
+        is DragDropContract.Inputs.ObserveFiles -> observeFiles()
+        is DragDropContract.Inputs.GetFiles -> getFiles(input.anyList as List<File>)
         is DragDropContract.Inputs.DeleteFile -> deleteFile(input.dragDropItem)
     }
-}
 
-private suspend fun DragDropInputScope.deleteFile(dragDropItem: DragDropItem) {
-    PrintlnLogger().debug("Deleting file")
-    val dragDropItems = getCurrentState().dragDropItems
-    val newDragDropItems = dragDropItems - dragDropItem
-    postInput(DragDropContract.Inputs.Update.SetFiles(newDragDropItems))
-}
+    private suspend fun DragDropInputScope.observeFiles() {
+        PrintlnLogger().debug("Observing files")
+        sideJob("observeFiles") {
+            screenshotRepository.flowOfVideos().collect { videos ->
+                val dragDropItems = videos.map { it.toDragDropItem() }
+                postInput(DragDropContract.Inputs.Update.SetFiles(dragDropItems))
+            }
+        }
+    }
 
-private suspend fun DragDropInputScope.getFiles(anyList: List<*>, fileProcessor: FileProcessor) {
-    PrintlnLogger().debug("Getting files")
-    try {
-        val currentDragDropItems = getCurrentState().dragDropItems
-        val videos = fileProcessor.processFileSystemItems(anyList)
-        val newDragDropItems = videos.toDragDropItems()
-        val combinedVideos = currentDragDropItems + newDragDropItems
-        postInput(DragDropContract.Inputs.Update.SetFiles(combinedVideos))
-    } catch (e: Exception) {
-        postEvent(DragDropContract.Events.ShowError(e.message ?: "Error while getting files"))
+    private suspend fun DragDropInputScope.deleteFile(dragDropItem: DragDropItem) {
+        sideJob("deleteFile") {
+            PrintlnLogger().debug("Deleting video ${dragDropItem.video().path}")
+            val video = dragDropItem.video()
+            screenshotRepository.deleteVideo(video)
+        }
+    }
+
+    private suspend fun DragDropInputScope.getFiles(files: List<File>) {
+        PrintlnLogger().debug("Getting files")
+        sideJob("getFiles") {
+            try {
+                screenshotRepository.filterVideos(files)
+            } catch (e: Exception) {
+                PrintlnLogger().error(e)
+                postEvent(DragDropContract.Events.ShowError(e.message ?: "Error while getting files"))
+            }
+        }
     }
 }

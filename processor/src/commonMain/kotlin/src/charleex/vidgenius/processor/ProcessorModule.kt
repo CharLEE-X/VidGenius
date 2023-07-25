@@ -6,8 +6,9 @@ import src.charleex.vidgenius.processor.file.FileProcessor
 import src.charleex.vidgenius.processor.file.FileProcessorImpl
 import src.charleex.vidgenius.processor.screenshot.VideoScreenshotCapturing
 import src.charleex.vidgenius.processor.screenshot.VideoScreenshotCapturingImpl
+import java.io.File
 
-val processorModule = module {
+fun processorModule(appDataDir: File) = module {
     single<FileProcessor> {
         FileProcessorImpl(
             logger = withTag(FileProcessor::class.simpleName!!),
@@ -16,6 +17,7 @@ val processorModule = module {
     single<VideoScreenshotCapturing> {
         VideoScreenshotCapturingImpl(
             logger = withTag(VideoScreenshotCapturing::class.simpleName!!),
+            appDataDir = appDataDir,
         )
     }
 }

@@ -153,12 +153,12 @@ internal fun RouterContent(
                         breakpoint = breakpoint,
                         displayMessage = displayMessage,
                         window = window,
-                        goToVideoScreenshots = { path ->
+                        goToVideoScreenshots = { id ->
                             router.trySend(
                                 RouterContract.Inputs.GoToDestination(
                                     RouterScreen.VideoScreenshots
                                         .directions()
-                                        .pathParameter("path", path)
+                                        .pathParameter("id", id)
                                         .build()
                                 )
                             )
@@ -166,11 +166,11 @@ internal fun RouterContent(
                     )
 
                     RouterScreen.VideoScreenshots -> {
-                        val path: String by stringPath()
+                        val id: String by stringPath()
                         VideoScreenshotsContent(
                             breakpoint = breakpoint,
                             displayMessage = displayMessage,
-                            filePath = path,
+                            videoId = id,
                         )
                     }
                 }

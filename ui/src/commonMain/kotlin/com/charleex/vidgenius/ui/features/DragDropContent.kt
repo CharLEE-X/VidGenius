@@ -31,20 +31,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.feature.dragdrop.DragDropContract
-import com.charleex.vidgenius.feature.dragdrop.DragDropItem
+import com.charleex.vidgenius.feature.dragdrop.model.DragDropItem
 import com.charleex.vidgenius.feature.dragdrop.DragDropViewModel
 import com.charleex.vidgenius.ui.components.AppCard
 import com.charleex.vidgenius.ui.components.AppFlexSpacer
 import com.charleex.vidgenius.ui.components.DragArea
 import com.charleex.vidgenius.ui.components.InfoText
 import com.charleex.vidgenius.ui.util.Breakpoint
+import com.charleex.vidgenius.ui.util.pretty
 
 @Composable
 internal fun DragDropContent(
     breakpoint: Breakpoint,
-    displayMessage: (String) -> Unit,
+    displayMessage: (message: String) -> Unit,
     window: ComposeWindow,
-    goToVideoScreenshots: (String) -> Unit,
+    goToVideoScreenshots: (id: String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val vm = remember(scope) {
@@ -64,8 +65,8 @@ internal fun DragDropContent(
         Column {
             DragArea(
                 window = window,
-                onDropped = {
-                    vm.trySend(DragDropContract.Inputs.GetFiles(it))
+                onDropped = {files ->
+                    vm.trySend(DragDropContract.Inputs.GetFiles(files))
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -85,7 +86,7 @@ internal fun DragDropContent(
 @Composable
 internal fun DroppedFiles(
     files: List<DragDropItem>,
-    goToVideoScreenshots: (String) -> Unit,
+    goToVideoScreenshots: (id: String) -> Unit,
     onDelete: (DragDropItem) -> Unit,
 ) {
     AnimatedVisibility(visible = files.isEmpty()) {
@@ -120,12 +121,16 @@ internal fun DroppedFiles(
                                 ),
                         ) {
                             Text(
-                                text = dragDropItem.absolutePath,
+                                text = dragDropItem.path,
+                                color = MaterialTheme.colors.onSurface,
+                            )
+                            Text(
+                                text = dragDropItem.modifiedAt.pretty(),
                                 color = MaterialTheme.colors.onSurface,
                             )
                             AppFlexSpacer()
                             Button(
-                                onClick = { goToVideoScreenshots(dragDropItem.absolutePath) },
+                                onClick = { goToVideoScreenshots(dragDropItem.id) },
                             ) {
                                 Text(
                                     text = "Screenshots",

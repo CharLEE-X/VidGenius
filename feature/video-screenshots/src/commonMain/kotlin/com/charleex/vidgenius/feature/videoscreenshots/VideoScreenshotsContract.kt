@@ -1,28 +1,23 @@
 package com.charleex.vidgenius.feature.videoscreenshots
 
-import java.io.File
+import com.charleex.vidgenius.feature.videoscreenshots.model.UiVideo
 
 object VideoScreenshotsContract {
     data class State(
-        val name: String = "",
-        val path: String = "",
-        val duration: String = "",
-        val screenshots: List<File> = emptyList(),
-        val processing: Boolean = false,
+        val video: UiVideo = UiVideo(),
         val percentages: List<Double> = listOf(0.25, 0.5, 0.75),
+        val processing: Boolean = false,
     )
 
     sealed interface Inputs {
         sealed interface Update : Inputs {
-            data class Name(val name: String) : Update
-            data class Path(val path: String) : Update
-            data class Duration(val duration: String) : Update
-            data class Screenshots(val images: List<File>) : Update
-            data class Processing(val processing: Boolean) : Update
+            data class Video(val video: UiVideo) : Update
+            data class Percentages(val percentages: List<Double>) : Update
+            data class Processing(val isProcessing: Boolean) : Update
         }
 
         object Init : Inputs
-        object GetScreenshots : Inputs
+        object CaptureScreenshots : Inputs
     }
 
     sealed interface Events {
