@@ -30,12 +30,9 @@ internal fun RouterContent(
     breakpoint: Breakpoint,
     displayMessage: (String) -> Unit,
     window: ComposeWindow,
+    initialRoute: RouterScreen,
 ) {
     val scope = rememberCoroutineScope()
-    val initialRoute = when (isAuthenticated) {
-        true -> RouterScreen.FeatureList
-        false -> RouterScreen.Login
-    }
     val router: Router<RouterScreen> =
         remember(scope) {
             RouterViewModel(
@@ -62,7 +59,6 @@ internal fun RouterContent(
     AppScaffold(
         topBar = {
             AppTopBar(
-//                currentRouteTitle = routerState.currentRouteOrNull?.label() ?: "",
                 routerScreen = routerState.currentRouteOrNull,
                 onBackClicked = { router.trySend(RouterContract.Inputs.GoBack()) },
                 backEnabled = routerState.size > 1,

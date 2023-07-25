@@ -1,6 +1,7 @@
 package src.charleex.vidgenius.repository
 
 import co.touchlab.kermit.Logger.Companion.withTag
+import com.charleex.vidgenius.settings.settingsModule
 import com.charleex.vidgenius.yt.youtubeModule
 import org.koin.dsl.module
 import src.charleex.vidgenius.api.apiModule
@@ -12,6 +13,7 @@ val repositoryModule = module {
         whisperModule,
         apiModule,
         processorModule,
+        settingsModule,
         youtubeModule(),
     )
     single<AssistRepository> {

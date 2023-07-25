@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.feature.router.RouterScreen
+import com.charleex.vidgenius.feature.router.label
 import com.charleex.vidgenius.ui.AppState
 import com.charleex.vidgenius.ui.util.icon
 
@@ -80,7 +81,7 @@ internal fun AppTopBar(
                     .alpha(alphaState)
             )
             Text(
-                text = routerScreen?.name ?: "Unknown",
+                text = routerScreen.label(),
                 style = MaterialTheme.typography.h5.copy(color = MaterialTheme.colors.onBackground),
             )
             Spacer(modifier = Modifier.weight(1f))

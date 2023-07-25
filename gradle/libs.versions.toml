@@ -1,16 +1,19 @@
 [versions]
-compileSdk = "33"
-minSdk = "26"
-
 ballast = "3.0.2"
-compose = "1.4.0"
+buildKonfig = "0.13.3"
+compose = "1.4.1"
 coroutines = "1.7.1"
 dateTime = "0.4.0"
+detekt = "1.23.0"
 kermit = "2.0.0-RC5"
 koin = "3.4.0"
-kotlin = "1.8.10"
+kotlin = "1.8.20"
+ktLint = "10.2.1"
 ktor = "2.3.1"
 serialization = "1.5.1"
+settings = "1.0.0"
+sqlDelight = "1.5.5"
+turbine = "0.12.1"
 uuid = "0.7.0"
 
 google = "1.23.0" #"1.34.1"
@@ -22,6 +25,8 @@ ballast-core = { module = "io.github.copper-leaf:ballast-core", version.ref = "b
 ballast-savedState = { module = "io.github.copper-leaf:ballast-saved-state", version.ref = "ballast" }
 ballast-navigation = { module = "io.github.copper-leaf:ballast-navigation", version.ref = "ballast" }
 
+buildKonfig = { module = "com.codingfeline.buildkonfig:buildkonfig-gradle-plugin", version.ref = "buildKonfig" }
+
 jetbrains-compose-ui-util = { group = "org.jetbrains.compose.ui", name = "ui-util", version.ref = "compose" }
 
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
@@ -31,6 +36,7 @@ koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
 kotlin-dateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "dateTime" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 kotlin-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "serialization" }
 kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
@@ -42,6 +48,8 @@ ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-commonCore = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-commonJson = { module = "io.ktor:ktor-client-json", version.ref = "ktor" }
 ktor-io-core = { group = "io.ktor", name = "ktor-io", version.ref = "ktor" }
 ktor-io-jvm = { group = "io.ktor", name = "ktor-io-jvm", version.ref = "ktor" }
 
@@ -49,3 +57,23 @@ google-api = { module = "com.google.api-client:google-api-client", version.ref =
 google-oauth = { module = "com.google.oauth-client:google-oauth-client-jetty", version.ref = "google" }
 google-youtube-services = { module = "com.google.apis:google-api-services-youtube", version.ref = "youtube" }
 google-youtube-analytics = { module = "com.google.apis:google-api-services-youtubeAnalytics", version.ref = "analytics" }
+
+multiplatformSettings-core = { module = "com.russhwolf:multiplatform-settings", version.ref = "settings" }
+multiplatformSettings-coroutines = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "settings" }
+multiplatformSettings-serialization = { module = "com.russhwolf:multiplatform-settings-serialization", version.ref = "settings" }
+
+sqlDelight-coroutinesExtensions = { module = "com.squareup.sqldelight:coroutines-extensions", version.ref = "sqlDelight" }
+sqlDelight-driverJVM = { module = "com.squareup.sqldelight:sqlite-driver", version.ref = "sqlDelight" }
+sqlDelight-gradle = { module = "com.squareup.sqldelight:gradle-plugin", version.ref = "sqlDelight" }
+sqlDelight-runtime = { module = "com.squareup.sqldelight:runtime", version.ref = "sqlDelight" }
+sqlDelight-runtimeJdk = { module = "com.squareup.sqldelight:runtime-jvm", version.ref = "sqlDelight" }
+
+test-kotlin-turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+
+[plugins]
+buildKonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildKonfig" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ktLint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktLint" }
+sqlDelight = { id = "com.squareup.sqldelight", version.ref = "sqlDelight" }

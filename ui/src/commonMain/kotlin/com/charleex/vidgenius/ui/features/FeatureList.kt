@@ -8,6 +8,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.ui.components.AppCard
@@ -26,11 +27,22 @@ internal fun FeatureList(
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize(),
         ) {
             Text(
+                "VidGenius",
+                style = MaterialTheme.typography.h1,
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .padding(top =24.dp)
+                    .padding(bottom = 8.dp),
+            )
+            Text(
                 "Feature List",
-                style = MaterialTheme.typography.h4,
-                modifier = Modifier.padding(bottom = 8.dp),
+                style = MaterialTheme.typography.h5,
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier.padding(bottom = 24.dp),
             )
             Button(
                 onClick = onGotToLogin

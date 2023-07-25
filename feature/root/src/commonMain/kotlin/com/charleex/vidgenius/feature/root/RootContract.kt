@@ -1,6 +1,8 @@
 package com.charleex.vidgenius.feature.root
 
-object RootContract {
+import org.koin.core.component.KoinComponent
+
+object RootContract : KoinComponent {
     data class State(
         val isAuthenticated: Boolean = true,
         val isLoading: Boolean = true,

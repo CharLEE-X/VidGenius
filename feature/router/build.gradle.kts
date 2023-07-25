@@ -1,5 +1,6 @@
 plugins {
     kotlin("multiplatform")
+    kotlin("plugin.serialization")
 }
 
 group = "com.charleex.autovidyt.feature.root"
@@ -13,9 +14,9 @@ kotlin {
             dependencies {
                 implementation(projects.feature.videoList)
                 implementation(libs.ballast.core)
-                implementation(libs.ballast.savedState)
-                implementation(libs.ballast.navigation)
+                api(libs.ballast.navigation)
                 implementation(libs.koin.core)
+                implementation(libs.ktor.serialization.kotlinx.json)
             }
         }
     }

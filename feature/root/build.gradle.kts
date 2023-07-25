@@ -16,6 +16,8 @@ kotlin {
                 implementation(libs.ballast.core)
                 implementation(libs.ballast.savedState)
                 implementation(libs.koin.core)
+                implementation(libs.multiplatformSettings.core)
+                implementation(libs.ktor.serialization.kotlinx.json)
             }
         }
     }

@@ -15,6 +15,9 @@ kotlin {
                 implementation(projects.ai)
                 implementation(projects.api)
                 implementation(projects.processor)
+                implementation(projects.settings)
+                implementation(projects.database)
+
                 implementation(libs.koin.core)
                 implementation(libs.kotlin.dateTime)
                 implementation(libs.kotlin.coroutines)

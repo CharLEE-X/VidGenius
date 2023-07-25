@@ -16,7 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
+import com.charleex.vidgenius.feature.root.RootContract
 import com.charleex.vidgenius.feature.root.RootViewModel
+import com.charleex.vidgenius.feature.router.RouterScreen
 import com.charleex.vidgenius.ui.AppState
 import com.charleex.vidgenius.ui.components.KXSnackBarHost
 import com.charleex.vidgenius.ui.theme.AutoYtVidTheme
@@ -45,6 +47,11 @@ fun RootContent(
         println("Current breakpoint: $currentBreakpoint")
     }
 
+    val initialRoute = when (state.isAuthenticated) {
+        true -> RouterScreen.FeatureList
+        false -> RouterScreen.Login
+    }
+
     AutoYtVidTheme {
         BoxWithConstraints(
             modifier =
@@ -62,6 +69,7 @@ fun RootContent(
                 modifier = modifier,
                 isAuthenticated = state.isAuthenticated,
                 breakpoint = currentBreakpoint,
+                initialRoute = initialRoute,
                 displayMessage = {
                     scope.launch {
                         snackbarHostState.showSnackbar(it)
