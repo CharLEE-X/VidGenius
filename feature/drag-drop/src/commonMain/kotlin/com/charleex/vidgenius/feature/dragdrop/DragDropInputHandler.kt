@@ -48,8 +48,7 @@ internal class DragDropInputHandler :
     private suspend fun DragDropInputScope.deleteFile(dragDropItem: DragDropItem) {
         sideJob("deleteFile") {
             PrintlnLogger().debug("Deleting video ${dragDropItem.video().path}")
-            val video = dragDropItem.video()
-            screenshotRepository.deleteVideo(video)
+            screenshotRepository.deleteVideo(dragDropItem.id)
         }
     }
 

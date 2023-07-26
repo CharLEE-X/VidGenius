@@ -133,11 +133,11 @@ internal fun DroppedFiles(
                                 onClick = { goToVideoScreenshots(dragDropItem.id) },
                             ) {
                                 Text(
-                                    text = "Screenshots",
+                                    text = "Process",
                                     color = MaterialTheme.colors.onSurface,
                                 )
                             }
-                            Spacer(modifier = Modifier.padding(8.dp))
+                            Spacer(modifier = Modifier.padding(32.dp))
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = "Delete",

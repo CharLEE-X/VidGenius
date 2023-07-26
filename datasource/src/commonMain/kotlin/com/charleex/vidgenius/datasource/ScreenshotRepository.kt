@@ -17,11 +17,13 @@ import java.io.File
 
 interface ScreenshotRepository {
     suspend fun filterVideos(files: List<File>)
-    suspend fun captureScreenshots(video: Video, percentages: List<Double>)
+    suspend fun captureScreenshots(videoId: String, timestamps: List<Long>)
+    fun getVideoDuration(videoId: String): Long
+
     fun flowOfVideo(videoId: String): Flow<Video>
     fun flowOfVideos(): Flow<List<Video>>
-    fun deleteVideo(video: Video)
-    fun deleteScreenshot(video: Video, screenshot: Screenshot)
+    fun deleteVideo(videoId: String)
+    fun deleteScreenshot(videoId: String, screenshotId: String)
 }
 
 internal class ScreenshotRepositoryImpl(
@@ -55,10 +57,11 @@ internal class ScreenshotRepositoryImpl(
         }
     }
 
-    override suspend fun captureScreenshots(video: Video, percentages: List<Double>) {
+    override suspend fun captureScreenshots(videoId: String, timestamps: List<Long>) {
         logger.d("Getting screenshots from file")
+        val video = getVideoById(videoId)
         val file = File(video.path)
-        val screenshotFiles = screenshotCapturing.captureScreenshots(file, percentages)
+        val screenshotFiles = screenshotCapturing.captureScreenshots(file, timestamps)
         val screenshots = screenshotFiles.map { screenshotFile ->
             Screenshot(
                 path = screenshotFile.absolutePath,
@@ -76,6 +79,13 @@ internal class ScreenshotRepositoryImpl(
         database.videoQueries.upsert(videoToUpdate)
     }
 
+    override fun getVideoDuration(videoId: String): Long {
+        val video = getVideoById(videoId)
+        val file = File(video.path)
+        if (!file.exists()) error("File does not exist")
+        return screenshotCapturing.getVideoDuration(file)
+    }
+
     override fun flowOfVideo(videoId: String): Flow<Video> {
         logger.d("Getting flow of video $videoId")
         return database.videoQueries.getById(videoId).asFlow().map { it.executeAsOne() }
@@ -89,12 +99,13 @@ internal class ScreenshotRepositoryImpl(
             .onEach { logger.d("Total videos: ${it.size}") }
     }
 
-    override fun deleteVideo(video: Video) {
+    override fun deleteVideo(videoId: String) {
+        val video = getVideoById(videoId)
         logger.d("Deleting video ${video.path}")
         if (video.screenshots.isNotEmpty()) {
             logger.d("Video ${video.path} has screenshots")
-            video.screenshots.forEach {
-                deleteScreenshot(video, it)
+            video.screenshots.forEach { screenshot ->
+                deleteScreenshot(video.id, screenshot.id)
             }
         } else {
             logger.d("Video ${video.path} has no screenshots")
@@ -102,7 +113,13 @@ internal class ScreenshotRepositoryImpl(
         database.videoQueries.delete(video.id)
     }
 
-    override fun deleteScreenshot(video: Video, screenshot: Screenshot) {
+    override fun deleteScreenshot(videoId: String, screenshotId: String) {
+        val video = getVideoById(videoId)
+        val screenshot = video.screenshots.find { it.id == screenshotId }
+        if (screenshot == null) {
+            logger.d("Screenshot $screenshotId not found")
+            return
+        }
         logger.d("Deleting screenshot ${screenshot.id}")
         val screenshots = video.screenshots.ifEmpty { return }
         val updatedScreenshots = screenshots - screenshot
@@ -112,5 +129,9 @@ internal class ScreenshotRepositoryImpl(
         )
         database.videoQueries.upsert(updatedVideo)
         fileProcessor.deleteFile(screenshot.path)
+    }
+
+    private fun getVideoById(videoId: String): Video {
+        return database.videoQueries.getById(videoId).executeAsOne()
     }
 }

@@ -41,6 +41,9 @@ kotlin {
         }
         val jvmMain by getting {
             dependsOn(commonMain)
+            dependencies {
+                implementation("uk.co.caprica:vlcj:4.8.2")
+            }
         }
     }
 }

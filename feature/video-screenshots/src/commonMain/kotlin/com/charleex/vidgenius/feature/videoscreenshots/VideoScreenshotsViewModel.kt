@@ -35,4 +35,8 @@ class VideoScreenshotsViewModel(
     init {
         trySend(VideoScreenshotsContract.Inputs.Init)
     }
+
+    companion object {
+        internal const val DEFAULT_NUMBER_OF_TIMESTAMPS = 3
+    }
 }

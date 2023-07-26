@@ -11,7 +11,7 @@
             <option value="$PROJECT_DIR$/ai" />
             <option value="$PROJECT_DIR$/api" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/database" />
+            <option value="$PROJECT_DIR$/datasource" />
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/drag-drop" />
             <option value="$PROJECT_DIR$/feature/root" />
@@ -20,7 +20,6 @@
             <option value="$PROJECT_DIR$/feature/video-list" />
             <option value="$PROJECT_DIR$/feature/video-screenshots" />
             <option value="$PROJECT_DIR$/processor" />
-            <option value="$PROJECT_DIR$/repository" />
             <option value="$PROJECT_DIR$/settings" />
             <option value="$PROJECT_DIR$/ui" />
             <option value="$PROJECT_DIR$/yt" />

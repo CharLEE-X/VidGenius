@@ -1,7 +1,6 @@
 package src.charleex.vidgenius.processor.screenshot
 
 import co.touchlab.kermit.Logger
-import net.bramp.ffmpeg.FFprobe
 import org.bytedeco.javacv.FFmpegFrameGrabber
 import org.bytedeco.javacv.Java2DFrameConverter
 import java.io.File
@@ -12,10 +11,10 @@ import javax.imageio.ImageIO
 interface VideoScreenshotCapturing {
     fun captureScreenshots(
         file: File,
-        percentages: List<Double>
+        timestamp: List<Long>
     ): List<File>
 
-    fun getVideoDuration(file: File): Double?
+    fun getVideoDuration(file: File): Long
 }
 
 internal class VideoScreenshotCapturingImpl(
@@ -30,32 +29,38 @@ internal class VideoScreenshotCapturingImpl(
         createOutputFolder(outputFolder)
     }
 
-    override fun captureScreenshots(file: File, percentages: List<Double>): List<File> {
+    override fun captureScreenshots(file: File, timestamp: List<Long>): List<File> {
         logger.d { "Capturing screenshots" }
-        return percentages.mapIndexed { index, percentage ->
-            captureScreenshot(file, percentage, index)
+        return timestamp.mapIndexed { index, ts ->
+            captureScreenshot(file, ts, index)
         }
     }
 
-    override fun getVideoDuration(file: File): Double {
+    override fun getVideoDuration(file: File): Long {
         logger.d { "Getting video duration" }
         return try {
-            val probeResult = FFprobe().probe(file.absolutePath)
-            val format = probeResult.getFormat()
-            format.duration
+            logger.d { "File: $file" }
+            logger.d { "File path: ${file.path}" }
+            val frameGrabber = FFmpegFrameGrabber(file)
+            frameGrabber.start()
+            frameGrabber.format = "mp4"
+            val duration = frameGrabber.lengthInTime
+            frameGrabber.stop()
+            frameGrabber.release()
+            duration
         } catch (e: IOException) {
             logger.e(e) { "Error getting video duration" }
             error("Error getting video duration")
         }
     }
 
-    private fun captureScreenshot(inputFile: File, timestamp: Double, index: Int): File {
+    private fun captureScreenshot(file: File, timestamp: Long, index: Int): File {
         logger.d { "Capturing screenshot $index" }
-        val fileName = inputFile.nameWithoutExtension
+        val fileName = file.nameWithoutExtension
         val outputFile = File(outputFolder, "${fileName}_${index + 1}.png")
 
         try {
-            val frameGrabber = FFmpegFrameGrabber(inputFile)
+            val frameGrabber = FFmpegFrameGrabber(file)
             frameGrabber.format = "mp4"
             frameGrabber.start()
 
@@ -63,11 +68,9 @@ internal class VideoScreenshotCapturingImpl(
             val height = frameGrabber.imageHeight
             println("width: $width, height: $height")
 
-            val length = frameGrabber.lengthInTime
-            logger.d { "Video length $length" }
-            val time = (length * timestamp).toLong()
-            logger.d { "Video time $time/$length ratio ${length / time}" }
-            frameGrabber.timestamp = time
+            frameGrabber.timestamp = timestamp
+            val duration = frameGrabber.lengthInTime
+            logger.d { "Duration: $duration" }
 
             val frame = frameGrabber.grabImage() ?: throw java.lang.Exception("Frame is NULL!")
             if (frame.image == null) error("Frame Image is NULL!")
