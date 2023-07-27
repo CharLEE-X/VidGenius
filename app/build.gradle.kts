@@ -10,6 +10,7 @@ version = "1.0-SNAPSHOT"
 
 dependencies {
     implementation(projects.ui)
+
     implementation(compose.desktop.currentOs)
     implementation(libs.koin.core)
 }

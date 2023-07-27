@@ -3,7 +3,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-group = "com.hackathon.cda.processor"
+group = "com.hackathon.cda.video-processor"
 
 kotlin {
     jvm()

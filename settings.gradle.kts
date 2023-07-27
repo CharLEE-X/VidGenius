@@ -10,9 +10,8 @@ include(
     ":yt",
     ":ai",
     ":api",
-    ":processor",
+    ":video-processor",
     ":datasource",
-    ":settings",
 )
 
 include(
@@ -22,4 +21,5 @@ include(
     ":feature:video-detail",
     ":feature:drag-drop",
     ":feature:video-screenshots",
+    ":feature:screenshots-description",
 )

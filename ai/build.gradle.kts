@@ -11,7 +11,9 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                // TODO: Remove this dependency. Repository should be using this and api.
                 implementation(projects.api)
+
                 implementation(libs.koin.core)
                 implementation(libs.kotlin.dateTime)
                 implementation(libs.kotlin.coroutines)

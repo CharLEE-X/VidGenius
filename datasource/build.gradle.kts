@@ -15,7 +15,7 @@ kotlin {
                 implementation(projects.yt)
                 implementation(projects.ai)
                 implementation(projects.api)
-                implementation(projects.processor)
+                implementation(projects.videoProcessor)
 
                 implementation(libs.koin.core)
                 implementation(libs.kotlin.dateTime)

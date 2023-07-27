@@ -1,9 +1,8 @@
 plugins {
     kotlin("multiplatform")
-    kotlin("plugin.serialization")
 }
 
-group = "com.charleex.autovidyt.feature.root"
+group = "com.charleex.autovidyt.feature.screenshots-description"
 version = "1.0-SNAPSHOT"
 
 kotlin {
@@ -12,11 +11,13 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                implementation(projects.datasource)
+
                 implementation(libs.ballast.core)
-                api(libs.ballast.navigation)
+                implementation(libs.ballast.savedState)
                 implementation(libs.koin.core)
-                implementation(libs.ktor.serialization.kotlinx.json)
-            }
+                implementation(libs.kotlin.dateTime)
+           }
         }
     }
 }

@@ -18,6 +18,7 @@ import com.charleex.vidgenius.feature.videodetail.VideoDetailViewModel
 import com.charleex.vidgenius.ui.components.AppCard
 import com.charleex.vidgenius.ui.components.AppFlexSpacer
 import com.charleex.vidgenius.ui.util.Breakpoint
+import com.charleex.vidgenius.ui.util.pretty
 
 @Composable
 internal fun VideoDetailContent(
@@ -53,7 +54,7 @@ internal fun VideoDetailContent(
                     )
                     AppFlexSpacer()
                     ItemText(
-                        text = state.videoDetail.publishedAt,
+                        text = state.videoDetail.publishedAt.pretty(),
                     )
                 }
                 ItemText(
