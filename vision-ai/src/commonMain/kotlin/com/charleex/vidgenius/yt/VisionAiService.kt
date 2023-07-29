@@ -1,14 +1,17 @@
 package com.charleex.vidgenius.yt
 
 import co.touchlab.kermit.Logger
+import com.google.api.gax.core.FixedCredentialsProvider
+import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.vision.v1.AnnotateImageRequest
+import com.google.cloud.vision.v1.BatchAnnotateImagesResponse
 import com.google.cloud.vision.v1.Feature
 import com.google.cloud.vision.v1.Feature.Type
 import com.google.cloud.vision.v1.Image
 import com.google.cloud.vision.v1.ImageAnnotatorClient
+import com.google.cloud.vision.v1.ImageAnnotatorSettings
 import com.google.protobuf.ByteString
 import java.io.File
-import java.io.IOException
 
 
 interface VisionAiService {
@@ -27,42 +30,49 @@ class VisionAiServiceImpl(
             )
         }
 
-        return try {
-            quickstart(imageFile)
-        } catch (e: IOException) {
-            logger.e { e.message ?: "Image annotation failed." }
-            ""
-        }
+        val description = quickstart(imageFile)
+        logger.d("Vision AI:\nimage: $imageFile\ndescription: $description")
+        return description
     }
 
     private fun quickstart(imageFile: File): String {
+        val inputStream = this::class.java
+            .getResourceAsStream("/autovidyt-9142f31d5049.json")
+
+        val credentials = GoogleCredentials.fromStream(inputStream)
+        val settings = ImageAnnotatorSettings.newBuilder()
+            .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+            .build()
+        val client = ImageAnnotatorClient.create(settings)
+
         val imgProto = ByteString.copyFrom(imageFile.readBytes())
-
-        val imageAnnotatorClient = ImageAnnotatorClient.create()
-
-        // Set up the Cloud Vision API request.
         val image = Image.newBuilder()
             .setContent(imgProto)
             .build()
         val feature = Feature.newBuilder()
             .setType(Type.LABEL_DETECTION)
-            .setType(Type.TEXT_DETECTION)
-            .setType(Type.IMAGE_PROPERTIES)
+            .setType(Type.FACE_DETECTION)
+            .setType(Type.LANDMARK_DETECTION)
+            .setType(Type.LOGO_DETECTION)
+            .setType(Type.OBJECT_LOCALIZATION)
+            .setType(Type.PRODUCT_SEARCH)
+            .setType(Type.WEB_DETECTION)
             .build()
-        val annotateImageRequest = AnnotateImageRequest.newBuilder()
+        val request = AnnotateImageRequest.newBuilder()
             .addFeatures(feature)
             .setImage(image)
             .build()
 
         // Call the Cloud Vision API and perform label detection on the image.
-        val requests = arrayListOf(annotateImageRequest)
-        val result = imageAnnotatorClient.batchAnnotateImages(requests)!!
-
+        val result: BatchAnnotateImagesResponse = client.batchAnnotateImages(arrayListOf(request))
         logger.d("Vision AI result: $result")
-        // Print the label annotations for the first response.
-        result.responsesList[0].labelAnnotationsList.forEach { label ->
-            logger.d("${label.description} (${(label.score * 100).toInt()}%)")
-        }
-        return result.responsesList[0].labelAnnotationsList.first().description ?: "no description"
+
+        val bestResults = result.responsesList[0].webDetection.webEntitiesList
+            .take(3)
+            .filter { it.score > 0.6 }
+            .joinToString(separator = ", ") { it.description }
+        logger.i { "Vision AI best results: $bestResults" }
+
+        return bestResults
     }
 }

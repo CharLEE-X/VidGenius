@@ -76,11 +76,8 @@ internal class GoogleAuthImpl(
     }
 
     private fun getGoogleClientSecrets(): GoogleClientSecrets? {
-//        val file = File(GOOGLE_CREDENTIALS_JSON)
-//        val fileInputStream = file.inputStream()
         val inputStream = this::class.java
             .getResourceAsStream("/client_secrets.json")
-//            ?: error("No client_secrets.json found in resources")
         val inputStreamReader = InputStreamReader(inputStream)
         return GoogleClientSecrets.load(jsonFactory, inputStreamReader)
     }

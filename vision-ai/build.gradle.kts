@@ -20,14 +20,8 @@ kotlin {
                 implementation("com.google.guava:guava:32.1.1-jre")
                 implementation("com.google.http-client:google-http-client-jackson2")
 
-                implementation(kotlin("reflect"))
-                implementation("com.google.cloud:google-cloud-vision:3.20.0")
-//                // see: https://github.com/googleapis/sdk-platform-java/pull/1832
-//                modules {
-//                    module("com.google.guava:listenablefuture") {
-//                        replacedBy("com.google.guava:guava", "listenablefuture is part of guava")
-//                    }
-//                }
+                implementation(platform("com.google.cloud:libraries-bom:25.1.0"))
+                implementation("com.google.cloud:google-cloud-vision")
             }
         }
         val commonTest by getting {

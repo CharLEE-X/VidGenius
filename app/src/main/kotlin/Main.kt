@@ -22,9 +22,9 @@ fun main() = application {
     val windowState = rememberWindowState()
     windowState.apply {
         size = DpSize(1200.dp, 800.dp)
-        position = WindowPosition(
-            alignment = Alignment.Center,
-        )
+//        position = WindowPosition(
+//            alignment = Alignment.Center,
+//        )
     }
 
     Window(
