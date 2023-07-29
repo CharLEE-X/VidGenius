@@ -4,7 +4,6 @@ import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.model.UploadItem
 import com.charleex.vidgenius.yt.VisionAiService
 import com.charleex.vidgenius.yt.youtube.model.ChannelUploadsItem
-import com.charleex.vidgenius.yt.youtube.video.ChannelUploadsService
 import com.hackathon.cda.repository.db.VidGeniusDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -27,9 +26,11 @@ internal class GoogleCloudRepositoryImpl(
         val screenshotsWithDescription = screenshots.mapIndexed { index, screenshot ->
             val text = visionAiService.getTextFromImage(screenshot.path)
             logger.d { "Text from screenshot ${screenshot.path}: \n$text" }
-            val screenshotWithDescription =
-                screenshot.copy(description = text, modifiedAt = Clock.System.now())
-            emit(screenshots.size / (index + 1).toFloat())
+            val screenshotWithDescription = screenshot.copy(
+                description = text,
+                modifiedAt = Clock.System.now(),
+            )
+            emit((index + 1).toFloat() / screenshots.size)
             screenshotWithDescription
         }
         val newVideo = video.copy(screenshots = screenshotsWithDescription)

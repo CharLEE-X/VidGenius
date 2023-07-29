@@ -3,6 +3,9 @@ package com.charleex.vidgenius.feature.videodetail
 import com.copperleaf.ballast.BallastViewModelConfiguration
 import com.copperleaf.ballast.build
 import com.copperleaf.ballast.core.BasicViewModel
+import com.copperleaf.ballast.core.LoggingInterceptor
+import com.copperleaf.ballast.core.PrintlnLogger
+import com.copperleaf.ballast.plusAssign
 import com.copperleaf.ballast.withViewModel
 import kotlinx.coroutines.CoroutineScope
 
@@ -15,10 +18,10 @@ class VideoDetailViewModel(
         VideoDetailContract.Events,
         VideoDetailContract.State>(
     config = BallastViewModelConfiguration.Builder()
-//        .apply {
-//            this += LoggingInterceptor()
-//            logger = { PrintlnLogger() }
-//        }
+        .apply {
+            this += LoggingInterceptor()
+            logger = { PrintlnLogger() }
+        }
         .withViewModel(
             initialState = VideoDetailContract.State(),
             inputHandler = VideoDetailInputHandler(),

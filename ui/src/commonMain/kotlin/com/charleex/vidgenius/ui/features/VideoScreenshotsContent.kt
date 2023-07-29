@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -88,10 +89,27 @@ internal fun VideoScreenshotsContent(
                 .animateContentSize()
         ) {
             item {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                 Text(
                     text = state.video.path,
                     color = MaterialTheme.colors.onSurface,
                 )
+                    Button(
+                        onClick = { goToScreenshotsToText(state.video.id) },
+                        modifier = Modifier.padding(start = 32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.TextSnippet,
+                            contentDescription = "Go to screenshots to text",
+                        )
+                        Text(
+                            text = "Go to screenshots to text",
+                            color = MaterialTheme.colors.onSurface,
+                        )
+                    }
+                }
             }
             state.video.description?.let { description ->
                 item {
@@ -252,21 +270,6 @@ internal fun VideoScreenshotsContent(
                             }
                         }
                     }
-                }
-            }
-            item {
-                Button(
-                    onClick = { goToScreenshotsToText(state.video.id) },
-                    modifier = Modifier
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.TextSnippet,
-                        contentDescription = "Go to screenshots to text",
-                    )
-                    Text(
-                        text = "Go to screenshots to text",
-                        color = MaterialTheme.colors.onSurface,
-                    )
                 }
             }
         }

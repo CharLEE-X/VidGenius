@@ -61,14 +61,6 @@ internal fun VideoListContent(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            Button(
-                onClick = { goToDragAndDrop() },
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(16.dp)
-            ) {
-                Text(text = "Drag and drop")
-            }
             AnimatedVisibility(state.list.isEmpty() && !state.showLoader) {
                 Text(text = "No uploads")
             }

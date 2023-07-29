@@ -28,16 +28,17 @@ class VisionAiServiceImpl(
         }
 
         return try {
-            quickstart(imagePath)
+            quickstart(imageFile)
         } catch (e: IOException) {
             logger.e { e.message ?: "Image annotation failed." }
             ""
         }
     }
 
-    private fun quickstart(imageFileName: String): String {
-        val imgProto = ByteString.copyFrom(File(imageFileName).readBytes())
-        val vision = ImageAnnotatorClient.create()
+    private fun quickstart(imageFile: File): String {
+        val imgProto = ByteString.copyFrom(imageFile.readBytes())
+
+        val imageAnnotatorClient = ImageAnnotatorClient.create()
 
         // Set up the Cloud Vision API request.
         val image = Image.newBuilder()
@@ -45,20 +46,23 @@ class VisionAiServiceImpl(
             .build()
         val feature = Feature.newBuilder()
             .setType(Type.LABEL_DETECTION)
+            .setType(Type.TEXT_DETECTION)
+            .setType(Type.IMAGE_PROPERTIES)
             .build()
-        val request = AnnotateImageRequest.newBuilder()
+        val annotateImageRequest = AnnotateImageRequest.newBuilder()
             .addFeatures(feature)
             .setImage(image)
             .build()
 
         // Call the Cloud Vision API and perform label detection on the image.
-//        val result = vision.batchAnnotateImages(arrayListOf(request))
+        val requests = arrayListOf(annotateImageRequest)
+        val result = imageAnnotatorClient.batchAnnotateImages(requests)!!
 
-//        // Print the label annotations for the first response.
-//        result.responsesList[0].labelAnnotationsList.forEach { label ->
-//            logger.d("${label.description} (${(label.score * 100).toInt()}%)")
-//        }
-//        return result.responsesList[0].labelAnnotationsList.first().description ?: "no description"
-        return "success"
+        logger.d("Vision AI result: $result")
+        // Print the label annotations for the first response.
+        result.responsesList[0].labelAnnotationsList.forEach { label ->
+            logger.d("${label.description} (${(label.score * 100).toInt()}%)")
+        }
+        return result.responsesList[0].labelAnnotationsList.first().description ?: "no description"
     }
 }

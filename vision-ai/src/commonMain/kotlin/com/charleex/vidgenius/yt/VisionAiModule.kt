@@ -13,8 +13,8 @@ fun visionAiModule() = module {
             logger = withTag(VisionAiService::class.simpleName!!),
         )
     }
-    single<JacksonFactory> {
-        JacksonFactory()
-    }
+//    single<JacksonFactory> {
+//        JacksonFactory()
+//    }
 }
 

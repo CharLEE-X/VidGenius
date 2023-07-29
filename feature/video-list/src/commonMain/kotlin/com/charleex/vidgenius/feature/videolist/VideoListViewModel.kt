@@ -3,6 +3,9 @@ package com.charleex.vidgenius.feature.videolist
 import com.copperleaf.ballast.BallastViewModelConfiguration
 import com.copperleaf.ballast.build
 import com.copperleaf.ballast.core.BasicViewModel
+import com.copperleaf.ballast.core.LoggingInterceptor
+import com.copperleaf.ballast.core.PrintlnLogger
+import com.copperleaf.ballast.plusAssign
 import com.copperleaf.ballast.withViewModel
 import kotlinx.coroutines.CoroutineScope
 
@@ -14,10 +17,10 @@ class VideoListViewModel(
         VideoListContract.Events,
         VideoListContract.State>(
     config = BallastViewModelConfiguration.Builder()
-//        .apply {
-//            this += LoggingInterceptor()
-//            logger = { PrintlnLogger() }
-//        }
+        .apply {
+            this += LoggingInterceptor()
+            logger = { PrintlnLogger() }
+        }
         .withViewModel(
             initialState = VideoListContract.State(),
             inputHandler = VideoListInputHandler(),
