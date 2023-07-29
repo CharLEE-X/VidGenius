@@ -2,7 +2,7 @@ plugins {
     kotlin("multiplatform")
 }
 
-group = "com.charleex.autovidyt.feature.video-list"
+group = "com.charleex.vidgenius.feature.video-list"
 version = "1.0-SNAPSHOT"
 
 kotlin {

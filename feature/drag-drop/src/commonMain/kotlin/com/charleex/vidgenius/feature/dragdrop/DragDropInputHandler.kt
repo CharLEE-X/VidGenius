@@ -1,6 +1,6 @@
 package com.charleex.vidgenius.feature.dragdrop
 
-import com.charleex.vidgenius.datasource.ScreenshotRepository
+import com.charleex.vidgenius.datasource.VideoRepository
 import com.charleex.vidgenius.feature.dragdrop.model.DragDropItem
 import com.charleex.vidgenius.feature.dragdrop.model.toDragDropItem
 import com.charleex.vidgenius.feature.dragdrop.model.video
@@ -20,7 +20,7 @@ internal class DragDropInputHandler :
     KoinComponent,
     InputHandler<DragDropContract.Inputs, DragDropContract.Events, DragDropContract.State> {
 
-    private val screenshotRepository: ScreenshotRepository by inject()
+    private val videoRepository: VideoRepository by inject()
 
     override suspend fun DragDropInputScope.handleInput(
         input: DragDropContract.Inputs,
@@ -38,7 +38,7 @@ internal class DragDropInputHandler :
     private suspend fun DragDropInputScope.observeFiles() {
         PrintlnLogger().debug("Observing files")
         sideJob("observeFiles") {
-            screenshotRepository.flowOfVideos().collect { videos ->
+            videoRepository.flowOfVideos().collect { videos ->
                 val dragDropItems = videos.map { it.toDragDropItem() }
                 postInput(DragDropContract.Inputs.Update.SetFiles(dragDropItems))
             }
@@ -48,7 +48,7 @@ internal class DragDropInputHandler :
     private suspend fun DragDropInputScope.deleteFile(dragDropItem: DragDropItem) {
         sideJob("deleteFile") {
             PrintlnLogger().debug("Deleting video ${dragDropItem.video().path}")
-            screenshotRepository.deleteVideo(dragDropItem.id)
+            videoRepository.deleteVideo(dragDropItem.id)
         }
     }
 
@@ -56,7 +56,7 @@ internal class DragDropInputHandler :
         PrintlnLogger().debug("Getting files")
         sideJob("getFiles") {
             try {
-                screenshotRepository.filterVideos(files)
+                videoRepository.filterVideos(files)
             } catch (e: Exception) {
                 PrintlnLogger().error(e)
                 postEvent(DragDropContract.Events.ShowError(e.message ?: "Error while getting files"))

@@ -1,6 +1,6 @@
 package com.charleex.vidgenius.feature.videoscreenshots
 
-import com.charleex.vidgenius.datasource.ScreenshotRepository
+import com.charleex.vidgenius.datasource.VideoRepository
 import com.charleex.vidgenius.feature.videoscreenshots.model.toUiVideo
 import com.charleex.vidgenius.feature.videoscreenshots.model.toVideo
 import com.copperleaf.ballast.InputHandler
@@ -20,7 +20,7 @@ internal class VideoScreenshotsInputHandler(
 ) : KoinComponent,
     InputHandler<VideoScreenshotsContract.Inputs, VideoScreenshotsContract.Events, VideoScreenshotsContract.State> {
 
-    private val screenshotRepository: ScreenshotRepository by inject()
+    private val videoRepository: VideoRepository by inject()
 
     override suspend fun VideoScreenshotInputScope.handleInput(
         input: VideoScreenshotsContract.Inputs,
@@ -34,7 +34,7 @@ internal class VideoScreenshotsInputHandler(
         VideoScreenshotsContract.Inputs.Init -> initVideo()
         VideoScreenshotsContract.Inputs.ObserveVideo -> observeVideo()
         VideoScreenshotsContract.Inputs.GetTimestamps -> getTimeStamps()
-        VideoScreenshotsContract.Inputs.CaptureScreenshots -> getScreenshots(screenshotRepository)
+        VideoScreenshotsContract.Inputs.CaptureScreenshots -> getScreenshots(videoRepository)
         is VideoScreenshotsContract.Inputs.OnScreenshotNotExist -> onScreenshotNotExist(input.screenshotPath)
         is VideoScreenshotsContract.Inputs.DeleteScreenshot -> deleteScreenshot(input.screenshotId)
         is VideoScreenshotsContract.Inputs.SaveTimestamp -> saveTimestamp(input.timestamp)
@@ -48,7 +48,7 @@ internal class VideoScreenshotsInputHandler(
 
     private suspend fun VideoScreenshotInputScope.observeVideo() {
         sideJob("initVideo") {
-            screenshotRepository.flowOfVideo(videoId).collect { video ->
+            videoRepository.flowOfVideo(videoId).collect { video ->
                 val uiVideo = video.toUiVideo()
                 postInput(VideoScreenshotsContract.Inputs.Update.Video(video = uiVideo))
             }
@@ -59,7 +59,7 @@ internal class VideoScreenshotsInputHandler(
         val uiVideo = getCurrentState().video
         val video = uiVideo.toVideo()
         val duration = try {
-            screenshotRepository.getVideoDuration(videoId)
+            videoRepository.getVideoDuration(videoId)
         } catch (e: Exception) {
             postEvent(
                 VideoScreenshotsContract.Events.ShowError(
@@ -96,7 +96,7 @@ internal class VideoScreenshotsInputHandler(
 
     private suspend fun VideoScreenshotInputScope.deleteScreenshot(screenshotId: String) {
         val video = getCurrentState().video
-        screenshotRepository.deleteScreenshot(video.id, screenshotId)
+        videoRepository.deleteScreenshot(video.id, screenshotId)
     }
 
     private suspend fun VideoScreenshotInputScope.saveTimestamp(timestamp: Long) {
@@ -112,7 +112,7 @@ internal class VideoScreenshotsInputHandler(
     }
 
     private suspend fun VideoScreenshotInputScope.getScreenshots(
-        screenshotRepository: ScreenshotRepository,
+        videoRepository: VideoRepository,
     ) {
         PrintlnLogger().debug("Getting screenshots")
         val timestamps = getCurrentState().timestamps
@@ -123,7 +123,7 @@ internal class VideoScreenshotsInputHandler(
                 postInput(VideoScreenshotsContract.Inputs.DeleteScreenshot(screenshotId = it.id))
             }
             try {
-                screenshotRepository.captureScreenshots(uiVideo.id, timestamps)
+                videoRepository.captureScreenshots(uiVideo.id, timestamps)
             } catch (e: Exception) {
                 postEvent(
                     VideoScreenshotsContract.Events.ShowError(

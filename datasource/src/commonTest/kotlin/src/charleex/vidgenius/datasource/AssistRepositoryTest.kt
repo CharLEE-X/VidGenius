@@ -1,6 +1,6 @@
 package src.charleex.vidgenius.datasource
 
-import com.charleex.vidgenius.datasource.AssistRepository
+import com.charleex.vidgenius.datasource.OpenAiRepository
 import kotlinx.coroutines.test.runTest
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -19,7 +19,7 @@ const val commonResourcesPrefix = "src/commonTest/resources"
 // /multilingual.wav
 
 class TranscriptionServiceTest : KoinTest {
-    private lateinit var sut: AssistRepository
+    private lateinit var sut: OpenAiRepository
 
     @BeforeTest
     fun setup() {

@@ -1,7 +1,7 @@
 package com.charleex.vidgenius.feature.videolist
 
+import com.charleex.vidgenius.datasource.model.UploadItem
 import kotlinx.datetime.Instant
-import com.charleex.vidgenius.datasource.UploadItem
 
 data class VideoListItem(
     val id: String,

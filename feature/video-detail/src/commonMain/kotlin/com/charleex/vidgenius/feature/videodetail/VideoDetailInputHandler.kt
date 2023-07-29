@@ -44,7 +44,7 @@ internal class VideoDetailInputHandler :
 
 private suspend fun VideoDetailInputScope.getVideos(videoId: String, repository: YoutubeRepository) {
     try {
-        val uploadItem = repository.getVideoDetail(videoId)
+        val uploadItem = repository.getYtVideoDetail(videoId)
         val videoDetail = uploadItem.toVideoDetail()
         postInput(VideoDetailContract.Inputs.Update.SetDetail(videoDetail))
     } catch (e: Exception) {

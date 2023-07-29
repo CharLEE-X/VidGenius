@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.compose")
 }
 
-group = "com.charleex.autovidyt.ui"
+group = "com.charleex.vidgenius.ui"
 version = "1.0-SNAPSHOT"
 
 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
@@ -19,6 +19,7 @@ kotlin {
                 implementation(projects.feature.videoDetail)
                 implementation(projects.feature.dragDrop)
                 implementation(projects.feature.videoScreenshots)
+                implementation(projects.feature.screenshotsToText)
 
                 implementation(compose.desktop.common)
                 implementation(compose.desktop.components.splitPane)

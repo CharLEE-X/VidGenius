@@ -1,12 +1,15 @@
 package com.charleex.vidgenius.datasource.di
 
 import co.touchlab.kermit.Logger.Companion.withTag
-import com.charleex.vidgenius.datasource.AssistRepository
-import com.charleex.vidgenius.datasource.AssistRepositoryImpl
-import com.charleex.vidgenius.datasource.ScreenshotRepository
-import com.charleex.vidgenius.datasource.ScreenshotRepositoryImpl
+import com.charleex.vidgenius.datasource.GoogleCloudRepository
+import com.charleex.vidgenius.datasource.GoogleCloudRepositoryImpl
 import com.charleex.vidgenius.datasource.YoutubeRepository
 import com.charleex.vidgenius.datasource.YoutubeRepositoryImpl
+import com.charleex.vidgenius.datasource.OpenAiRepository
+import com.charleex.vidgenius.datasource.OpenAiRepositoryImpl
+import com.charleex.vidgenius.datasource.VideoRepository
+import com.charleex.vidgenius.datasource.VideoRepositoryImpl
+import com.charleex.vidgenius.yt.visionAiModule
 import com.charleex.vidgenius.yt.youtubeModule
 import org.koin.dsl.module
 import src.charleex.vidgenius.api.apiModule
@@ -14,21 +17,28 @@ import src.charleex.vidgenius.processor.processorModule
 import src.charleex.vidgenius.whisper.whisperModule
 import java.io.File
 
-
 val repositoryModule = module {
     val appDataDir = createAppDataDir()
 
     includes(
         platformModule(appDataDir),
+        processorModule(appDataDir),
+        youtubeModule(),
+        visionAiModule(),
         whisperModule,
         apiModule,
-        processorModule(appDataDir),
         settingsModule,
         databaseModule,
-        youtubeModule(),
     )
-    single<AssistRepository> {
-        AssistRepositoryImpl(
+    single<GoogleCloudRepository> {
+        GoogleCloudRepositoryImpl(
+            logger = withTag(GoogleCloudRepository::class.simpleName!!),
+            database = get(),
+            visionAiService = get(),
+        )
+    }
+    single<OpenAiRepository> {
+        OpenAiRepositoryImpl(
             montoApi = get(),
             transcriptionService = get(),
             translationService = get(),
@@ -41,9 +51,9 @@ val repositoryModule = module {
             channelUploadsService = get(),
         )
     }
-    single<ScreenshotRepository> {
-        ScreenshotRepositoryImpl(
-            logger = withTag(ScreenshotRepository::class.simpleName!!),
+    single<VideoRepository> {
+        VideoRepositoryImpl(
+            logger = withTag(VideoRepository::class.simpleName!!),
             fileProcessor = get(),
             screenshotCapturing = get(),
             database = get(),

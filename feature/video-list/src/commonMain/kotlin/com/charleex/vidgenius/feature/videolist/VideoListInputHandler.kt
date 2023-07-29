@@ -6,8 +6,8 @@ import com.copperleaf.ballast.core.PrintlnLogger
 import com.copperleaf.ballast.postInput
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import com.charleex.vidgenius.datasource.UploadItem
 import com.charleex.vidgenius.datasource.YoutubeRepository
+import com.charleex.vidgenius.datasource.model.UploadItem
 
 private typealias VideoListInputScope = InputHandlerScope<
         VideoListContract.Inputs,
@@ -39,7 +39,7 @@ private suspend fun VideoListInputScope.getVideos(repository: YoutubeRepository)
     sideJob("GetVideos") {
         postInput(VideoListContract.Inputs.Update.ShowLoader(true))
         try {
-            val channelUploads: List<UploadItem> = repository.getChannelUploads()
+            val channelUploads: List<UploadItem> = repository.getYtChannelUploads()
             val videoListItems = channelUploads.toVideoListItems()
             PrintlnLogger().debug("GetVideos | videoListItems: $videoListItems")
             postInput(VideoListContract.Inputs.Update.SetList(videoListItems))
@@ -54,9 +54,3 @@ private suspend fun VideoListInputScope.getVideos(repository: YoutubeRepository)
         PrintlnLogger().debug("GetVideos | End")
     }
 }
-
-private suspend fun getVideos(repository: YoutubeRepository): List<VideoListItem> {
-    val channelUploads: List<UploadItem> = repository.getChannelUploads()
-    return channelUploads.toVideoListItems()
-}
-

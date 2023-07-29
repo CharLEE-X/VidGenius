@@ -2,7 +2,7 @@ plugins {
     kotlin("multiplatform")
 }
 
-group = "com.charleex.autovidyt.feature.drag-drop"
+group = "com.charleex.vidgenius.feature.drag-drop"
 version = "1.0-SNAPSHOT"
 
 kotlin {

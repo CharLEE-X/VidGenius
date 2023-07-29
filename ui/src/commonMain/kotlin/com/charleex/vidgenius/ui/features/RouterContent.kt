@@ -141,9 +141,9 @@ internal fun RouterContent(
                     )
 
                     RouterScreen.VideoDetail -> {
-                        val id: String by stringPath()
+                        val videoId: String by stringPath()
                         VideoDetailContent(
-                            videoId = id,
+                            videoId = videoId,
                             breakpoint = breakpoint,
                             displayMessage = displayMessage,
                         )
@@ -153,12 +153,12 @@ internal fun RouterContent(
                         breakpoint = breakpoint,
                         displayMessage = displayMessage,
                         window = window,
-                        goToVideoScreenshots = { id ->
+                        goToVideoScreenshots = { videoId ->
                             router.trySend(
                                 RouterContract.Inputs.GoToDestination(
                                     RouterScreen.VideoScreenshots
                                         .directions()
-                                        .pathParameter("id", id)
+                                        .pathParameter("videoId", videoId)
                                         .build()
                                 )
                             )
@@ -166,11 +166,30 @@ internal fun RouterContent(
                     )
 
                     RouterScreen.VideoScreenshots -> {
-                        val id: String by stringPath()
+                        val videoId: String by stringPath()
                         VideoScreenshotsContent(
                             breakpoint = breakpoint,
                             displayMessage = displayMessage,
-                            videoId = id,
+                            videoId = videoId,
+                            goToScreenshotsToText = { id ->
+                                router.trySend(
+                                    RouterContract.Inputs.GoToDestination(
+                                        RouterScreen.ScreenshotsToText
+                                            .directions()
+                                            .pathParameter("videoId", id)
+                                            .build()
+                                    )
+                                )
+                            },
+                        )
+                    }
+
+                    RouterScreen.ScreenshotsToText -> {
+                        val videoId: String by stringPath()
+                        ScreenshotToTextContent(
+                            breakpoint = breakpoint,
+                            displayMessage = displayMessage,
+                            videoId = videoId
                         )
                     }
                 }

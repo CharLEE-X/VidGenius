@@ -1,25 +1,25 @@
 package com.charleex.vidgenius.datasource
 
 import co.touchlab.kermit.Logger
-import com.charleex.vidgenius.yt.ChannelUploadsService
-import com.charleex.vidgenius.yt.model.ChannelUploadsItem
-import kotlinx.datetime.Instant
+import com.charleex.vidgenius.datasource.model.UploadItem
+import com.charleex.vidgenius.yt.youtube.model.ChannelUploadsItem
+import com.charleex.vidgenius.yt.youtube.video.ChannelUploadsService
 
 interface YoutubeRepository {
-    suspend fun getChannelUploads(): List<UploadItem>
-    suspend fun getVideoDetail(videoId: String): UploadItem
+    suspend fun getYtChannelUploads(): List<UploadItem>
+    suspend fun getYtVideoDetail(videoId: String): UploadItem
 }
 
 internal class YoutubeRepositoryImpl(
     private val logger: Logger,
     private val channelUploadsService: ChannelUploadsService,
 ) : YoutubeRepository {
-    override suspend fun getChannelUploads(): List<UploadItem> {
+    override suspend fun getYtChannelUploads(): List<UploadItem> {
         logger.d { "Getting channel uploads" }
         return channelUploadsService.getUploadList().toUploadItems()
     }
 
-    override suspend fun getVideoDetail(videoId: String): UploadItem {
+    override suspend fun getYtVideoDetail(videoId: String): UploadItem {
         logger.d { "Getting video detail $videoId" }
         return channelUploadsService.getVideoDetail(videoId).toUploadItem()
     }
@@ -37,10 +37,3 @@ private fun ChannelUploadsItem.toUploadItem(): UploadItem {
         publishedAt = this.publishedAt,
     )
 }
-
-data class UploadItem(
-    val id: String,
-    val title: String,
-    val description: String,
-    val publishedAt: Instant,
-)

@@ -1,6 +1,6 @@
 package com.charleex.vidgenius.feature.videodetail
 
-import com.charleex.vidgenius.datasource.UploadItem
+import com.charleex.vidgenius.datasource.model.UploadItem
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 

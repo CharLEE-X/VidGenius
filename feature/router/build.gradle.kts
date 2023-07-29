@@ -3,7 +3,7 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-group = "com.charleex.autovidyt.feature.root"
+group = "com.charleex.vidgenius.feature.root"
 version = "1.0-SNAPSHOT"
 
 kotlin {

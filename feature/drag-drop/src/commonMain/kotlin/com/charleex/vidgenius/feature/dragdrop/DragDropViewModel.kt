@@ -17,10 +17,10 @@ class DragDropViewModel(
         DragDropContract.Events,
         DragDropContract.State>(
     config = BallastViewModelConfiguration.Builder()
-        .apply {
-            this += LoggingInterceptor()
-            logger = { PrintlnLogger() }
-        }
+//        .apply {
+//            this += LoggingInterceptor()
+//            logger = { PrintlnLogger() }
+//        }
         .withViewModel(
             initialState = DragDropContract.State(),
             inputHandler = DragDropInputHandler(),

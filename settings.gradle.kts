@@ -7,11 +7,12 @@ include(
     ":ui",
 )
 include(
-    ":yt",
-    ":ai",
     ":api",
-    ":video-processor",
     ":datasource",
+    ":ai",
+    ":youtube",
+    ":video-processor",
+    ":vision-ai",
 )
 
 include(
@@ -21,5 +22,5 @@ include(
     ":feature:video-detail",
     ":feature:drag-drop",
     ":feature:video-screenshots",
-    ":feature:screenshots-description",
+    ":feature:screenshots-to-text",
 )

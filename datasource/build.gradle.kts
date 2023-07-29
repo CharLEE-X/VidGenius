@@ -12,10 +12,11 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(projects.yt)
+                implementation(projects.youtube)
                 implementation(projects.ai)
                 implementation(projects.api)
                 implementation(projects.videoProcessor)
+                implementation(projects.visionAi)
 
                 implementation(libs.koin.core)
                 implementation(libs.kotlin.dateTime)

@@ -5,7 +5,7 @@ plugins {
     id("org.jetbrains.compose")
 }
 
-group = "com.charleex.autovidyt"
+group = "com.charleex.vidgenius"
 version = "1.0-SNAPSHOT"
 
 dependencies {
