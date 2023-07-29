@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
-import com.charleex.vidgenius.feature.root.RootContract
 import com.charleex.vidgenius.feature.root.RootViewModel
 import com.charleex.vidgenius.feature.router.RouterScreen
 import com.charleex.vidgenius.ui.AppState
@@ -48,7 +47,7 @@ fun RootContent(
     }
 
     val initialRoute = when (state.isAuthenticated) {
-        true -> RouterScreen.FeatureList
+        true -> RouterScreen.ProcessVideo
         false -> RouterScreen.Login
     }
 

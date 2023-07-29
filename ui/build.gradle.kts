@@ -17,9 +17,7 @@ kotlin {
                 implementation(projects.feature.router)
                 implementation(projects.feature.videoList)
                 implementation(projects.feature.videoDetail)
-                implementation(projects.feature.dragDrop)
-                implementation(projects.feature.videoScreenshots)
-                implementation(projects.feature.screenshotsToText)
+                implementation(projects.feature.processVideo)
 
                 implementation(compose.desktop.common)
                 implementation(compose.desktop.components.splitPane)

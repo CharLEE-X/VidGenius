@@ -4,7 +4,6 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
-        <option name="testRunner" value="GRADLE" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="gradleJvm" value="jbr-17" />
         <option name="modules">
@@ -15,13 +14,11 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/datasource" />
             <option value="$PROJECT_DIR$/feature" />
-            <option value="$PROJECT_DIR$/feature/drag-drop" />
+            <option value="$PROJECT_DIR$/feature/process-video" />
             <option value="$PROJECT_DIR$/feature/root" />
             <option value="$PROJECT_DIR$/feature/router" />
-            <option value="$PROJECT_DIR$/feature/screenshots-to-text" />
             <option value="$PROJECT_DIR$/feature/video-detail" />
             <option value="$PROJECT_DIR$/feature/video-list" />
-            <option value="$PROJECT_DIR$/feature/video-screenshots" />
             <option value="$PROJECT_DIR$/ui" />
             <option value="$PROJECT_DIR$/video-processor" />
             <option value="$PROJECT_DIR$/vision-ai" />

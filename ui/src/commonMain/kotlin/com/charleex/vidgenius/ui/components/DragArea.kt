@@ -1,12 +1,12 @@
 package com.charleex.vidgenius.ui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
@@ -37,7 +37,7 @@ import java.awt.dnd.DropTargetDropEvent
 
 @Composable
 internal fun DragArea(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     window: ComposeWindow,
     onDropped: (List<*>) -> Unit,
 ) {
@@ -61,17 +61,11 @@ internal fun DragArea(
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier
-            .height(200.dp)
-            .width(200.dp)
+        modifier = Modifier
     ) {
         Surface(
             shape = RoundedCornerShape(20.dp),
-            border = BorderStroke(
-                width = 1.dp,
-                color = MaterialTheme.colors.primary
-            ),
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier,
         ) {
             TextField(
                 value = "",
@@ -94,7 +88,8 @@ internal fun DragArea(
                     disabledIndicatorColor = Color.Transparent,
                 ),
                 modifier = Modifier
-                    .fillMaxSize()
+                    .height(200.dp)
+                    .fillMaxWidth()
                     .selectable(
                         selected = false,
                         onClick = { })
@@ -108,6 +103,7 @@ internal fun DragArea(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.align(Alignment.Center)
         ) {
             Text(
                 text = "Drag and drop a file or directory here to add videos",

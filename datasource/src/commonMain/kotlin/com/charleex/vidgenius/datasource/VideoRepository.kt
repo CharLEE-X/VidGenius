@@ -16,7 +16,7 @@ import src.charleex.vidgenius.processor.screenshot.ScreenshotCapturing
 import java.io.File
 
 interface VideoRepository {
-    suspend fun filterVideos(files: List<File>)
+    suspend fun filterVideos(files: List<*>)
     fun getVideoDuration(videoId: String): Long
     fun flowOfVideo(videoId: String): Flow<Video>
     fun flowOfVideos(): Flow<List<Video>>
@@ -32,7 +32,7 @@ internal class VideoRepositoryImpl(
     private val screenshotCapturing: ScreenshotCapturing,
     private val database: VidGeniusDatabase,
 ) : VideoRepository {
-    override suspend fun filterVideos(files: List<File>) {
+    override suspend fun filterVideos(files: List<*>) {
         logger.d("Getting videos from files")
         val videos = fileProcessor.filterVideoFiles(files)
         val localVideos = database.videoQueries.getAll().executeAsList()

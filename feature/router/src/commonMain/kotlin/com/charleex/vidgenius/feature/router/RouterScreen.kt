@@ -10,7 +10,7 @@ private const val FEATURE_LIST = "/feature-list"
 private const val LOGIN = "/login"
 private const val VIDEO_LIST = "/videos"
 private const val VIDEO_DETAIL = "/videos/{videoId}"
-private const val DRAG_AND_DROP = "/drag-and-drop"
+private const val PROCESS_VIDEO = "/process-video"
 private const val VIDEO_SCREENSHOTS = "/video-screenshots/{videoId}"
 private const val SCREENSHOTS_TO_TEXT = "/screenshots-to-text/{videoId}"
 
@@ -23,7 +23,7 @@ enum class RouterScreen(
     Login(ROOT + LOGIN),
     VideoList(ROOT + VIDEO_LIST),
     VideoDetail(ROOT + VIDEO_DETAIL),
-    DragDrop(ROOT + DRAG_AND_DROP),
+    ProcessVideo(ROOT + PROCESS_VIDEO),
     VideoScreenshots(ROOT + VIDEO_SCREENSHOTS),
     ScreenshotsToText(ROOT + SCREENSHOTS_TO_TEXT)
     ;
@@ -36,7 +36,7 @@ fun RouterScreen?.label(): String = when (this) {
     RouterScreen.Login -> "Login"
     RouterScreen.VideoList -> "Video List"
     RouterScreen.VideoDetail -> "Video Detail"
-    RouterScreen.DragDrop -> "Drag Drop"
+    RouterScreen.ProcessVideo -> "Drag Drop"
     RouterScreen.VideoScreenshots -> "Video Screenshots"
     RouterScreen.ScreenshotsToText -> "Screenshots To Text"
     null -> ""

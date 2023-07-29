@@ -20,7 +20,5 @@ include(
     ":feature:router",
     ":feature:video-list",
     ":feature:video-detail",
-    ":feature:drag-drop",
-    ":feature:video-screenshots",
-    ":feature:screenshots-to-text",
+    ":feature:process-video",
 )

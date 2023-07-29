@@ -9,30 +9,30 @@ import com.copperleaf.ballast.plusAssign
 import com.copperleaf.ballast.withViewModel
 import kotlinx.coroutines.CoroutineScope
 
-class DragDropViewModel(
+class ProcessVideoViewModel(
     scope: CoroutineScope,
     showMessage: (String) -> Unit,
 ) : BasicViewModel<
-        DragDropContract.Inputs,
-        DragDropContract.Events,
-        DragDropContract.State>(
+        ProcessVideoContract.Inputs,
+        ProcessVideoContract.Events,
+        ProcessVideoContract.State>(
     config = BallastViewModelConfiguration.Builder()
-//        .apply {
-//            this += LoggingInterceptor()
-//            logger = { PrintlnLogger() }
-//        }
+        .apply {
+            this += LoggingInterceptor()
+            logger = { PrintlnLogger() }
+        }
         .withViewModel(
-            initialState = DragDropContract.State(),
-            inputHandler = DragDropInputHandler(),
+            initialState = ProcessVideoContract.State(),
+            inputHandler = ProcessVideoInputHandler(),
             name = "DragDropViewModel",
         )
         .build(),
-    eventHandler = DragDropEventHandler(
+    eventHandler = ProcessVideoEventHandler(
         showMessage = showMessage,
     ),
     coroutineScope = scope,
 ) {
     init {
-        trySend(DragDropContract.Inputs.ObserveFiles)
+        trySend(ProcessVideoContract.Inputs.Video.ObserveUiVideo)
     }
 }
