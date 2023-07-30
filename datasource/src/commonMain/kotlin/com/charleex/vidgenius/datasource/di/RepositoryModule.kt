@@ -1,16 +1,19 @@
 package com.charleex.vidgenius.datasource.di
 
 import co.touchlab.kermit.Logger.Companion.withTag
-import com.charleex.vidgenius.datasource.GoogleCloudRepository
-import com.charleex.vidgenius.datasource.GoogleCloudRepositoryImpl
-import com.charleex.vidgenius.datasource.OpenAiRepository
-import com.charleex.vidgenius.datasource.OpenAiRepositoryImpl
-import com.charleex.vidgenius.datasource.VideoRepository
-import com.charleex.vidgenius.datasource.VideoRepositoryImpl
-import com.charleex.vidgenius.datasource.YoutubeRepository
-import com.charleex.vidgenius.datasource.YoutubeRepositoryImpl
+import com.charleex.vidgenius.datasource.VideoProcessing
+import com.charleex.vidgenius.datasource.VideoProcessingImpl
+import com.charleex.vidgenius.datasource.repository.GoogleCloudRepository
+import com.charleex.vidgenius.datasource.repository.GoogleCloudRepositoryImpl
+import com.charleex.vidgenius.datasource.repository.OpenAiRepository
+import com.charleex.vidgenius.datasource.repository.OpenAiRepositoryImpl
+import com.charleex.vidgenius.datasource.repository.VideoRepository
+import com.charleex.vidgenius.datasource.repository.VideoRepositoryImpl
+import com.charleex.vidgenius.datasource.repository.YoutubeRepository
+import com.charleex.vidgenius.datasource.repository.YoutubeRepositoryImpl
 import com.charleex.vidgenius.datasource.debug.GoogleCloudRepositoryDebug
 import com.charleex.vidgenius.datasource.debug.OpenAiRepositoryDebug
+import com.charleex.vidgenius.datasource.debug.VideoProcessingDebug
 import com.charleex.vidgenius.datasource.debug.YoutubeRepositoryDebug
 import com.charleex.vidgenius.datasource.utils.getIsDebugBuild
 import com.charleex.vidgenius.vision_ai.visionAiModule
@@ -39,12 +42,12 @@ val repositoryModule = if (!getIsDebugBuild()) {
         single<GoogleCloudRepository> {
             GoogleCloudRepositoryImpl(
                 logger = withTag(GoogleCloudRepository::class.simpleName!!),
-                database = get(),
                 visionAiService = get(),
             )
         }
         single<OpenAiRepository> {
             OpenAiRepositoryImpl(
+                logger = withTag(OpenAiRepository::class.simpleName!!),
                 montoApi = get(),
                 database = get(),
                 transcriptionService = get(),
@@ -68,6 +71,16 @@ val repositoryModule = if (!getIsDebugBuild()) {
                 database = get(),
             )
         }
+        single<VideoProcessing> {
+            VideoProcessingImpl(
+                logger = withTag(VideoProcessing::class.simpleName!!),
+                database = get(),
+                videoRepository = get(),
+                openAiRepository = get(),
+                googleCloudRepository = get(),
+                youtubeRepository = get(),
+            )
+        }
     }
 } else {
     println("[BUILD] Debug build")
@@ -87,6 +100,7 @@ val repositoryModule = if (!getIsDebugBuild()) {
         single<GoogleCloudRepository> { GoogleCloudRepositoryDebug() }
         single<OpenAiRepository> { OpenAiRepositoryDebug() }
         single<YoutubeRepository> { YoutubeRepositoryDebug() }
+        single<VideoProcessing> { VideoProcessingDebug() }
         single<VideoRepository> {
             VideoRepositoryImpl(
                 logger = withTag(VideoRepository::class.simpleName!!),

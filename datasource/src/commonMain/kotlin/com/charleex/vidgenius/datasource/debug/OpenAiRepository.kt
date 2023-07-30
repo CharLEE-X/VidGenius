@@ -1,10 +1,9 @@
 package com.charleex.vidgenius.datasource.debug
 
-import com.charleex.vidgenius.datasource.OpenAiRepository
 import com.charleex.vidgenius.datasource.model.AudioTranscription
 import com.charleex.vidgenius.datasource.model.Message
 import com.charleex.vidgenius.datasource.model.Role
-import com.charleex.vidgenius.datasource.utils.measureTimeMillisPair
+import com.charleex.vidgenius.datasource.repository.OpenAiRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import okio.FileSystem
@@ -45,11 +44,11 @@ internal class OpenAiRepositoryDebug : OpenAiRepository {
         )
     }
 
-    override suspend fun getDescriptionContext(videoId: String): String {
+    override suspend fun getDescriptionContext(descriptions: List<String>): String {
         return "debug answer"
     }
 
-    override suspend fun getMetaData(videoId: String): Flow<Float> = flowOf(1f)
+    override suspend fun getMetaData(videoId: String, descriptionsString: String): Flow<Float> = flowOf(1f)
 
     override suspend fun chat(
         messageId: Int,

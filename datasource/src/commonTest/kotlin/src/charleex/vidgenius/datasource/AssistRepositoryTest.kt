@@ -1,6 +1,6 @@
 package src.charleex.vidgenius.datasource
 
-import com.charleex.vidgenius.datasource.OpenAiRepository
+import com.charleex.vidgenius.datasource.repository.OpenAiRepository
 import kotlinx.coroutines.test.runTest
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin

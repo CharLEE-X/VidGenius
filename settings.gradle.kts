@@ -20,5 +20,6 @@ include(
     ":feature:router",
     ":feature:video-list",
     ":feature:video-detail",
-    ":feature:process-video",
+    ":feature:process-videos",
+    ":feature:process-video-item",
 )

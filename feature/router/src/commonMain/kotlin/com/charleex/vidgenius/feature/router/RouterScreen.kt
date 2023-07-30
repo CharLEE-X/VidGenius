@@ -10,9 +10,7 @@ private const val FEATURE_LIST = "/feature-list"
 private const val LOGIN = "/login"
 private const val VIDEO_LIST = "/videos"
 private const val VIDEO_DETAIL = "/videos/{videoId}"
-private const val PROCESS_VIDEO = "/process-video"
-private const val VIDEO_SCREENSHOTS = "/video-screenshots/{videoId}"
-private const val SCREENSHOTS_TO_TEXT = "/screenshots-to-text/{videoId}"
+private const val PROCESS_VIDEOS = "/process-video"
 
 @Serializable
 enum class RouterScreen(
@@ -23,9 +21,7 @@ enum class RouterScreen(
     Login(ROOT + LOGIN),
     VideoList(ROOT + VIDEO_LIST),
     VideoDetail(ROOT + VIDEO_DETAIL),
-    ProcessVideo(ROOT + PROCESS_VIDEO),
-    VideoScreenshots(ROOT + VIDEO_SCREENSHOTS),
-    ScreenshotsToText(ROOT + SCREENSHOTS_TO_TEXT)
+    ProcessVideos(ROOT + PROCESS_VIDEOS),
     ;
 
     override val matcher: RouteMatcher by lazy { RouteMatcher.create(routeFormat) }
@@ -36,8 +32,6 @@ fun RouterScreen?.label(): String = when (this) {
     RouterScreen.Login -> "Login"
     RouterScreen.VideoList -> "Video List"
     RouterScreen.VideoDetail -> "Video Detail"
-    RouterScreen.ProcessVideo -> "Drag Drop"
-    RouterScreen.VideoScreenshots -> "Video Screenshots"
-    RouterScreen.ScreenshotsToText -> "Screenshots To Text"
+    RouterScreen.ProcessVideos -> "Process Videos"
     null -> ""
 }

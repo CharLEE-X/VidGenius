@@ -6,7 +6,7 @@ import com.copperleaf.ballast.core.PrintlnLogger
 import com.copperleaf.ballast.postInput
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import com.charleex.vidgenius.datasource.YoutubeRepository
+import com.charleex.vidgenius.datasource.repository.YoutubeRepository
 import com.charleex.vidgenius.datasource.model.UploadItem
 
 private typealias VideoListInputScope = InputHandlerScope<

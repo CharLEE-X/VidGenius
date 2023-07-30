@@ -13,10 +13,8 @@ import com.charleex.vidgenius.feature.router.RouterScreen
 internal fun RouterScreen?.icon() = when (this) {
     RouterScreen.FeatureList -> Icons.Filled.List
     RouterScreen.Login -> Icons.Filled.Login
-    RouterScreen.ProcessVideo -> Icons.Filled.DragIndicator
+    RouterScreen.ProcessVideos -> Icons.Filled.DragIndicator
     RouterScreen.VideoList -> Icons.Filled.List
     RouterScreen.VideoDetail -> Icons.Filled.VideoFile
-    RouterScreen.VideoScreenshots -> Icons.Default.Screenshot
-    RouterScreen.ScreenshotsToText -> Icons.Default.ShortText
     null -> Icons.Filled.Error
 }

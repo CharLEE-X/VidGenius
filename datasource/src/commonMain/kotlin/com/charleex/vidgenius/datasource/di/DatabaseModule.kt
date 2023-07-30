@@ -20,9 +20,10 @@ internal val databaseModule = module {
     }
     single {
         Video.Adapter(
+            screenshotsAdapter = ListSerializer(Screenshot.serializer()).asColumnAdapter(),
+            descriptionsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
             createdAtAdapter = InstantComponentSerializer.asColumnAdapter(),
             modifiedAtAdapter = InstantComponentSerializer.asColumnAdapter(),
-            screenshotsAdapter = ListSerializer(Screenshot.serializer()).asColumnAdapter(),
             tagsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
         )
     }

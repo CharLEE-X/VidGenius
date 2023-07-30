@@ -1,6 +1,6 @@
 package com.charleex.vidgenius.datasource.debug
 
-import com.charleex.vidgenius.datasource.YoutubeRepository
+import com.charleex.vidgenius.datasource.repository.YoutubeRepository
 import com.charleex.vidgenius.datasource.model.UploadItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -15,9 +15,6 @@ internal class YoutubeRepositoryDebug : YoutubeRepository {
         description = "debug description",
         publishedAt = Instant.fromEpochMilliseconds(0L),
     )
-
-    override suspend fun getYoutubeVideoLink(videoId: String): String =
-        "https://www.youtube.com/watch?v=debug"
 
     override suspend fun uploadVideo(
         videoId: String,

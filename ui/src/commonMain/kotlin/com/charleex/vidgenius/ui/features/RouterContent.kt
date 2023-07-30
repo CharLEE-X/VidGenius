@@ -12,7 +12,7 @@ import com.charleex.vidgenius.feature.router.RouterScreen
 import com.charleex.vidgenius.feature.router.RouterViewModel
 import com.charleex.vidgenius.ui.components.AppScaffold
 import com.charleex.vidgenius.ui.components.AppTopBar
-import com.charleex.vidgenius.ui.features.process.DragDropContent
+import com.charleex.vidgenius.ui.features.process.ProcessVideosContent
 import com.charleex.vidgenius.ui.util.Breakpoint
 import com.copperleaf.ballast.navigation.routing.Backstack
 import com.copperleaf.ballast.navigation.routing.RouterContract
@@ -84,7 +84,7 @@ internal fun RouterContent(
                         onGoToDragDrop = {
                             router.trySend(
                                 RouterContract.Inputs.GoToDestination(
-                                    RouterScreen.ProcessVideo
+                                    RouterScreen.ProcessVideos
                                         .directions()
                                         .build()
                                 )
@@ -123,7 +123,7 @@ internal fun RouterContent(
                         goToDragAndDrop = {
                             router.trySend(
                                 RouterContract.Inputs.GoToDestination(
-                                    RouterScreen.ProcessVideo
+                                    RouterScreen.ProcessVideos
                                         .directions()
                                         .build()
                                 )
@@ -150,39 +150,11 @@ internal fun RouterContent(
                         )
                     }
 
-                    RouterScreen.ProcessVideo -> DragDropContent(
+                    RouterScreen.ProcessVideos -> ProcessVideosContent(
                         breakpoint = breakpoint,
                         displayMessage = displayMessage,
                         window = window,
                     )
-
-                    RouterScreen.VideoScreenshots -> {
-                        val videoId: String by stringPath()
-                        VideoScreenshotsContent(
-                            breakpoint = breakpoint,
-                            displayMessage = displayMessage,
-                            videoId = videoId,
-                            goToScreenshotsToText = { id ->
-                                router.trySend(
-                                    RouterContract.Inputs.GoToDestination(
-                                        RouterScreen.ScreenshotsToText
-                                            .directions()
-                                            .pathParameter("videoId", id)
-                                            .build()
-                                    )
-                                )
-                            },
-                        )
-                    }
-
-                    RouterScreen.ScreenshotsToText -> {
-                        val videoId: String by stringPath()
-                        ScreenshotToTextContent(
-                            breakpoint = breakpoint,
-                            displayMessage = displayMessage,
-                            videoId = videoId
-                        )
-                    }
                 }
             },
             notFound = { },
