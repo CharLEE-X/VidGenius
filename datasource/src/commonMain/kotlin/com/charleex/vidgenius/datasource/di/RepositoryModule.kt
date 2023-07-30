@@ -9,8 +9,8 @@ import com.charleex.vidgenius.datasource.OpenAiRepository
 import com.charleex.vidgenius.datasource.OpenAiRepositoryImpl
 import com.charleex.vidgenius.datasource.VideoRepository
 import com.charleex.vidgenius.datasource.VideoRepositoryImpl
-import com.charleex.vidgenius.yt.visionAiModule
-import com.charleex.vidgenius.yt.youtubeModule
+import com.charleex.vidgenius.vision_ai.visionAiModule
+import com.charleex.vidgenius.youtube.youtubeModule
 import org.koin.dsl.module
 import src.charleex.vidgenius.api.apiModule
 import src.charleex.vidgenius.processor.processorModule

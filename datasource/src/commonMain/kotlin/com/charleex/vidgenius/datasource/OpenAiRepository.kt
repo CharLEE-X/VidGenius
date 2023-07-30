@@ -16,28 +16,6 @@ import src.charleex.vidgenius.whisper.model.chat.ChatMessage
 import src.charleex.vidgenius.whisper.model.chat.FunctionMode
 
 interface OpenAiRepository {
-    suspend fun transcryptAudio(
-        messageId: Int,
-        filePath: String,
-        fileSystem: FileSystem = FileSystem.SYSTEM,
-    ): AudioTranscription
-
-    /**
-     * Flow:
-     * - transcrypt - audio-to-text - output original text and language name
-     * - store language name, to be used by next transcription
-     * - translate - original text to english text - output english text
-     * - send CrashMessage to the api
-     * - receive an answer in the original language from the api
-     * - return the 'Answer' with 'message'
-     */
-    suspend fun sendMessage(
-        crashId: String,
-        audioTranscription: AudioTranscription,
-        latitude: Double,
-        longitude: Double,
-    ): Message
-
     suspend fun chat(
         messageId: Int,
         messages: List<ChatMessage> = emptyList(),
@@ -68,6 +46,28 @@ interface OpenAiRepository {
         functions: List<ChatCompletionFunction>? = null,
         functionCall: FunctionMode? = null,
     ): Flow<ChatCompletionChunk>
+
+    suspend fun transcryptAudio(
+        messageId: Int,
+        filePath: String,
+        fileSystem: FileSystem = FileSystem.SYSTEM,
+    ): AudioTranscription
+
+    /**
+     * Flow:
+     * - transcrypt - audio-to-text - output original text and language name
+     * - store language name, to be used by next transcription
+     * - translate - original text to english text - output english text
+     * - send CrashMessage to the api
+     * - receive an answer in the original language from the api
+     * - return the 'Answer' with 'message'
+     */
+    suspend fun uploadData(
+        crashId: String,
+        audioTranscription: AudioTranscription,
+        latitude: Double,
+        longitude: Double,
+    ): Message
 }
 
 internal class OpenAiRepositoryImpl(
@@ -103,7 +103,7 @@ internal class OpenAiRepositoryImpl(
         )
     }
 
-    override suspend fun sendMessage(
+    override suspend fun uploadData(
         crashId: String,
         audioTranscription: AudioTranscription,
         latitude: Double,

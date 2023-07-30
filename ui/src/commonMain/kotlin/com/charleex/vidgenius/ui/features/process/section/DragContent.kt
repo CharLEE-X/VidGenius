@@ -1,7 +1,6 @@
 package com.charleex.vidgenius.ui.features.process.section
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,16 +18,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.dp
-import com.charleex.vidgenius.feature.dragdrop.ProcessVideoContract
-import com.charleex.vidgenius.feature.dragdrop.ProcessVideoViewModel
-import com.charleex.vidgenius.feature.dragdrop.model.UiVideo
+import com.charleex.vidgenius.feature.process_video.ProcessVideoContract
+import com.charleex.vidgenius.feature.process_video.ProcessVideoViewModel
+import com.charleex.vidgenius.feature.process_video.model.UiVideo
 import com.charleex.vidgenius.ui.components.AppFlexSpacer
 import com.charleex.vidgenius.ui.components.DragArea
-import com.charleex.vidgenius.ui.features.process.SectionContainer
-
+import com.charleex.vidgenius.ui.features.process.components.SectionContainer
 
 @Composable
-internal fun ColumnScope.DragContent(
+internal fun DragContent(
     modifier: Modifier = Modifier,
     window: ComposeWindow,
     vm: ProcessVideoViewModel,
@@ -37,13 +35,15 @@ internal fun ColumnScope.DragContent(
     SectionContainer(
         name = "Drag & Drop",
         progressState = state.dragDropState,
-        isOpenInitially = true,
+        isOpen = state.isDragDropOen,
+        onOpenClicked = { vm.trySend(ProcessVideoContract.Inputs.DragDrop.ToggleIsOpen) },
         modifier = modifier
     ) {
         state.uiVideo?.let { uiVideo ->
             DroppedItem(
                 droppedItem = uiVideo,
-                goToVideoScreenshots = {},
+                goProcessClicked = {
+                    vm.trySend(ProcessVideoContract.Inputs.Video.ProcessVideo)},
                 onDelete = {
                     vm.trySend(ProcessVideoContract.Inputs.DragDrop.DeleteFile(it))
                 },
@@ -69,10 +69,10 @@ internal fun ColumnScope.DragContent(
 }
 
 @Composable
-internal fun DroppedItem(
+private fun DroppedItem(
     modifier: Modifier = Modifier,
     droppedItem: UiVideo,
-    goToVideoScreenshots: (id: String) -> Unit,
+    goProcessClicked: (id: String) -> Unit,
     onDelete: (UiVideo) -> Unit,
 ) {
     Row(
@@ -100,7 +100,7 @@ internal fun DroppedItem(
         )
         Spacer(modifier = Modifier.padding(24.dp))
         Button(
-            onClick = { goToVideoScreenshots(droppedItem.id) },
+            onClick = { goProcessClicked(droppedItem.id) },
         ) {
             Text(
                 text = "Process",

@@ -2,8 +2,8 @@ package com.charleex.vidgenius.datasource
 
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.model.UploadItem
-import com.charleex.vidgenius.yt.youtube.model.ChannelUploadsItem
-import com.charleex.vidgenius.yt.youtube.video.ChannelUploadsService
+import com.charleex.vidgenius.youtube.youtube.model.ChannelUploadsItem
+import com.charleex.vidgenius.youtube.youtube.video.ChannelUploadsService
 
 interface YoutubeRepository {
     suspend fun getYtChannelUploads(): List<UploadItem>

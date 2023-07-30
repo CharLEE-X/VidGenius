@@ -9,10 +9,11 @@ import javax.imageio.ImageIO
 
 
 interface ScreenshotCapturing {
-    fun captureScreenshots(
+    fun captureScreenshot(
         file: File,
-        timestamp: List<Long>
-    ): List<File>
+        timestamp: Long,
+        index: Int,
+    ): File
 
     fun getVideoDuration(file: File): Long
 }
@@ -27,13 +28,6 @@ internal class ScreenshotCapturingImpl(
 
     init {
         createOutputFolder(outputFolder)
-    }
-
-    override fun captureScreenshots(file: File, timestamp: List<Long>): List<File> {
-        logger.d { "Capturing screenshots" }
-        return timestamp.mapIndexed { index, ts ->
-            captureScreenshot(file, ts, index)
-        }
     }
 
     override fun getVideoDuration(file: File): Long {
@@ -54,7 +48,7 @@ internal class ScreenshotCapturingImpl(
         }
     }
 
-    private fun captureScreenshot(file: File, timestamp: Long, index: Int): File {
+    override fun captureScreenshot(file: File, timestamp: Long, index: Int): File {
         logger.d { "Capturing screenshot $index" }
         val fileName = file.nameWithoutExtension
         val outputFile = File(outputFolder, "${fileName}_${index + 1}.png")

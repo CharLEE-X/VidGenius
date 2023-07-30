@@ -2,8 +2,8 @@ package com.charleex.vidgenius.datasource
 
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.model.UploadItem
-import com.charleex.vidgenius.yt.VisionAiService
-import com.charleex.vidgenius.yt.youtube.model.ChannelUploadsItem
+import com.charleex.vidgenius.vision_ai.VisionAiService
+import com.charleex.vidgenius.youtube.youtube.model.ChannelUploadsItem
 import com.hackathon.cda.repository.db.VidGeniusDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

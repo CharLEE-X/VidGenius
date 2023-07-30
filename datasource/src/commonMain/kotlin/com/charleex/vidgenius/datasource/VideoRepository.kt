@@ -8,6 +8,7 @@ import com.hackathon.cda.repository.db.VidGeniusDatabase
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.Clock
@@ -22,8 +23,8 @@ interface VideoRepository {
     fun flowOfVideos(): Flow<List<Video>>
     fun deleteVideo(videoId: String)
 
-    suspend fun captureScreenshots(videoId: String, timestamps: List<Long>)
-    fun deleteScreenshot(videoId: String, screenshotId: String)
+    suspend fun captureScreenshots(videoId: String, timestamps: List<Long>): Flow<Float>
+    fun deleteScreenshot(videoId: String, screenshotPath: String)
 }
 
 internal class VideoRepositoryImpl(
@@ -57,19 +58,22 @@ internal class VideoRepositoryImpl(
         }
     }
 
-    override suspend fun captureScreenshots(videoId: String, timestamps: List<Long>) {
+    override suspend fun captureScreenshots(videoId: String, timestamps: List<Long>): Flow<Float> = flow {
         logger.d("Getting screenshots from file")
         val video = getVideoById(videoId)
         val file = File(video.path)
-        val screenshotFiles = screenshotCapturing.captureScreenshots(file, timestamps)
-        val screenshots = screenshotFiles.map { screenshotFile ->
-            Screenshot(
+
+        val screenshots = timestamps.mapIndexed { index: Int, timestamp: Long ->
+            val screenshotFile = screenshotCapturing.captureScreenshot(file, timestamp, index)
+            val screenshot = Screenshot(
                 path = screenshotFile.absolutePath,
                 videoId = video.id,
                 description = video.description,
                 createdAt = video.createdAt,
                 modifiedAt = video.createdAt,
             )
+            emit(index.toFloat() / timestamps.size)
+            screenshot
         }
         val videoToUpdate = video.copy(
             screenshots = screenshots,
@@ -115,11 +119,11 @@ internal class VideoRepositoryImpl(
         database.videoQueries.delete(video.id)
     }
 
-    override fun deleteScreenshot(videoId: String, screenshotId: String) {
+    override fun deleteScreenshot(videoId: String, screenshotPath: String) {
         val video = getVideoById(videoId)
-        val screenshot = video.screenshots.find { it.id == screenshotId }
+        val screenshot = video.screenshots.find { it.path == screenshotPath }
         if (screenshot == null) {
-            logger.d("Screenshot $screenshotId not found")
+            logger.d("Screenshot $screenshotPath not found")
             return
         }
         logger.d("Deleting screenshot ${screenshot.id}")

@@ -23,18 +23,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.ui.util.imageFromBufferedImage
 import java.io.File
-import java.lang.Error
 
 @Composable
 fun ImageFromBufferedImage(
     modifier: Modifier = Modifier,
-    file: File,
+    filePath: String,
     contentScale: ContentScale = ContentScale.Crop,
-    onError: (String) -> Unit,
+    onError: (filePath: String) -> Unit,
 ) {
+    val file = File(filePath)
     var bitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
-    LaunchedEffect(file) {
+    LaunchedEffect(filePath) {
         bitmap = imageFromBufferedImage(file) {
             onError(it)
         }
