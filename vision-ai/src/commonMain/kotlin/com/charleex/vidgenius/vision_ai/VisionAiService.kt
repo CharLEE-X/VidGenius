@@ -68,8 +68,9 @@ class VisionAiServiceImpl(
         logger.d("Vision AI result: $result")
 
         val bestResults = result.responsesList[0].webDetection.webEntitiesList
-            .take(3)
+            .toSet()
             .filter { it.score > 0.45 }
+            .take(3)
             .joinToString(separator = " ") { it.description }
         logger.i { "Vision AI best results: $bestResults" }
 

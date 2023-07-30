@@ -176,15 +176,23 @@ internal class OpenAiRepositoryImpl(
                         content = "Here is a list of screenshot descriptions for animal funny videos:\n$descriptions\n\n" +
                                 "Generate:\n" +
                                 "- TITLE: for the YouTube video with related emojis at the front and back of the title.\n" +
-                                "- DESC: SEO friendly\n" +
-                                "- TAGS: 5 SEO friendly tags."
+                                "- DESCRIPTION: SEO friendly\n" +
+                                "- TAGS: 5 best ranking SEO tags."
                     ),
                 )
             )
         }
         emit(0.7f)
         answer.first.choices.firstOrNull()?.message?.let { message ->
-            val metaData = Json.decodeFromString(deserializer = MetaDataSerializer, message.content)
+            val inputString = message.content
+            val lines = inputString.lines()
+            val title = lines.find { it.startsWith("TITLE:") }?.removePrefix("TITLE: ") ?: error("Title not found")
+            val description = lines.find { it.startsWith("DESCRIPTION:") }?.removePrefix("DESCRIPTION: ") ?: error("Description not found")
+            val tagsLine = lines.find { it.startsWith("TAGS:") }?.removePrefix("TAGS: ") ?: error("Tags not found")
+            val tags = tagsLine.split(", ").map { it.trim() }
+
+            val metaData = MetaData(title, description, tags)
+
             println("[$TAG] MEATADATA: $metaData")
             val updatedVideo = video.copy(
                 title = metaData.title,

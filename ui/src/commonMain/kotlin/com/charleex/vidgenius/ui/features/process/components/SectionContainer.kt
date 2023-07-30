@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.feature.process_video.model.ProgressState
 import com.charleex.vidgenius.ui.components.AppCard
@@ -171,6 +172,9 @@ private fun SectionHeader(
                         Text(
                             text = progressState.message ?: "Success",
                             color = MaterialTheme.colors.onSurface,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis,
                         )
                         CircularIcon(
                             imageVector = Icons.Default.Check,
@@ -192,6 +196,9 @@ private fun SectionHeader(
                             text = "Failed: ${progressState.message}",
                             style = MaterialTheme.typography.body1,
                             color = MaterialTheme.colors.onSurface,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis,
                         )
                         CircularIcon(
                             imageVector = Icons.Default.Close,

@@ -35,7 +35,7 @@ internal class ProcessVideoInputHandler :
         is ProcessVideoContract.Inputs.DragDrop -> handleDragDrop(input, videoRepository)
         is ProcessVideoContract.Inputs.Screenshots -> handleScreenshots(input, videoRepository, openAiRepository)
         is ProcessVideoContract.Inputs.Description -> handleDescriptions(input, googleCloudRepository, openAiRepository)
-        is ProcessVideoContract.Inputs.MetaData -> handleMetaData(input, openAiRepository)
+        is ProcessVideoContract.Inputs.MetaData -> handleMetaData(input, openAiRepository, videoRepository)
         is ProcessVideoContract.Inputs.Upload -> handleUploads(input,
 //            youtubeRepository
         )

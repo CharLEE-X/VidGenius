@@ -10,21 +10,23 @@ import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 
 @Serializable
-data class MetaData(
+internal data class MetaData(
     val title: String,
     val description: String,
     val tags: List<String>,
 )
 
-object MetaDataSerializer : KSerializer<MetaData> {
+internal object MetaDataSerializer : KSerializer<MetaData> {
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("MetaData") {
-            element<String>("TITLE")
-            element<String>("DESC")
-            element<List<String>>("TAGS")
+            element<String>("title")
+            element<String>("description")
+            element<List<String>>("tags")
         }
 
     override fun serialize(encoder: Encoder, value: MetaData) {
@@ -36,14 +38,19 @@ object MetaDataSerializer : KSerializer<MetaData> {
     }
 
     override fun deserialize(decoder: Decoder): MetaData {
-        val json = decoder as? JsonDecoder ?: error("Can be deserialized only by JSON")
-        val content = json.decodeJsonElement().jsonPrimitive.content
-        val lines = content.split("\n")
-        val title = lines.find { it.startsWith("TITLE:") }?.removePrefix("TITLE: ") ?: error("TITLE not found")
-        val description = lines.find { it.startsWith("DESC:") }?.removePrefix("DESC: ") ?: error("DESC not found")
-        val tagsLine = lines.find { it.startsWith("TAGS:") }?.removePrefix("TAGS: ")
-        val tags = tagsLine?.split(", ") ?: emptyList()
+        val jsonDecoder = decoder as? JsonDecoder ?: error("Can be deserialized only by JSON")
+        val jsonElement = jsonDecoder.decodeJsonElement()
 
-        return MetaData(title, description, tags)
+        if (jsonElement is JsonObject) {
+            val title = jsonElement["title"]?.jsonPrimitive?.content ?: error("Title not found")
+            val description = jsonElement["description"]?.jsonPrimitive?.content ?: error("Description not found")
+
+            val tagsElement = jsonElement["tags"]?.jsonArray ?: error("Tags not found")
+            val tags = tagsElement.map { it.jsonPrimitive.content }
+
+            return MetaData(title, description, tags)
+        } else {
+            error("Invalid JSON format for MetaData")
+        }
     }
 }

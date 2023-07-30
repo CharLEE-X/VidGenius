@@ -58,6 +58,7 @@ object ProcessVideoContract {
             data class SetState(val metaState: ProgressState) : MetaData
             object ToggleIsOpen : MetaData
             object GetMeta : MetaData
+            object SetTitle : MetaData
         }
 
         sealed interface Upload : Inputs {
