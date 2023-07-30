@@ -14,6 +14,7 @@ import com.google.api.services.youtube.model.VideoStatus
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 
@@ -28,6 +29,7 @@ interface UploadVideoService {
         title: String,
         description: String,
         tags: List<String>,
+        channelId: String,
     ): Flow<UploadVideoProgress>
 }
 
@@ -50,24 +52,12 @@ class UploadVideoServiceImpl(
         title: String,
         description: String,
         tags: List<String>,
+        channelId: String,
     ): Flow<UploadVideoProgress> = channelFlow {
-        if (!videoFile.exists()) {
-            send(UploadVideoProgress.Error("File does not exist"))
-            return@channelFlow
-        }
-
         logger.d { "Uploading: ${videoFile.path}" }
         try {
-            send(UploadVideoProgress.Progress(.1f))
+            send(UploadVideoProgress.Progress(0f))
             val progressChannel = Channel<Float>()
-
-
-//            val scopes = Lists.newArrayList("https://www.googleapis.com/auth/youtube.upload")
-//            val credential = googleAuth.authorize(scopes, "uploadvideo")
-//
-//            youtube = YouTube.Builder(Auth.HTTP_TRANSPORT, Auth.JSON_FACTORY, credential).setApplicationName(
-//                "youtube-cmdline-uploadvideo-sample").build()
-
 
             val videoStatus = VideoStatus().apply {
                 privacyStatus = "public"
@@ -77,6 +67,7 @@ class UploadVideoServiceImpl(
                 setTitle(title)
                 setDescription(description)
                 setTags(tags)
+                setChannelId(channelId)
             }
 
             val videoObjectDefiningMetadata = Video().apply {
@@ -88,22 +79,11 @@ class UploadVideoServiceImpl(
 
             val videoInsert = youtube.videos()
                 .insert(listOf("snippet", "statistics", "status"), videoObjectDefiningMetadata, mediaContent)
+//                .setOnBehalfOfContentOwner("joFpbRmICEmDzE276LP59g")
+//                .setOnBehalfOfContentOwnerChannel(channelId)
 
-            // Set the upload type and add an event listener.
             val uploader = videoInsert.mediaHttpUploader
-
-            // Indicate whether direct media upload is enabled. A value of
-            // "True" indicates that direct media upload is enabled and that
-            // the entire media content will be uploaded in a single request.
-            // A value of "False," which is the default, indicates that the
-            // request will use the resumable media upload protocol, which
-            // supports the ability to resume an upload operation after a
-            // network interruption or other transmission failure, saving
-            // time and bandwidth in the event of network failures.
             uploader.isDirectUploadEnabled = false
-
-
-            send(UploadVideoProgress.Progress(.1f))
 
             val progressListener = MediaHttpUploaderProgressListener { mediaHttpUploader ->
                 when (mediaHttpUploader.uploadState) {
@@ -111,16 +91,25 @@ class UploadVideoServiceImpl(
                     MediaHttpUploader.UploadState.INITIATION_COMPLETE -> println("Initiation Completed")
                     MediaHttpUploader.UploadState.MEDIA_IN_PROGRESS -> {
                         println("Upload in progress")
-                        println("Upload percentage: " + mediaHttpUploader.progress)
-                        println("Upload progress float: " + mediaHttpUploader.progress.toFloat())
 
-                        val progress = mediaHttpUploader.progress.toFloat()
-//                        launch {
-//                            progressChannel.send(progress) // Send progress via the channel
-//                        }
+                        val numBytesToUpload = videoFile.length()
+                        val progress = (mediaHttpUploader.numBytesUploaded * 100f) / numBytesToUpload
+                        println("Upload percentage: $progress")
+
+                        launch {
+                        println("Upload percentage sending : $progress")
+                            progressChannel.send(progress) // Send progress via the channel
+                        }
                     }
 
-                    MediaHttpUploader.UploadState.MEDIA_COMPLETE -> println("Upload Completed!")
+                    MediaHttpUploader.UploadState.MEDIA_COMPLETE -> {
+                        println("Upload Completed!")
+                        launch {
+                        println("Upload Completed - sending progress 1f!")
+                            send(UploadVideoProgress.Progress(1f))
+                        }
+                    }
+
                     MediaHttpUploader.UploadState.NOT_STARTED -> println("Upload Not Started!")
                     null -> println("Upload state is null!")
                 }
@@ -128,8 +117,6 @@ class UploadVideoServiceImpl(
             uploader.progressListener = progressListener
 
             val returnedVideo = videoInsert.execute()
-
-            send(UploadVideoProgress.Progress(.9f))
 
             println("\n================== Returned Video ==================\n")
             println("  - Id: " + returnedVideo.id)
@@ -140,7 +127,6 @@ class UploadVideoServiceImpl(
             println("  - Privacy Status: " + returnedVideo.status.privacyStatus)
             println("  - Published at: " + returnedVideo.snippet.publishedAt)
 
-            send(UploadVideoProgress.Progress(1f))
             send(UploadVideoProgress.Success(returnedVideo.id))
             progressChannel.close()
         } catch (e: GoogleJsonResponseException) {

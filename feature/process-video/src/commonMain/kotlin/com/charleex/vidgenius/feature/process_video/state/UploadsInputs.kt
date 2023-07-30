@@ -22,11 +22,13 @@ internal suspend fun ProcessVideoInputScope.handleUploads(
 }
 
 private suspend fun ProcessVideoInputScope.uploadVideo(youtubeRepository: YoutubeRepository) {
-    val uiVideo = getCurrentState().uiVideo ?: return
+    val state = getCurrentState()
+    val uiVideo = state.uiVideo ?: return
+    val channelId = state.channelId ?: return
     sideJob("uploadVideo") {
         postInput(ProcessVideoContract.Inputs.Upload.SetState(ProgressState.InProgress(0f)))
         try {
-            youtubeRepository.uploadVideo(uiVideo.id).collect { progress ->
+            youtubeRepository.uploadVideo(uiVideo.id, channelId).collect { progress ->
                 postInput(ProcessVideoContract.Inputs.Upload.SetState(ProgressState.InProgress(progress)))
             }
             postInput(ProcessVideoContract.Inputs.Upload.SetState(ProgressState.Success(null)))

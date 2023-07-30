@@ -7,6 +7,7 @@ object ProcessVideoContract {
     data class State(
         val uiVideo: UiVideo? = null,
         val uiVideoState: ProgressState = ProgressState.None,
+        val channelId: String? = "UCjoFpbRmICEmDzE276LP59g", // RoaringLaughter-AnimalComedy
 
         val dragDropState: ProgressState = ProgressState.None,
         val isDragDropOen: Boolean = true,
@@ -31,6 +32,7 @@ object ProcessVideoContract {
             data class SetUiVideo(val uiVideo: UiVideo?) : Video
             object ObserveUiVideo : Video
             object ProcessVideo : Video
+            data class SetChannelId(val channelId: String) : Video
         }
 
         sealed interface DragDrop : Inputs {

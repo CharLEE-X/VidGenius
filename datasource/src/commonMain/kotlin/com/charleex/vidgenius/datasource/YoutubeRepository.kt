@@ -17,7 +17,10 @@ interface YoutubeRepository {
     suspend fun getYtChannelUploads(): List<UploadItem>
     suspend fun getYtVideoDetail(videoId: String): UploadItem
     suspend fun getYoutubeVideoLink(videoId: String): String
-    suspend fun uploadVideo(videoId: String): Flow<Float>
+    suspend fun uploadVideo(
+        videoId: String,
+        channelId: String,
+    ): Flow<Float>
 }
 
 internal class YoutubeRepositoryImpl(
@@ -39,22 +42,27 @@ internal class YoutubeRepositoryImpl(
     override suspend fun getYoutubeVideoLink(videoId: String): String {
         val video: Video = database.videoQueries.getById(videoId).executeAsOneOrNull() ?: error("Video not found")
         val youtubeVideoId = video.youtubeVideoId ?: error("Youtube video id not found")
-        val link = "https://www.youtube.com/watch?v=$youtubeVideoId"
-        return link
+        return "https://www.youtube.com/watch?v=$youtubeVideoId"
     }
 
-    override suspend fun uploadVideo(videoId: String): Flow<Float> {
+    override suspend fun uploadVideo(
+        videoId: String,
+        channelId: String,
+    ): Flow<Float> {
         val video: Video = database.videoQueries.getById(videoId).executeAsOneOrNull() ?: run {
             logger.e { "Video not found" }
             return flowOf(0f)
 
         }
         val file = File(video.path)
+        if (!file.exists()) error("File not found")
+
         return uploadVideoService.uploadVideo(
             videoFile = file,
             title = video.title ?: file.nameWithoutExtension,
             description = video.description ?: "no description",
             tags = video.tags,
+            channelId = channelId,
         ).map { progress ->
             val value = when (progress) {
                 is UploadVideoProgress.Error -> 0f

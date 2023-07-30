@@ -18,6 +18,7 @@ internal suspend fun ProcessVideoInputScope.handleVideo(
     is ProcessVideoContract.Inputs.Video.SetState -> updateState { it.copy(uiVideoState = input.uiVideoState) }
     is ProcessVideoContract.Inputs.Video.SetUiVideo -> updateState { it.copy(uiVideo = input.uiVideo) }
     is ProcessVideoContract.Inputs.Video.ProcessVideo -> processVideo()
+    is ProcessVideoContract.Inputs.Video.SetChannelId -> updateState { it.copy(channelId = input.channelId) }
 }
 
 internal suspend fun ProcessVideoInputScope.handleDragDrop(
