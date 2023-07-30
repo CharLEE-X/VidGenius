@@ -13,6 +13,7 @@ data class UiVideo(
     val title: String?,
     val description: String?,
     val tags: List<String> = emptyList(),
+    val youtubeVideoId: String? = null,
 
     val createdAt: Instant? = null,
     val modifiedAt: Instant? = null,
@@ -41,6 +42,7 @@ fun UiVideo.video(): Video {
         title = null,
         description = null,
         tags = emptyList(),
+        youtubeVideoId = this.youtubeVideoId,
         createdAt = this.createdAt ?: Instant.DISTANT_PAST,
         modifiedAt = this.modifiedAt ?: Instant.DISTANT_PAST,
     )

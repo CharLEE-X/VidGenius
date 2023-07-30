@@ -35,7 +35,7 @@ internal fun MetaDataContent(
                 progressState = state.metaDataState,
                 isOpen = state.isMetaDataOpen,
                 onOpenClicked = { vm.trySend(ProcessVideoContract.Inputs.MetaData.ToggleIsOpen) },
-                enabled = state.metaDataState is ProgressState.Success,
+                enabled = state.metaDataState is ProgressState.Success || state.metaDataState is ProgressState.Error,
                 modifier = modifier
             ) {
                 state.uiVideo?.let { uiVideo ->

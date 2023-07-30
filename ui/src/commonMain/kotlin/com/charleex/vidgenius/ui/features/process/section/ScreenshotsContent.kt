@@ -8,7 +8,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,7 +34,7 @@ import com.charleex.vidgenius.ui.features.process.components.ArrowDown
 import com.charleex.vidgenius.ui.features.process.components.SectionContainer
 
 @Composable
-internal fun ColumnScope.ScreenshotsContent(
+internal fun ScreenshotsContent(
     modifier: Modifier = Modifier,
     vm: ProcessVideoViewModel,
     state: ProcessVideoContract.State,
@@ -51,7 +50,7 @@ internal fun ColumnScope.ScreenshotsContent(
                 progressState = state.screenshotsState,
                 isOpen = state.isScreenshotsOpen,
                 onOpenClicked = { vm.trySend(ProcessVideoContract.Inputs.Screenshots.ToggleIsOpen) },
-                enabled = state.screenshotsState is ProgressState.Success,
+                enabled = state.screenshotsState is ProgressState.Success || state.screenshotsState is ProgressState.Error,
                 modifier = modifier
             ) {
                 Screenshots(

@@ -29,7 +29,7 @@ internal fun UploadContent(
                 progressState = state.uploadState,
                 isOpen = state.isUploadOpen,
                 onOpenClicked = { vm.trySend(ProcessVideoContract.Inputs.Upload.ToggleIsOpen) },
-                enabled = state.uploadState is ProgressState.Success,
+                enabled = state.uploadState is ProgressState.Success || state.uploadState is ProgressState.Error,
                 modifier = modifier
             ) {
                 Text(

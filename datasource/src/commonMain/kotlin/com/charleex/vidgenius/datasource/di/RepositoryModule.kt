@@ -49,7 +49,9 @@ val repositoryModule = module {
     single<YoutubeRepository> {
         YoutubeRepositoryImpl(
             logger = withTag(YoutubeRepository::class.simpleName!!),
+            database = get(),
             channelUploadsService = get(),
+            uploadVideoService = get(),
         )
     }
     single<VideoRepository> {

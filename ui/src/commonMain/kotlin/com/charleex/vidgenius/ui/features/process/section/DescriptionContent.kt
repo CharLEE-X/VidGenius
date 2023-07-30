@@ -2,7 +2,6 @@ package com.charleex.vidgenius.ui.features.process.section
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
@@ -18,7 +17,7 @@ import com.charleex.vidgenius.ui.features.process.components.ArrowDown
 import com.charleex.vidgenius.ui.features.process.components.SectionContainer
 
 @Composable
-internal fun ColumnScope.DescriptionContent(
+internal fun DescriptionContent(
     modifier: Modifier = Modifier,
     vm: ProcessVideoViewModel,
     state: ProcessVideoContract.State,
@@ -33,7 +32,7 @@ internal fun ColumnScope.DescriptionContent(
                 progressState = state.descriptionState,
                 isOpen = state.isDescriptionOpen,
                 onOpenClicked = { vm.trySend(ProcessVideoContract.Inputs.Description.ToggleIsOpen) },
-                enabled = state.descriptionState is ProgressState.Success,
+                enabled = state.descriptionState is ProgressState.Success || state.descriptionState is ProgressState.Error,
                 modifier = modifier
             ) {
                 Column(

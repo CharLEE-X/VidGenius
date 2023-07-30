@@ -51,6 +51,7 @@ internal class VideoRepositoryImpl(
                     title = null,
                     description = null,
                     tags = emptyList(),
+                    youtubeVideoId = null,
                     createdAt = Clock.System.now(),
                     modifiedAt = Clock.System.now(),
                 )

@@ -3,6 +3,7 @@ package com.charleex.vidgenius.feature.process_video
 import com.charleex.vidgenius.datasource.GoogleCloudRepository
 import com.charleex.vidgenius.datasource.OpenAiRepository
 import com.charleex.vidgenius.datasource.VideoRepository
+import com.charleex.vidgenius.datasource.YoutubeRepository
 import com.charleex.vidgenius.feature.process_video.state.handleDescriptions
 import com.charleex.vidgenius.feature.process_video.state.handleDragDrop
 import com.charleex.vidgenius.feature.process_video.state.handleMetaData
@@ -26,7 +27,7 @@ internal class ProcessVideoInputHandler :
     private val videoRepository: VideoRepository by inject()
     private val googleCloudRepository: GoogleCloudRepository by inject()
     private val openAiRepository: OpenAiRepository by inject()
-//    private val youtubeRepository: YoutubeRepository by inject()
+    private val youtubeRepository: YoutubeRepository by inject()
 
     override suspend fun ProcessVideoInputScope.handleInput(
         input: ProcessVideoContract.Inputs,
@@ -36,8 +37,6 @@ internal class ProcessVideoInputHandler :
         is ProcessVideoContract.Inputs.Screenshots -> handleScreenshots(input, videoRepository, openAiRepository)
         is ProcessVideoContract.Inputs.Description -> handleDescriptions(input, googleCloudRepository, openAiRepository)
         is ProcessVideoContract.Inputs.MetaData -> handleMetaData(input, openAiRepository, videoRepository)
-        is ProcessVideoContract.Inputs.Upload -> handleUploads(input,
-//            youtubeRepository
-        )
+        is ProcessVideoContract.Inputs.Upload -> handleUploads(input, youtubeRepository)
     }
 }

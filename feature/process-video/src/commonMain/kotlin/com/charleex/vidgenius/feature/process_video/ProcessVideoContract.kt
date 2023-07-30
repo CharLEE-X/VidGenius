@@ -65,6 +65,7 @@ object ProcessVideoContract {
             data class SetState(val uploadState: ProgressState) : Upload
             object ToggleIsOpen : Upload
             object UploadVideo : Upload
+            object GetYoutubeVideoLink : Upload
         }
     }
 

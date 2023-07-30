@@ -1,10 +1,14 @@
 package com.charleex.vidgenius.ui.features.process
 
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -36,43 +40,61 @@ internal fun DragDropContent(
         )
     }
     val state by vm.observeStates().collectAsState()
+    val layColumnState = rememberLazyListState()
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        Column(
+        LazyColumn(
+            state = layColumnState,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(48.dp)
         ) {
-            DragContent(
-                window = window,
-                vm = vm,
-                state = state,
-                modifier = Modifier
-            )
-            ScreenshotsContent(
-                vm = vm,
-                state = state,
-                modifier = Modifier
-            )
-            DescriptionContent(
-                vm = vm,
-                state = state,
-                modifier = Modifier
-            )
-            MetaDataContent(
-                vm = vm,
-                state = state,
-                modifier = Modifier
-            )
-            UploadContent(
-                vm = vm,
-                state = state,
-                modifier = Modifier
-            )
+            item {
+                DragContent(
+                    window = window,
+                    vm = vm,
+                    state = state,
+                    modifier = Modifier
+                )
+            }
+            item {
+                ScreenshotsContent(
+                    vm = vm,
+                    state = state,
+                    modifier = Modifier
+                )
+            }
+            item {
+                DescriptionContent(
+                    vm = vm,
+                    state = state,
+                    modifier = Modifier
+                )
+            }
+            item {
+                MetaDataContent(
+                    vm = vm,
+                    state = state,
+                    modifier = Modifier
+                )
+            }
+            item {
+                UploadContent(
+                    vm = vm,
+                    state = state,
+                    modifier = Modifier
+                )
+            }
         }
+        VerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight(),
+            adapter = rememberScrollbarAdapter(layColumnState)
+        )
     }
 }

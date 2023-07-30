@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS Video (
   title TEXT,
   description TEXT,
   tags TEXT AS List<String> NOT NULL,
+  youtubeVideoId TEXT,
   createdAt TEXT AS kotlinx.datetime.Instant NOT NULL,
   modifiedAt TEXT AS kotlinx.datetime.Instant NOT NULL
 );
