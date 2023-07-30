@@ -6,11 +6,14 @@ import kotlinx.datetime.Instant
 data class UiVideo(
     val id: String,
     val path: String,
-    val duration: Long?,
+    val duration: Long?, // not used
     val screenshots: List<UiScreenshot> = emptyList(),
+    val descriptionContext: String? = null,
+
     val title: String?,
     val description: String?,
     val tags: List<String> = emptyList(),
+
     val createdAt: Instant? = null,
     val modifiedAt: Instant? = null,
 )

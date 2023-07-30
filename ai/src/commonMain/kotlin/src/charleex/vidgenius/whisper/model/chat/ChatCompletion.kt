@@ -23,7 +23,7 @@ data class ChatCompletion(
     /**
      * The model used.
      */
-    @SerialName("model") val model: ModelId,
+    @SerialName("model") val model: String,
 
     /**
      * A list of generated completions

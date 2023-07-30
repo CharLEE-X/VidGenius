@@ -6,4 +6,5 @@ sealed interface ProgressState {
     data class InProgress(val progress: Float) : ProgressState
     data class Success(val message: String?) : ProgressState
     data class Error(val message: String) : ProgressState
+    object Cancelled : ProgressState
 }

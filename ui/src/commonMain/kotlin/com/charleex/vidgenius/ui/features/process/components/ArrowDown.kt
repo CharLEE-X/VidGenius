@@ -17,6 +17,7 @@ internal fun ArrowDown(
     val colorState by animateColorAsState(
         when (progressState) {
             ProgressState.None -> Color.Transparent
+            ProgressState.Cancelled,
             ProgressState.Queued -> Color.LightGray
             is ProgressState.InProgress -> Color.Gray
             is ProgressState.Success -> Color.Green

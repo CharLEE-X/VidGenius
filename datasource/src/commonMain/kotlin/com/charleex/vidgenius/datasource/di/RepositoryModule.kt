@@ -40,6 +40,7 @@ val repositoryModule = module {
     single<OpenAiRepository> {
         OpenAiRepositoryImpl(
             montoApi = get(),
+            database = get(),
             transcriptionService = get(),
             translationService = get(),
             chatService = get(),

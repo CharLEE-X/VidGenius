@@ -38,15 +38,3 @@ internal class GoogleCloudRepositoryImpl(
     }
 }
 
-private fun List<ChannelUploadsItem>.toUploadItems(): List<UploadItem> {
-    return map { it.toUploadItem() }
-}
-
-private fun ChannelUploadsItem.toUploadItem(): UploadItem {
-    return UploadItem(
-        id = this.videoId,
-        title = this.title,
-        description = this.description,
-        publishedAt = this.publishedAt,
-    )
-}

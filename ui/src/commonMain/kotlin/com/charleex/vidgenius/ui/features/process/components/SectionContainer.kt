@@ -2,6 +2,7 @@ package com.charleex.vidgenius.ui.features.process.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -10,21 +11,29 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudQueue
+import androidx.compose.material.icons.filled.Pending
+import androidx.compose.material.icons.filled.Queue
+import androidx.compose.material.icons.outlined.Pending
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
@@ -92,9 +101,11 @@ private fun SectionHeader(
         elevation = 0.dp,
         modifier = modifier
             .fillMaxWidth()
+            .animateContentSize()
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(48.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -113,10 +124,20 @@ private fun SectionHeader(
                 }
 
                 ProgressState.Queued -> {
-                    Text(
-                        text = "Queued",
-                        color = MaterialTheme.colors.onSurface,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(48.dp),
+                    ) {
+                        Text(
+                            text = "Queued",
+                            color = MaterialTheme.colors.onSurface,
+                        )
+                        CircularIcon(
+                            imageVector = Icons.Outlined.Pending,
+                            bgColor = Color.LightGray,
+                            iconColor = Color.Black,
+                        )
+                    }
                 }
 
                 is ProgressState.InProgress -> {
@@ -132,6 +153,12 @@ private fun SectionHeader(
                         Text(
                             text = "Running",
                             color = MaterialTheme.colors.onSurface,
+                        )
+                        CircularProgressIndicator(
+                            strokeWidth = 4.dp,
+                            strokeCap = StrokeCap.Round,
+                            modifier = Modifier
+                                .size(28.dp)
                         )
                     }
                 }
@@ -170,6 +197,27 @@ private fun SectionHeader(
                             imageVector = Icons.Default.Close,
                             bgColor = Color.Red,
                             iconColor = Color.White,
+                        )
+                    }
+                }
+
+                ProgressState.Cancelled -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(48.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        AppFlexSpacer()
+                        Text(
+                            text = "Cancelled",
+                            style = MaterialTheme.typography.body1,
+                            color = MaterialTheme.colors.onSurface,
+                        )
+                        CircularIcon(
+                            imageVector = Icons.Default.Cancel,
+                            bgColor = Color.LightGray,
+                            iconColor = Color.Black,
                         )
                     }
                 }

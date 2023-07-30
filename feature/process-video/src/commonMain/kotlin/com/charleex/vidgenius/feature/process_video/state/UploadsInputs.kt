@@ -38,6 +38,7 @@ private suspend fun ProcessVideoInputScope.uploadVideo(
         } catch (e: Exception) {
             val message = e.message ?: "Error getting screenshots"
             postInput(ProcessVideoContract.Inputs.Upload.SetState(ProgressState.Error(message)))
+            postEvent(ProcessVideoContract.Events.ShowError(message))
             return@sideJob
         }
 //        postInput(ProcessVideoContract.Inputs.Description.GetDescription)

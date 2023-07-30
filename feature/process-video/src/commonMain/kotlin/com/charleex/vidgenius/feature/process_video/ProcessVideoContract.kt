@@ -51,6 +51,7 @@ object ProcessVideoContract {
             data class SetState(val descriptionState: ProgressState) : Description
             object ToggleIsOpen : Description
             object GetDescription : Description
+            object GetScreenshotContext : Description
         }
 
         sealed interface MetaData : Inputs {

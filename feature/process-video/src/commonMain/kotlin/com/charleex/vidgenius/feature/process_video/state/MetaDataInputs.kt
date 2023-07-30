@@ -26,15 +26,15 @@ private suspend fun ProcessVideoInputScope.getMetaData(openAiRepository: OpenAiR
     sideJob("uploadVideo") {
         postInput(ProcessVideoContract.Inputs.MetaData.SetState(ProgressState.InProgress(0f)))
         try {
-//            youtubeRepository.uploadVideo(uiVideo.id, timestamps).collect { progress ->
-//                postInput(ProcessVideoContract.Inputs.Upload.SetState(ProgressState.InProgress(progress)))
-//            }
-
-            delay(1000)
+            openAiRepository.getMetaData(uiVideo.id).collect { progress ->
+                postInput(ProcessVideoContract.Inputs.MetaData.SetState(ProgressState.InProgress(progress)))
+            }
             postInput(ProcessVideoContract.Inputs.MetaData.SetState(ProgressState.Success(null)))
         } catch (e: Exception) {
-            val message = e.message ?: "Error getting screenshots"
+            val message = e.message ?: "Error getting meta-data"
             postInput(ProcessVideoContract.Inputs.MetaData.SetState(ProgressState.Error(message)))
+            postInput(ProcessVideoContract.Inputs.Upload.SetState(ProgressState.Cancelled))
+            postEvent(ProcessVideoContract.Events.ShowError(message))
             return@sideJob
         }
         postInput(ProcessVideoContract.Inputs.Upload.UploadVideo)

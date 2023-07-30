@@ -1,5 +1,6 @@
 package com.charleex.vidgenius.feature.process_video.state
 
+import com.charleex.vidgenius.datasource.OpenAiRepository
 import com.charleex.vidgenius.datasource.VideoRepository
 import com.charleex.vidgenius.feature.process_video.ProcessVideoContract
 import com.charleex.vidgenius.feature.process_video.ProcessVideoInputScope
@@ -8,7 +9,8 @@ import com.copperleaf.ballast.postInput
 
 internal suspend fun ProcessVideoInputScope.handleScreenshots(
     input: ProcessVideoContract.Inputs.Screenshots,
-    videoRepository: VideoRepository
+    videoRepository: VideoRepository,
+    openAiRepository: OpenAiRepository,
 ) {
     when (input) {
         is ProcessVideoContract.Inputs.Screenshots.SetState -> updateState { it.copy(screenshotsState = input.screenshotsState) }
@@ -42,10 +44,14 @@ private suspend fun ProcessVideoInputScope.processScreenshots(
             videoRepository.captureScreenshots(uiVideo.id, timestamps).collect { progress ->
                 postInput(ProcessVideoContract.Inputs.Screenshots.SetState(ProgressState.InProgress(progress)))
             }
-            postInput(ProcessVideoContract.Inputs.Screenshots.SetState(ProgressState.Success(null)))
+            postInput(ProcessVideoContract.Inputs.Screenshots.SetState(ProgressState.Success("$quantity/$quantity Success")))
         } catch (e: Exception) {
             val message = e.message ?: "Error getting screenshots"
             postInput(ProcessVideoContract.Inputs.Screenshots.SetState(ProgressState.Error(message)))
+            postInput(ProcessVideoContract.Inputs.Description.SetState(ProgressState.Cancelled))
+            postInput(ProcessVideoContract.Inputs.MetaData.SetState(ProgressState.Cancelled))
+            postInput(ProcessVideoContract.Inputs.Upload.SetState(ProgressState.Cancelled))
+            postEvent(ProcessVideoContract.Events.ShowError(message))
             return@sideJob
         }
         postInput(ProcessVideoContract.Inputs.Description.GetDescription)

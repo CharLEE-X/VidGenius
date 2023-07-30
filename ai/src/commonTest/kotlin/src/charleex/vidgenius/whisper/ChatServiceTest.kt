@@ -1,6 +1,19 @@
 package src.charleex.vidgenius.whisper
 
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.element
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
@@ -40,7 +53,11 @@ class ChatServiceTest : KoinTest {
                 messages = listOf(
                     ChatMessage(
                         role = ChatRole.User.role,
-                        content = "Here is a list of screenshot descriptions. Pick those related to the animal, and return them: $descriptions"
+                        content = "Here is a list of screenshot descriptions for animal funny videos:\n$descriptions\n\n" +
+                                "Generate:\n" +
+                                "- TITLE: for the YouTube video with related emojis at the front and back of the title.\n" +
+                                "- DESC: SEO friendly\n" +
+                                "- TAGS: 5 SEO friendly tags."
                     ),
                 )
             )

@@ -33,8 +33,8 @@ internal class ProcessVideoInputHandler :
     ) = when (input) {
         is ProcessVideoContract.Inputs.Video -> handleVideo(input, videoRepository)
         is ProcessVideoContract.Inputs.DragDrop -> handleDragDrop(input, videoRepository)
-        is ProcessVideoContract.Inputs.Screenshots -> handleScreenshots(input, videoRepository)
-        is ProcessVideoContract.Inputs.Description -> handleDescriptions(input, googleCloudRepository)
+        is ProcessVideoContract.Inputs.Screenshots -> handleScreenshots(input, videoRepository, openAiRepository)
+        is ProcessVideoContract.Inputs.Description -> handleDescriptions(input, googleCloudRepository, openAiRepository)
         is ProcessVideoContract.Inputs.MetaData -> handleMetaData(input, openAiRepository)
         is ProcessVideoContract.Inputs.Upload -> handleUploads(input,
 //            youtubeRepository

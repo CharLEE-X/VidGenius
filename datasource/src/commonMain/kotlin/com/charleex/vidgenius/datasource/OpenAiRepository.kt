@@ -1,21 +1,30 @@
 package com.charleex.vidgenius.datasource
 
-import com.charleex.vidgenius.datasource.utils.measureTimeMillisPair
-import kotlinx.coroutines.flow.Flow
-import okio.FileSystem
-import src.charleex.vidgenius.api.monto_api.MontoApi
 import com.charleex.vidgenius.datasource.model.AudioTranscription
 import com.charleex.vidgenius.datasource.model.Message
+import com.charleex.vidgenius.datasource.model.MetaData
+import com.charleex.vidgenius.datasource.model.MetaDataSerializer
 import com.charleex.vidgenius.datasource.model.Role
+import com.charleex.vidgenius.datasource.utils.measureTimeMillisPair
+import com.hackathon.cda.repository.db.VidGeniusDatabase
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.serialization.json.Json
+import okio.FileSystem
+import src.charleex.vidgenius.api.monto_api.MontoApi
 import src.charleex.vidgenius.whisper.ChatService
 import src.charleex.vidgenius.whisper.TranscriptionService
 import src.charleex.vidgenius.whisper.TranslationService
 import src.charleex.vidgenius.whisper.model.chat.ChatCompletionChunk
 import src.charleex.vidgenius.whisper.model.chat.ChatCompletionFunction
 import src.charleex.vidgenius.whisper.model.chat.ChatMessage
+import src.charleex.vidgenius.whisper.model.chat.ChatRole
 import src.charleex.vidgenius.whisper.model.chat.FunctionMode
 
 interface OpenAiRepository {
+    suspend fun getDescriptionContext(videoId: String): String
+    suspend fun getMetaData(videoId: String): Flow<Float>
+
     suspend fun chat(
         messageId: Int,
         messages: List<ChatMessage> = emptyList(),
@@ -72,6 +81,7 @@ interface OpenAiRepository {
 
 internal class OpenAiRepositoryImpl(
     private val montoApi: MontoApi,
+    private val database: VidGeniusDatabase,
     private val transcriptionService: TranscriptionService,
     private val translationService: TranslationService,
     private val chatService: ChatService,
@@ -120,7 +130,7 @@ internal class OpenAiRepositoryImpl(
                 longitude = longitude,
             )
         }
-        println("[AssistRepository] ANSWER: $crashMessageResponse, TIME: ${crashMessageResponse.second}")
+        println("[$TAG] ANSWER: $crashMessageResponse, TIME: ${crashMessageResponse.second}")
         return Message(
             id = audioTranscription.id + 1,
             message = crashMessageResponse.first.message,
@@ -129,6 +139,65 @@ internal class OpenAiRepositoryImpl(
             answerTime = crashMessageResponse.second,
         )
     }
+
+    override suspend fun getDescriptionContext(videoId: String): String {
+        val video = getVideoById(videoId)
+        val descriptions = video.screenshots
+            .map { it.description }
+            .joinToString(" ")
+        val answer = measureTimeMillisPair {
+            chatService.chatCompletion(
+                messages = listOf(
+                    ChatMessage(
+                        role = ChatRole.User.role,
+                        content = "Here is a list of screenshot descriptions. Pick those related to the animal, and return them: $descriptions"
+                    ),
+                )
+            )
+        }
+
+        println("[$TAG] ANSWER: ${answer.first}, TIME: ${answer.second}")
+        return answer.first.choices
+            .mapNotNull { it.message?.content }
+            .joinToString(", ")
+    }
+
+    override suspend fun getMetaData(videoId: String): Flow<Float> = flow {
+        val video = getVideoById(videoId)
+        val descriptions = video.screenshots
+            .map { it.description }
+            .joinToString(" ")
+        emit(0.1f)
+        val answer = measureTimeMillisPair {
+            chatService.chatCompletion(
+                messages = listOf(
+                    ChatMessage(
+                        role = ChatRole.User.role,
+                        content = "Here is a list of screenshot descriptions for animal funny videos:\n$descriptions\n\n" +
+                                "Generate:\n" +
+                                "- TITLE: for the YouTube video with related emojis at the front and back of the title.\n" +
+                                "- DESC: SEO friendly\n" +
+                                "- TAGS: 5 SEO friendly tags."
+                    ),
+                )
+            )
+        }
+        emit(0.7f)
+        answer.first.choices.firstOrNull()?.message?.let { message ->
+            val metaData = Json.decodeFromString(deserializer = MetaDataSerializer, message.content)
+            println("[$TAG] MEATADATA: $metaData")
+            val updatedVideo = video.copy(
+                title = metaData.title,
+                description = metaData.description,
+                tags = metaData.tags,
+            )
+            emit(0.85f)
+            database.videoQueries.upsert(updatedVideo)
+            emit(1f)
+        }
+    }
+
+    private fun getVideoById(videoId: String) = database.videoQueries.getById(videoId).executeAsOne()
 
     override suspend fun chat(
         messageId: Int,
@@ -161,7 +230,7 @@ internal class OpenAiRepositoryImpl(
                 functionCall = functionCall,
             )
         }
-        println("[AssistRepository] COMPLETION: $completion, TIME: ${completion.second}")
+        println("[$TAG] COMPLETION: $completion, TIME: ${completion.second}")
         return Message(
             id = messageId,
             message = completion.first.choices.map { it.message }.joinToString(separator = "\n"),
@@ -213,7 +282,7 @@ internal class OpenAiRepositoryImpl(
                 language = conversationLanguage?.codeISO6391(),
             )
         }
-        println("[AssistRepository] TRANSCRIPTION: $transcription, TIME: ${transcription.second}")
+        println("[$TAG] TRANSCRIPTION: $transcription, TIME: ${transcription.second}")
         conversationLanguage = transcription.first.language
         return Message(
             id = id,
@@ -231,8 +300,12 @@ internal class OpenAiRepositoryImpl(
         val translation = measureTimeMillisPair {
             translationService.translateAudio(filePath, fileSystem)
         }
-        println("[AssistRepository] TRANSLATION: $translation, TIME: ${translation.second}")
+        println("[$TAG] TRANSLATION: $translation, TIME: ${translation.second}")
         return translation.first.text
+    }
+
+    companion object {
+        private val TAG = this::class.java.simpleName
     }
 }
 

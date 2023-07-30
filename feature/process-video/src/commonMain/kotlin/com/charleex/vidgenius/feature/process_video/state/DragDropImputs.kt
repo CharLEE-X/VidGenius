@@ -72,6 +72,8 @@ private suspend fun ProcessVideoInputScope.getFile(files: List<*>, videoReposito
             e.printStackTrace()
             val message = e.message ?: "Error while getting file"
             postInput(ProcessVideoContract.Inputs.DragDrop.SetState(ProgressState.Error(message)))
+            postEvent(ProcessVideoContract.Events.ShowError(message))
+            return@sideJob
         }
     }
 }
