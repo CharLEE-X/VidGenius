@@ -39,7 +39,8 @@ internal class YoutubeRepositoryImpl(
     override suspend fun getYoutubeVideoLink(videoId: String): String {
         val video: Video = database.videoQueries.getById(videoId).executeAsOneOrNull() ?: error("Video not found")
         val youtubeVideoId = video.youtubeVideoId ?: error("Youtube video id not found")
-        return youtubeVideoId
+        val link = "https://www.youtube.com/watch?v=$youtubeVideoId"
+        return link
     }
 
     override suspend fun uploadVideo(videoId: String): Flow<Float> {

@@ -23,25 +23,31 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.CloudQueue
-import androidx.compose.material.icons.filled.Pending
-import androidx.compose.material.icons.filled.Queue
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.outlined.Pending
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.feature.process_video.model.ProgressState
 import com.charleex.vidgenius.ui.components.AppCard
 import com.charleex.vidgenius.ui.components.AppFlexSpacer
+import com.charleex.vidgenius.ui.util.openInBrowser
 
 
 @Composable
@@ -90,6 +96,7 @@ internal fun SectionContainer(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun SectionHeader(
     modifier: Modifier = Modifier,
@@ -97,12 +104,21 @@ private fun SectionHeader(
     progressState: ProgressState,
     bgColor: Color,
 ) {
+    var isLinkHovered by remember { mutableStateOf(false) }
+
     Surface(
         color = bgColor,
         elevation = 0.dp,
         modifier = modifier
             .fillMaxWidth()
             .animateContentSize()
+            .onPointerEvent(PointerEventType.Enter) {
+                isLinkHovered = true
+            }
+            .onPointerEvent(PointerEventType.Exit) {
+                isLinkHovered = false
+            }
+            .pointerHoverIcon(if (isLinkHovered) PointerIcon.Hand else PointerIcon.Default)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -175,6 +191,15 @@ private fun SectionHeader(
                             maxLines = 1,
                             softWrap = false,
                             overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .clickable(
+                                    enabled = progressState.message?.contains("http://") ?: false,
+                                    onClick = {
+                                        progressState.message?.let {
+                                            openInBrowser(it)
+                                        }
+                                    }
+                                )
                         )
                         CircularIcon(
                             imageVector = Icons.Default.Check,
