@@ -78,7 +78,7 @@ internal class ChatServiceImpl(
         functionCall: FunctionMode?,
     ): ChatCompletion {
         val request = ChatCompletionRequest(
-            model = modelId,
+            model = modelId.id,
             messages = messages,
             temperature = temperature,
             topP = topP,
@@ -95,8 +95,11 @@ internal class ChatServiceImpl(
         return requester.perform {
             it.post {
                 url(path = API_PATH_CHAT_COMPLETIONS)
-                setBody(request)
                 contentType(ContentType.Application.Json)
+                setBody(request)
+                headers {
+                    append(HttpHeaders.Authorization, "no-cache")
+                }
             }.body()
         }
     }
@@ -116,7 +119,7 @@ internal class ChatServiceImpl(
         functionCall: FunctionMode?,
     ): Flow<ChatCompletionChunk> {
         val request = ChatCompletionRequest(
-            model = modelId,
+            model = modelId.id,
             messages = messages,
             temperature = temperature,
             topP = topP,
@@ -133,8 +136,8 @@ internal class ChatServiceImpl(
         val builder = HttpRequestBuilder().apply {
             method = HttpMethod.Post
             url(path = API_PATH_CHAT_COMPLETIONS)
-            setBody(streamRequestOf(request))
             contentType(ContentType.Application.Json)
+            setBody(streamRequestOf(request))
             accept(ContentType.Text.EventStream)
             headers {
                 append(HttpHeaders.CacheControl, "no-cache")

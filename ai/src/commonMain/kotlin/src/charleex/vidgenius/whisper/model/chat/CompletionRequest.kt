@@ -16,7 +16,7 @@ class CompletionRequest(
     /**
      * ID of the model to use.
      */
-    @SerialName("model") val model: ModelId,
+    @SerialName("model") val model: String,
 
     /**
      * The prompt(s) to generate completions for, encoded as a string, a list of strings, or a list of token lists.

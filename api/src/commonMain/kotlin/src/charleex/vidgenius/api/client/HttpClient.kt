@@ -10,6 +10,7 @@ import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.KotlinxSerializationConverter
@@ -37,6 +38,7 @@ internal fun createHttpClient(config: HttpClientConfig) = HttpClient {
                 println(message)
             }
         }
+        level = LogLevel.ALL
     }
 
     install(Auth) {
@@ -85,4 +87,5 @@ internal fun createHttpClient(config: HttpClientConfig) = HttpClient {
 val JsonLenient = Json {
     isLenient = true
     ignoreUnknownKeys = true
+    prettyPrint = true
 }

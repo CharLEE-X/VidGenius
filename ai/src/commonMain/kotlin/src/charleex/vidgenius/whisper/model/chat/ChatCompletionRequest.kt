@@ -12,7 +12,7 @@ class ChatCompletionRequest(
     /**
      * ID of the model to use.
      */
-    @SerialName("model") val model: ModelId,
+    @SerialName("model") val model: String,
 
     /**
      * The messages to generate chat completions for.

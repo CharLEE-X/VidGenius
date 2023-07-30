@@ -20,7 +20,7 @@ class TranslationServiceTestKoinTest : KoinTest {
     fun setup() {
         stopKoin()
         startKoin {
-            modules(whisperModule)
+            modules(openAiModule)
         }
         sut = get()
     }

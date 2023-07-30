@@ -4,7 +4,7 @@ import org.koin.dsl.module
 import src.charleex.vidgenius.api.apiModule
 import src.charleex.vidgenius.whisper.model.ModelId
 
-val whisperModule = module {
+val openAiModule = module {
     includes(apiModule)
 
     single<AudioService> {
@@ -27,7 +27,7 @@ val whisperModule = module {
     single<ChatService> {
         ChatServiceImpl(
             requester = get(),
-            modelId = ModelId("gpt-3.5-turbo-0613"),
+            modelId = ModelId("gpt-3.5-turbo"),
         )
     }
 }

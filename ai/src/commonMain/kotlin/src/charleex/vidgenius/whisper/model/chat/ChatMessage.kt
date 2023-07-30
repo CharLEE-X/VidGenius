@@ -8,12 +8,12 @@ public data class ChatMessage(
     /**
      * The role of the author of this message.
      */
-    @SerialName("role") public val role: ChatRole,
+    @SerialName("role") val role: String,
 
     /**
      * The contents of the message.
      */
-    @SerialName("content") public val content: String? = null,
+    @SerialName("content") val content: String,
 
     /**
      * The name of the author of this message.

@@ -14,7 +14,7 @@ import com.charleex.vidgenius.youtube.youtubeModule
 import org.koin.dsl.module
 import src.charleex.vidgenius.api.apiModule
 import src.charleex.vidgenius.processor.processorModule
-import src.charleex.vidgenius.whisper.whisperModule
+import src.charleex.vidgenius.whisper.openAiModule
 import java.io.File
 
 val repositoryModule = module {
@@ -25,7 +25,7 @@ val repositoryModule = module {
         processorModule(appDataDir),
         youtubeModule(),
         visionAiModule(),
-        whisperModule,
+        openAiModule,
         apiModule,
         settingsModule,
         databaseModule,
