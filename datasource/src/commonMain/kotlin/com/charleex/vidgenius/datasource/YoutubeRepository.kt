@@ -51,9 +51,9 @@ internal class YoutubeRepositoryImpl(
         val file = File(video.path)
         return uploadVideoService.uploadVideo(
             videoFile = file,
-            title = "Test",
-            description = "Test",
-            tags = listOf("test"),
+            title = video.title ?: file.nameWithoutExtension,
+            description = video.description ?: "no description",
+            tags = video.tags,
         ).map { progress ->
             val value = when (progress) {
                 is UploadVideoProgress.Error -> 0f

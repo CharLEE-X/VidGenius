@@ -12,7 +12,7 @@ import kotlin.system.exitProcess
  * Update a video by adding a keyword tag to its metadata. The demo uses the
  * YouTube Data API (v3) and OAuth 2.0 for authorization.
  */
-interface UpdateVideo {
+interface UpdateVideoService {
     /**
      * Add a keyword tag to a video that the user specifies. Use OAuth 2.0 to
      * authorize the API request.
@@ -20,10 +20,10 @@ interface UpdateVideo {
     fun update()
 }
 
-internal class UpdateVideoImpl(
+internal class UpdateVideoServiceImpl(
     private val logger: Logger,
     private var youtube: YouTube
-) : UpdateVideo {
+) : UpdateVideoService {
 
     /*
      * Prompt the user to enter a keyword tag.
@@ -33,13 +33,12 @@ internal class UpdateVideoImpl(
         @Throws(IOException::class)
         get() {
 
-            var keyword = ""
 
             print("Please enter a tag for your video: ")
             val bReader = BufferedReader(InputStreamReader(System.`in`))
-            keyword = bReader.readLine()
+            var keyword = bReader.readLine()
 
-            if (keyword.length < 1) {
+            if (keyword.isEmpty()) {
                 keyword = "New Tag"
             }
             return keyword
@@ -52,12 +51,9 @@ internal class UpdateVideoImpl(
     val videoIdFromUser: String
         @Throws(IOException::class)
         get() {
-
-            var videoId = ""
-
             print("Please enter a video Id to update: ")
             val bReader = BufferedReader(InputStreamReader(System.`in`))
-            videoId = bReader.readLine()
+            val videoId = bReader.readLine()
 
             if (videoId.isEmpty()) {
                 print("Video Id can't be empty!")
@@ -81,7 +77,9 @@ internal class UpdateVideoImpl(
 
             // Call the YouTube Data API's youtube.videos.list method to
             // retrieve the resource that represents the specified video.
-            val listVideosRequest = youtube.videos().list("snippet").setId(videoId)
+            val listVideosRequest = youtube.videos()
+                .list(listOf("snippet"))
+                .setId(listOf(videoId))
             val listResponse = listVideosRequest.execute()
 
             // Since the API request specified a unique video ID, the API
@@ -108,7 +106,7 @@ internal class UpdateVideoImpl(
             tags.add(tag)
 
             // Update the video resource by calling the videos.update() method.
-            val updateVideosRequest = youtube.videos().update("snippet", video)
+            val updateVideosRequest = youtube.videos().update(listOf("snippet"), video)
             val videoResponse = updateVideosRequest.execute()
 
             // Print information from the updated resource.
@@ -129,7 +127,5 @@ internal class UpdateVideoImpl(
             System.err.println("Throwable: " + t.message)
             t.printStackTrace()
         }
-
     }
-
 }

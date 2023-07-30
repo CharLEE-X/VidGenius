@@ -11,78 +11,83 @@ import com.google.api.services.youtube.YouTube
 import com.google.api.services.youtube.model.Video
 import com.google.api.services.youtube.model.VideoSnippet
 import com.google.api.services.youtube.model.VideoStatus
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import java.io.File
 import java.io.IOException
-import java.util.Calendar
 
 /**
  * Upload a video to the authenticated user's channel. Use OAuth 2.0 to
  * authorize the request. Note that you must add your video files to the
  * project folder to upload them with this application.
  */
-interface UploadVideo {
-    fun upload()
+interface UploadVideoService {
+    fun uploadVideo(
+        videoFile: File,
+        title: String,
+        description: String,
+        tags: List<String>,
+    ): Flow<UploadVideoProgress>
 }
 
-class UploadVideoImpl(
+sealed interface UploadVideoProgress {
+    data class Progress(val progress: Float) : UploadVideoProgress
+    data class Success(val youtubeVideoId: String) : UploadVideoProgress
+    data class Error(val message: String) : UploadVideoProgress
+}
+
+class UploadVideoServiceImpl(
     private val logger: Logger,
     private val youtube: YouTube,
-) : UploadVideo {
-    private val VIDEO_FILE_FORMAT = "video/*"
-    private val SAMPLE_VIDEO_FILENAME = "sample-video.mp4"
+) : UploadVideoService {
+    companion object {
+        private const val VIDEO_FILE_FORMAT = "video/*"
+    }
 
-    /**
-     * Upload the user-selected video to the user's YouTube channel. The code
-     * looks for the video in the application's project folder and uses OAuth
-     * 2.0 to authorize the API request.
-     */
-    override fun upload() {
-        logger.d { "Uploading: $SAMPLE_VIDEO_FILENAME" }
+    override fun uploadVideo(
+        videoFile: File,
+        title: String,
+        description: String,
+        tags: List<String>,
+    ): Flow<UploadVideoProgress> = channelFlow {
+        if (!videoFile.exists()) {
+            send(UploadVideoProgress.Error("File does not exist"))
+            return@channelFlow
+        }
+
+        logger.d { "Uploading: ${videoFile.path}" }
         try {
+            send(UploadVideoProgress.Progress(.1f))
+            val progressChannel = Channel<Float>()
+
+
+//            val scopes = Lists.newArrayList("https://www.googleapis.com/auth/youtube.upload")
+//            val credential = googleAuth.authorize(scopes, "uploadvideo")
+//
+//            youtube = YouTube.Builder(Auth.HTTP_TRANSPORT, Auth.JSON_FACTORY, credential).setApplicationName(
+//                "youtube-cmdline-uploadvideo-sample").build()
+
+
             val videoStatus = VideoStatus().apply {
                 privacyStatus = "public"
             }
 
-            // Add extra information to the video before uploading.
+            val snippet = VideoSnippet().apply {
+                setTitle(title)
+                setDescription(description)
+                setTags(tags)
+            }
+
             val videoObjectDefiningMetadata = Video().apply {
                 status = videoStatus
+                setSnippet(snippet)
             }
 
-            // Most of the video's metadata is set on the VideoSnippet object.
-            val snippet = VideoSnippet().apply {
-                // This code uses a Calendar instance to create a unique name and
-                // description for test purposes so that you can easily upload
-                // multiple files. You should remove this code from your project
-                // and use your own standard names instead.
-                val cal = Calendar.getInstance()
-                title = "Test Upload via Java on " + cal.time
-                description = "Video uploaded via YouTube Data API V3 using the Java library " + "on " + cal.time
-            }
+            val mediaContent = InputStreamContent(VIDEO_FILE_FORMAT, videoFile.inputStream())
 
-
-            // Set the keyword tags that you want to associate with the video.
-            val tags = ArrayList<String>()
-            tags.add("test")
-            tags.add("example")
-            tags.add("java")
-            tags.add("YouTube Data API V3")
-            tags.add("erase me")
-            snippet.tags = tags
-
-            // Add the completed snippet object to the video resource.
-            videoObjectDefiningMetadata.snippet = snippet
-
-            val mediaContent = InputStreamContent(
-                VIDEO_FILE_FORMAT,
-                UploadVideo::class.java.getResourceAsStream("/sample-video.mp4")
-            )
-
-            // Insert the video. The command sends three arguments. The first
-            // specifies which information the API request is setting and which
-            // information the API response should return. The second argument
-            // is the video resource that contains metadata about the new video.
-            // The third argument is the actual video content.
-            val videoInsert = youtube!!.videos()
-                .insert("snippet,statistics,status", videoObjectDefiningMetadata, mediaContent)
+            val videoInsert = youtube.videos()
+                .insert(listOf("snippet", "statistics", "status"), videoObjectDefiningMetadata, mediaContent)
 
             // Set the upload type and add an event listener.
             val uploader = videoInsert.mediaHttpUploader
@@ -97,32 +102,47 @@ class UploadVideoImpl(
             // time and bandwidth in the event of network failures.
             uploader.isDirectUploadEnabled = false
 
-            val progressListener = MediaHttpUploaderProgressListener { uploader ->
-                when (uploader.uploadState) {
+
+            send(UploadVideoProgress.Progress(.1f))
+
+            val progressListener = MediaHttpUploaderProgressListener { mediaHttpUploader ->
+                when (mediaHttpUploader.uploadState) {
                     MediaHttpUploader.UploadState.INITIATION_STARTED -> println("Initiation Started")
                     MediaHttpUploader.UploadState.INITIATION_COMPLETE -> println("Initiation Completed")
                     MediaHttpUploader.UploadState.MEDIA_IN_PROGRESS -> {
                         println("Upload in progress")
-                        println("Upload percentage: " + uploader.progress)
+                        println("Upload percentage: " + mediaHttpUploader.progress)
+                        println("Upload progress float: " + mediaHttpUploader.progress.toFloat())
+
+                        val progress = mediaHttpUploader.progress.toFloat()
+//                        launch {
+//                            progressChannel.send(progress) // Send progress via the channel
+//                        }
                     }
 
                     MediaHttpUploader.UploadState.MEDIA_COMPLETE -> println("Upload Completed!")
                     MediaHttpUploader.UploadState.NOT_STARTED -> println("Upload Not Started!")
+                    null -> println("Upload state is null!")
                 }
             }
             uploader.progressListener = progressListener
 
-            // Call the API and upload the video.
             val returnedVideo = videoInsert.execute()
 
-            // Print data about the newly inserted video from the API response.
+            send(UploadVideoProgress.Progress(.9f))
+
             println("\n================== Returned Video ==================\n")
             println("  - Id: " + returnedVideo.id)
+            println("  - Link: " + "https://www.youtube.com/watch?v=${returnedVideo.id}")
             println("  - Title: " + returnedVideo.snippet.title)
+            println("  - Description: " + returnedVideo.snippet.description)
             println("  - Tags: " + returnedVideo.snippet.tags)
             println("  - Privacy Status: " + returnedVideo.status.privacyStatus)
-            println("  - Video Count: " + returnedVideo.statistics.viewCount)
+            println("  - Published at: " + returnedVideo.snippet.publishedAt)
 
+            send(UploadVideoProgress.Progress(1f))
+            send(UploadVideoProgress.Success(returnedVideo.id))
+            progressChannel.close()
         } catch (e: GoogleJsonResponseException) {
             System.err.println(
                 "GoogleJsonResponseException code: " + e.details.code + " : "

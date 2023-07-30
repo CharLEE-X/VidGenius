@@ -47,9 +47,11 @@ internal class ChannelUploadsServiceImpl(
     override suspend fun getVideoDetail(videoId: String): ChannelUploadsItem {
         logger.d { "Getting video details for videoId: $videoId" }
 
-        val videoList = youtube.videos().list("snippet,contentDetails")
+        val videoList = youtube.videos()
+            .list(listOf("snippet", "contentDetails"))
+            .setId(listOf(videoId))
             ?: error("Unable to create video list.")
-        videoList.id = videoId
+
         videoList.fields =
             "items(id,snippet/title,snippet/description,snippet/publishedAt,contentDetails/duration)"
 
@@ -88,7 +90,8 @@ internal class ChannelUploadsServiceImpl(
 
     private fun getPlaylistItemRequest(uploadPlaylistId: String?): YouTube.PlaylistItems.List? {
         logger.d { "Retrieving playlist items" }
-        val playlistItems = youtube.playlistItems().list("id,contentDetails,snippet")
+        val parts = listOf("id", "contentDetails", "snippet")
+        val playlistItems = youtube.playlistItems().list(parts)
         playlistItems.playlistId = uploadPlaylistId
         // Only retrieve data used in this application, thereby making
         // the application more efficient. See:
@@ -114,7 +117,7 @@ internal class ChannelUploadsServiceImpl(
         // this use case. The channel's contentDetails part contains
         // playlist IDs relevant to the channel, including the ID for the
         // list that contains videos uploaded to the channel.
-        val channelRequest = youtube.channels().list("contentDetails")
+        val channelRequest = youtube.channels().list(listOf("contentDetails"))
         channelRequest.mine = true
         channelRequest.fields = "items/contentDetails,nextPageToken,pageInfo"
         return channelRequest.execute()

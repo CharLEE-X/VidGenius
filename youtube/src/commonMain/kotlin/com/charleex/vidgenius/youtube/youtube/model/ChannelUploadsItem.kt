@@ -1,6 +1,9 @@
 package com.charleex.vidgenius.youtube.youtube.model
 
 import com.google.api.services.youtube.model.PlaylistItem
+import com.google.api.services.youtube.model.Video
+import com.google.api.services.youtube.model.VideoContentDetails
+import com.google.api.services.youtube.model.VideoSnippet
 import kotlinx.datetime.Instant
 
 data class ChannelUploadsItem(
