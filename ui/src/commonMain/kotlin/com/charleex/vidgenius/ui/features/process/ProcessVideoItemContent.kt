@@ -1,17 +1,20 @@
 package com.charleex.vidgenius.ui.features.process
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -27,16 +30,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.feature.process_video_item.ProcessVideoItemContract
 import com.charleex.vidgenius.feature.process_video_item.ProcessVideoItemViewModel
 import com.charleex.vidgenius.feature.process_videos.model.UIProgressState
 import com.charleex.vidgenius.feature.process_videos.model.UiVideo
-import com.charleex.vidgenius.feature.process_videos.model.UiVideoCategory
+import com.charleex.vidgenius.ui.components.AppCard
 import com.charleex.vidgenius.ui.components.AppFlexSpacer
+import com.charleex.vidgenius.ui.components.CounterAnimation
 import com.charleex.vidgenius.ui.util.Breakpoint
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 internal fun ProcessVideoItemContent(
     modifier: Modifier = Modifier,
@@ -57,30 +61,68 @@ internal fun ProcessVideoItemContent(
     }
     val state by vm.observeStates().collectAsState()
     var isVisible by remember { mutableStateOf(false) }
-    var dropdownMenuExpanded by remember { mutableStateOf(false) }
-    val categories = listOf(
-        UiVideoCategory(
-            id = "1",
-            name = "Animals",
-        ),
-        UiVideoCategory(
-            id = "2",
-            name = "Cars",
-        ),
+    val progressState by animateFloatAsState(
+        targetValue = when (val uiProgressState = state.uiVideoProcessingState) {
+            UIProgressState.Queued,
+            UIProgressState.Cancelled,
+            is UIProgressState.Error,
+            -> 0f
+
+            is UIProgressState.InProgress -> uiProgressState.progress
+            UIProgressState.Success -> 1f
+        }
     )
+    val progressColorState by animateColorAsState(
+        targetValue = when (val uiProgressState = state.uiVideoProcessingState) {
+            UIProgressState.Queued -> Color.Transparent
+            UIProgressState.Cancelled -> Color.Gray
+            is UIProgressState.Error -> Color.Red
+            is UIProgressState.InProgress -> Color.Blue.copy(alpha = uiProgressState.progress)
+            UIProgressState.Success -> Color.Green.copy(alpha = 0.7f)
+        }
+    )
+    val progressTextColorState by animateColorAsState(
+        targetValue = when (val uiProgressState = state.uiVideoProcessingState) {
+            UIProgressState.Queued -> MaterialTheme.colors.onSurface
+            UIProgressState.Cancelled -> Color.Black
+            is UIProgressState.Error -> Color.Black
+            is UIProgressState.InProgress -> Color.White
+            UIProgressState.Success -> Color.Black
+        }
+    )
+
+//    var dropdownMenuExpanded by remember { mutableStateOf(false) }
+//    val categories = listOf(
+//        UiVideoCategory(
+//            id = "1",
+//            name = "Animals",
+//        ),
+//        UiVideoCategory(
+//            id = "2",
+//            name = "Cars",
+//        ),
+//    )
 
     LaunchedEffect(Unit) {
         isVisible = true
     }
 
     AnimatedVisibility(isVisible) {
-        Card(
-            elevation = 0.dp,
-            shape = RoundedCornerShape(20.dp),
-            modifier = modifier.fillMaxWidth()
+        AppCard(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(80.dp)
         ) {
+            LinearProgressIndicator(
+                progress = progressState,
+                color = progressColorState,
+                backgroundColor = Color.Transparent,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .align(Alignment.Center)
+            )
             Row(
-//            horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = modifier
                     .fillMaxWidth()
@@ -91,29 +133,56 @@ internal fun ProcessVideoItemContent(
             ) {
                 Text(
                     text = state.uiVideo.path,
-                    color = MaterialTheme.colors.onSurface,
+                    color = progressTextColorState,
                 )
                 AppFlexSpacer()
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    modifier = Modifier
-                        .clickable(
-                            onClick = {
-                                vm.trySend(ProcessVideoItemContract.Inputs.Video.CancelProcessingVideo)
-                                onDeleteClicked()
-                            }
-                        )
+
+                when(val progress = state.uiVideoProcessingState) {
+                    is UIProgressState.InProgress -> CounterAnimation(
+                            count = (progress.progress * 100).toInt(),
+                        ) {
+                            Text(
+                                text = "$it%",
+                                color = progressTextColorState,
+                            )
+                        }
+                    else -> {}
+                }
+
+                AnimatedVisibility(
+                    visible = state.uiVideoProcessingState !is UIProgressState.InProgress,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
                 )
-                Spacer(modifier = Modifier.padding(24.dp))
-                FloatingActionButton(
-                    onClick = { vm.trySend(ProcessVideoItemContract.Inputs.Video.StartVideoProcessing) },
-                    modifier = Modifier.size(48.dp),
-                ) {
+                {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Start Video Processing",
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        modifier = Modifier
+                            .clickable(
+                                onClick = {
+                                    vm.trySend(ProcessVideoItemContract.Inputs.Video.CancelProcessingVideo)
+                                    onDeleteClicked()
+                                }
+                            )
                     )
+                }
+                Spacer(modifier = Modifier.padding(24.dp))
+                AnimatedVisibility(
+                    visible = state.uiVideoProcessingState == UIProgressState.Queued,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                )
+                {
+                    FloatingActionButton(
+                        onClick = { vm.trySend(ProcessVideoItemContract.Inputs.Video.StartVideoProcessing) },
+                        modifier = Modifier.size(48.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Start Video Processing",
+                        )
+                    }
                 }
             }
 //        Row(

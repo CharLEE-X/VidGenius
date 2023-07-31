@@ -3,6 +3,7 @@ package com.charleex.vidgenius.datasource.debug
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.model.UploadItem
 import com.charleex.vidgenius.datasource.repository.YoutubeRepository
+import kotlinx.coroutines.delay
 import kotlinx.datetime.Instant
 
 internal class YoutubeRepositoryDebug : YoutubeRepository {
@@ -18,5 +19,8 @@ internal class YoutubeRepositoryDebug : YoutubeRepository {
     override suspend fun uploadVideo(
         video: Video,
         channelId: String,
-    ): String = "flowOf(1f)"
+    ): String {
+        delay(1000)
+        return "flowOf(1f)"
+    }
 }

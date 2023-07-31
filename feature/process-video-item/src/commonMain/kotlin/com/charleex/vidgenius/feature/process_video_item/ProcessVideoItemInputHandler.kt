@@ -7,6 +7,7 @@ import com.charleex.vidgenius.feature.process_videos.model.toUiProgressState
 import com.charleex.vidgenius.feature.process_videos.model.toVideoCategory
 import com.copperleaf.ballast.InputHandler
 import com.copperleaf.ballast.InputHandlerScope
+import com.copperleaf.ballast.core.PrintlnLogger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -56,14 +57,9 @@ internal class ProcessVideoItemInputHandler(
                 uploadYouTube = state.uploadYouTube,
             )
             videoProcessing.processAndUploadVideo(state.uiVideo.id, config).collect { processingState ->
-                postInput(
-                    ProcessVideoItemContract.Inputs.Video.SetVideoProcessingState(
-                        UIProgressState.InProgress(0F)
-                    )
-                )
                 val progressState = processingState.toUiProgressState()
-                postInput(ProcessVideoItemContract.Inputs.Video.SetVideoProcessingState(progressState))
                 onProcessingStateChanged(progressState)
+                postInput(ProcessVideoItemContract.Inputs.Video.SetVideoProcessingState(progressState))
             }
         }
     }

@@ -6,6 +6,7 @@ import com.charleex.vidgenius.datasource.model.Message
 import com.charleex.vidgenius.datasource.model.MetaData
 import com.charleex.vidgenius.datasource.model.Role
 import com.charleex.vidgenius.datasource.repository.OpenAiRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import okio.FileSystem
@@ -47,14 +48,18 @@ internal class OpenAiRepositoryDebug : OpenAiRepository {
     }
 
     override suspend fun getDescriptionContext(descriptions: List<String>): String {
+        delay(100)
         return "debug answer"
     }
 
-    override suspend fun getMetaData(video: Video): MetaData = MetaData(
-        title = "debug title",
-        description = "debug description",
-        tags = listOf("debug tag"),
-    )
+    override suspend fun getMetaData(video: Video): MetaData {
+        delay(300)
+        return MetaData(
+            title = "debug title",
+            description = "debug description",
+            tags = listOf("debug tag"),
+        )
+    }
 
     override suspend fun chat(
         messageId: Int,
@@ -71,6 +76,7 @@ internal class OpenAiRepositoryDebug : OpenAiRepository {
         functions: List<ChatCompletionFunction>?,
         functionCall: FunctionMode?,
     ): Message {
+        delay(1000)
         return Message(
             id = messageId,
             message = "debug message",

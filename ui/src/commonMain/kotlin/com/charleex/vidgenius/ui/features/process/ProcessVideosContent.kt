@@ -91,7 +91,7 @@ internal fun ProcessVideosContent(
                                 text = "No videos",
                                 style = MaterialTheme.typography.h6,
                                 color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f),
-                                modifier = Modifier.padding(16.dp)
+                                modifier = Modifier.padding(64.dp)
                             )
                         }
                     }
