@@ -46,10 +46,10 @@ internal fun SectionContainer(
     isOpen: Boolean = false,
     block: @Composable ColumnScope.() -> Unit,
 ) {
-    var isOpen by remember { mutableStateOf(isOpen) }
+    var open by remember { mutableStateOf(isOpen) }
     val indicationSource = remember { MutableInteractionSource() }
     val headerBgColor by animateColorAsState(
-        targetValue = when (isOpen) {
+        targetValue = when (open) {
             true -> MaterialTheme.colors.background.copy(alpha = 0.3f)
             false -> MaterialTheme.colors.surface
         }
@@ -66,18 +66,18 @@ internal fun SectionContainer(
             SectionHeader(
                 name = name,
                 bgColor = headerBgColor,
-                isOpen = isOpen,
+                isOpen = open,
                 modifier = Modifier
                     .clickable(
                         indication = null,
                         interactionSource = indicationSource,
                         onClick = {
-                            isOpen = !isOpen
+                            open = !open
                         },
                         role = Role.Button,
                     )
             )
-            AnimatedVisibility(isOpen) {
+            AnimatedVisibility(open) {
                 block()
             }
         }
@@ -129,7 +129,7 @@ private fun SectionHeader(
                 contentDescription = "",
                 tint = MaterialTheme.colors.onSurface,
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(32.dp)
                     .graphicsLayer(
                         rotationZ = iconRotationState,
                     )

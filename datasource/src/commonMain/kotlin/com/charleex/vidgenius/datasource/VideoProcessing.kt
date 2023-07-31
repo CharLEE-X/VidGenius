@@ -74,6 +74,7 @@ internal class VideoProcessingImpl(
             emit(ProgressState.InProgress(0.9F))
         }
         emit(ProgressState.InProgress(1F))
+        emit(ProgressState.Success)
     }
 
     private suspend fun processVideo(video: Video, config: ProcessingConfig): Video {

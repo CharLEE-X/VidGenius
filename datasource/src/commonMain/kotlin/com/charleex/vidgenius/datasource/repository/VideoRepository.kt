@@ -40,7 +40,7 @@ internal class VideoRepositoryImpl(
         logger.d("Getting flow of all videos")
         return database.videoQueries.getAll().asFlow()
             .map { it.executeAsList() }
-            .onEach { logger.d("Videos: $it") }
+//            .onEach { logger.d("Videos: $it") }
     }
 
     override fun deleteVideo(videoId: String) {

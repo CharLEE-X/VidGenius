@@ -61,11 +61,11 @@ internal fun DragArea(
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
+        modifier = modifier
     ) {
         Surface(
             shape = RoundedCornerShape(20.dp),
-            modifier = modifier,
+            modifier = Modifier,
         ) {
             TextField(
                 value = "",
