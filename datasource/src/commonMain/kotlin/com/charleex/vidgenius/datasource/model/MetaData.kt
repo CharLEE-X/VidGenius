@@ -15,7 +15,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 
 @Serializable
-internal data class MetaData(
+data class MetaData(
     val title: String,
     val description: String,
     val tags: List<String>,

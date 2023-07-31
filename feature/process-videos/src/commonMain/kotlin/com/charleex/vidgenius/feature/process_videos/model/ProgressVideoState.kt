@@ -3,7 +3,6 @@ package com.charleex.vidgenius.feature.process_videos.model
 import com.charleex.vidgenius.datasource.model.ProgressState
 
 sealed interface UIProgressState {
-    object None : UIProgressState
     object Queued : UIProgressState
     data class InProgress(val progress: Float) : UIProgressState
     object Success : UIProgressState
@@ -11,8 +10,7 @@ sealed interface UIProgressState {
     object Cancelled : UIProgressState
 }
 
-internal fun ProgressState.toUiProgressState() = when (this) {
-    ProgressState.None -> UIProgressState.None
+fun ProgressState.toUiProgressState() = when (this) {
     ProgressState.Queued -> UIProgressState.Queued
     is ProgressState.InProgress -> UIProgressState.InProgress(progress)
     ProgressState.Success -> UIProgressState.Success

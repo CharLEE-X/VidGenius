@@ -1,13 +1,14 @@
 package com.charleex.vidgenius.feature.process_videos
 
 import com.charleex.vidgenius.datasource.repository.VideoRepository
+import com.charleex.vidgenius.feature.process_videos.model.UIProgressState
 import com.charleex.vidgenius.feature.process_videos.model.toUiVideo
 import com.copperleaf.ballast.InputHandler
 import com.copperleaf.ballast.InputHandlerScope
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-internal typealias ProcessVideoInputScope = InputHandlerScope<
+internal typealias ProcessVideosInputScope = InputHandlerScope<
         ProcessVideosContract.Inputs,
         ProcessVideosContract.Events,
         ProcessVideosContract.State>
@@ -18,16 +19,74 @@ internal class ProcessVideosInputHandler :
 
     private val videoRepository: VideoRepository by inject()
 
-    override suspend fun ProcessVideoInputScope.handleInput(
+    override suspend fun ProcessVideosInputScope.handleInput(
         input: ProcessVideosContract.Inputs,
     ) = when (input) {
         ProcessVideosContract.Inputs.ObserveVideos -> observeVideos()
         is ProcessVideosContract.Inputs.SetVideos -> updateState { it.copy(videos = input.videos) }
         is ProcessVideosContract.Inputs.DeleteVideoId -> deleteVideo(input.videoId, videoRepository)
         is ProcessVideosContract.Inputs.HandleFiles -> handleFiles(input.files, videoRepository)
+
+        is ProcessVideosContract.Inputs.OnChildProgressStateChanged -> onChildProgressStateChanged(
+            input.videoId,
+            input.processingState
+        )
+
+        is ProcessVideosContract.Inputs.SetQueue -> updateState { it.copy(queue = input.queue) }
+        is ProcessVideosContract.Inputs.SetProgress -> updateState { it.copy(progress = input.progress) }
+        is ProcessVideosContract.Inputs.SetDone -> updateState { it.copy(done = input.done) }
+        is ProcessVideosContract.Inputs.SetCanceled -> updateState { it.copy(canceled = input.canceled) }
+        is ProcessVideosContract.Inputs.SetFailed -> updateState { it.copy(failed = input.failed) }
     }
 
-    private suspend fun ProcessVideoInputScope.observeVideos() {
+    private suspend fun ProcessVideosInputScope.onChildProgressStateChanged(
+        videoId: String,
+        processingState: UIProgressState,
+    ) {
+        val state = getCurrentState()
+        sideJob("onChildProgressStateChanged") {
+            when (processingState) {
+                UIProgressState.Success -> {
+                    val done = state.done + videoId
+                    postInput(ProcessVideosContract.Inputs.SetDone(done))
+
+                    val queue = state.queue - videoId
+                    postInput(ProcessVideosContract.Inputs.SetQueue(queue))
+                }
+
+                is UIProgressState.InProgress -> {
+                    val progress = state.progress + videoId
+                    postInput(ProcessVideosContract.Inputs.SetProgress(progress))
+                }
+                UIProgressState.Queued -> {
+                    val queue = state.queue + videoId
+                    postInput(ProcessVideosContract.Inputs.SetQueue(queue))
+                }
+                UIProgressState.Cancelled -> {
+                    val canceled = state.canceled + videoId
+                    postInput(ProcessVideosContract.Inputs.SetCanceled(canceled))
+
+                    val queue = state.queue - videoId
+                    postInput(ProcessVideosContract.Inputs.SetQueue(queue))
+
+                    val progress = state.progress - videoId
+                    postInput(ProcessVideosContract.Inputs.SetProgress(progress))
+                }
+                is UIProgressState.Error -> {
+                    val failed = state.failed + videoId
+                    postInput(ProcessVideosContract.Inputs.SetFailed(failed))
+
+                    val queue = state.queue - videoId
+                    postInput(ProcessVideosContract.Inputs.SetQueue(queue))
+
+                    val progress = state.progress - videoId
+                    postInput(ProcessVideosContract.Inputs.SetProgress(progress))
+                }
+            }
+        }
+    }
+
+    private suspend fun ProcessVideosInputScope.observeVideos() {
         sideJob("observeVideosIds") {
             videoRepository.flowOfVideos().collect { videos ->
                 val uiVideos = videos.map { it.toUiVideo() }
@@ -36,13 +95,13 @@ internal class ProcessVideosInputHandler :
         }
     }
 
-    private fun ProcessVideoInputScope.deleteVideo(videoId: String, videoRepository: VideoRepository) {
+    private fun ProcessVideosInputScope.deleteVideo(videoId: String, videoRepository: VideoRepository) {
         sideJob("deleteVideo") {
             videoRepository.deleteVideo(videoId)
         }
     }
 
-    private suspend fun ProcessVideoInputScope.handleFiles(files: List<*>, videoRepository: VideoRepository) {
+    private suspend fun ProcessVideosInputScope.handleFiles(files: List<*>, videoRepository: VideoRepository) {
         sideJob("handleFiles") {
             try {
                 videoRepository.filterVideos(files)

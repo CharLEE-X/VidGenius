@@ -9,34 +9,10 @@ import com.charleex.vidgenius.datasource.repository.OpenAiRepository
 import com.charleex.vidgenius.datasource.repository.VideoRepository
 import com.charleex.vidgenius.datasource.repository.YoutubeRepository
 import com.hackathon.cda.repository.db.VidGeniusDatabase
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import java.io.File
 
-sealed interface ProcessingState {
-    data class VideoProcessing(
-        val progressState: ProgressState = ProgressState.None,
-    ) : ProcessingState
-
-    data class TextProcessing(
-        val progressState: ProgressState = ProgressState.None,
-    ) : ProcessingState
-
-    data class MetadataGeneration(
-        val progressState: ProgressState = ProgressState.None,
-    ) : ProcessingState
-
-    sealed interface UploadVideo : ProcessingState {
-        data class Youtube(
-            val progressState: ProgressState = ProgressState.None,
-        ) : UploadVideo
-    }
-
-    object Done : ProcessingState
-}
 
 data class ProcessingConfig(
     val id: String = uuid4().toString(),
@@ -54,7 +30,7 @@ data class VideoCategory(
 interface VideoProcessing {
     fun getVideos(): Flow<List<Video>>
     suspend fun filterVideosFromFiles(files: List<*>)
-    fun processVideo(videoId: String, config: ProcessingConfig): Flow<ProcessingState>
+    fun processAndUploadVideo(videoId: String, config: ProcessingConfig): Flow<ProgressState>
 }
 
 internal class VideoProcessingImpl(
@@ -75,148 +51,101 @@ internal class VideoProcessingImpl(
     }
 
 
-    override fun processVideo(videoId: String, config: ProcessingConfig): Flow<ProcessingState> = flow {
+    override fun processAndUploadVideo(videoId: String, config: ProcessingConfig): Flow<ProgressState> = flow {
         logger.d("Processing video $videoId")
-        setupProcessing(config)
-        processVideo(videoId, config) { message ->
-            emit(ProcessingState.VideoProcessing(ProgressState.Error(message)))
-            emit(ProcessingState.TextProcessing(ProgressState.Cancelled))
-            emit(ProcessingState.MetadataGeneration(ProgressState.Cancelled))
-            cancelAllUploads(config)
-        }
-        processText(videoId, config) { message ->
-            emit(ProcessingState.TextProcessing(ProgressState.Error(message)))
-            emit(ProcessingState.MetadataGeneration(ProgressState.Cancelled))
-            cancelAllUploads(config)
-        }
-        generateMetadata(videoId) { message ->
-            emit(ProcessingState.MetadataGeneration(ProgressState.Error(message)))
-            cancelAllUploads(config)
-        }
+        emit(ProgressState.InProgress(0F))
+
+        val video = videoRepository.getVideoById(videoId)
+
+        val videoWithScreenshots = processVideo(video, config)
+        emit(ProgressState.InProgress(0.2F))
+
+        val videoWithDescriptions = processScreenshotsToText(videoWithScreenshots, config.numberOfScreenshots)
+        emit(ProgressState.InProgress(0.45F))
+
+        val videoWithDescriptionContext = processDescriptions(videoWithDescriptions)
+        emit(ProgressState.InProgress(0.65F))
+
+        val videoWithMetadata = generateMetaData(videoWithDescriptionContext)
+        emit(ProgressState.InProgress(0.8F))
+
         if (config.uploadYouTube) {
-            uploadToYoutube(videoId, config) { message ->
-                emit(ProcessingState.UploadVideo.Youtube(ProgressState.Error(message)))
-            }
+            uploadYouTubeVideo(videoWithMetadata, config.channelId)
+            emit(ProgressState.InProgress(0.9F))
         }
+        emit(ProgressState.InProgress(1F))
     }
 
-    private suspend fun FlowCollector<ProcessingState>.setupProcessing(config: ProcessingConfig) {
-        logger.d("Processing setup")
-        emit(ProcessingState.VideoProcessing(ProgressState.Queued))
-        emit(ProcessingState.TextProcessing(ProgressState.Queued))
-        emit(ProcessingState.MetadataGeneration(ProgressState.Queued))
-        if (config.uploadYouTube) {
-            emit(ProcessingState.UploadVideo.Youtube(ProgressState.Queued))
-        }
+    private suspend fun processVideo(video: Video, config: ProcessingConfig): Video {
+        val hasScreenshots = video.screenshots.size == config.numberOfScreenshots
+        val screenshotsHaveText = video.descriptions.all { it.isNotEmpty() }
+        val allFilesExist = video.screenshots.all { File(it).exists() }
+        if (hasScreenshots && screenshotsHaveText && allFilesExist) return video
+
+        logger.d("Video processing | ${video.id} | Start")
+        val screenshots = videoRepository.captureScreenshots(video, config.numberOfScreenshots)
+        val newVideo = video.copy(screenshots = screenshots)
+        database.videoQueries.upsert(newVideo)
+        logger.d("Video processing | ${video.id} | Done")
+        return newVideo
     }
 
-    private suspend fun FlowCollector<ProcessingState>.cancelAllUploads(
-        config: ProcessingConfig,
-    ) {
-        if (config.uploadYouTube) {
-            emit(ProcessingState.UploadVideo.Youtube(ProgressState.Cancelled))
+    private suspend fun processScreenshotsToText(video: Video, numberOfScreenshots: Int): Video {
+        val hasDescriptions = video.descriptions.size == numberOfScreenshots
+        val allDescriptionsHaveText = video.descriptions.all { it.isNotEmpty() }
+        if (hasDescriptions && allDescriptionsHaveText) return video
+
+        logger.d("Text processing | ${video.id} | Start")
+        val descriptions = video.screenshots.map { screenshot ->
+            googleCloudRepository.getTextFromImage(screenshot)
         }
-        currentCoroutineContext().cancel()
+        val newVideo = video.copy(descriptions = descriptions)
+        database.videoQueries.upsert(newVideo)
+        logger.d("Text processing | ${video.id} | Done")
+        return newVideo
     }
 
-    private suspend fun FlowCollector<ProcessingState>.processVideo(
-        videoId: String,
-        config: ProcessingConfig,
-        onError: suspend (String) -> Unit,
-    ) {
-        logger.d("Video processing | $videoId")
-        try {
-            emit(ProcessingState.VideoProcessing(ProgressState.InProgress(0f)))
+    private suspend fun processDescriptions(video: Video): Video {
+        val hasDescriptionContext = video.descriptionContext.isNullOrEmpty().not()
+        if (hasDescriptionContext) return video
 
-            videoRepository.captureScreenshots(videoId, config.numberOfScreenshots) { progress ->
-                emit(ProcessingState.VideoProcessing(ProgressState.InProgress(progress)))
-            }
-
-            emit(ProcessingState.VideoProcessing(ProgressState.Success))
-        } catch (e: Exception) {
-            val message = e.message ?: "Video processing failed"
-            onError(message)
-        }
+        logger.d("Description processing | ${video.id} | Start")
+        val context = openAiRepository.getDescriptionContext(video.descriptions)
+        val newVideo = video.copy(descriptionContext = context)
+        database.videoQueries.upsert(newVideo)
+        logger.d("Description processing | ${video.id} | Done")
+        return newVideo
     }
 
-    private suspend fun FlowCollector<ProcessingState>.processText(
-        videoId: String,
-        config: ProcessingConfig,
-        onError: suspend (String) -> Unit,
-    ) {
-        logger.d("Text processing | $videoId")
-        try {
-            emit(ProcessingState.TextProcessing(ProgressState.InProgress(0f)))
+    private suspend fun generateMetaData(video: Video): Video {
+        val hasTitle = video.title?.isNotEmpty() == true
+        val hasDescription = video.description?.isNotEmpty() == true
+        val hasTags = video.tags.isNotEmpty()
+        val tagsHaveText = video.tags.all { it.isNotEmpty() }
+        if (hasTitle && hasDescription && hasTags && tagsHaveText) return video
 
-            val totalSteps = config.numberOfScreenshots + 1
-            logger.d("Text processing | Steps: $totalSteps")
-
-            val video = videoRepository.getVideoById(videoId)
-
-            val descriptions = video.screenshots.mapIndexed { index, screenshot ->
-                val description = googleCloudRepository.getTextFromImage(screenshot.path)
-                val progress = (index + 1) / totalSteps.toFloat()
-
-                emit(ProcessingState.TextProcessing(ProgressState.InProgress(progress)))
-                description
-            }
-
-            val descriptionContext = openAiRepository.getDescriptionContext(descriptions)
-
-            emit(ProcessingState.TextProcessing(ProgressState.InProgress(1f)))
-
-            val updatedVideo = video.copy(
-                descriptions = descriptions,
-                descriptionContext = descriptionContext,
-            )
-
-            database.videoQueries.upsert(updatedVideo)
-            emit(ProcessingState.TextProcessing(ProgressState.Success))
-        } catch (e: Exception) {
-            val message = e.message ?: "Text processing failed"
-            onError(message)
-        }
+        logger.d("Metadata generation | ${video.id} | Start")
+        val metadata = openAiRepository.getMetaData(video)
+        val newVideo = video.copy(
+            title = metadata.title,
+            description = metadata.description,
+            tags = metadata.tags,
+        )
+        database.videoQueries.upsert(newVideo)
+        logger.d("Metadata generation | ${video.id} | Done")
+        return newVideo
     }
 
-    private suspend fun FlowCollector<ProcessingState>.generateMetadata(
-        videoId: String,
-        onError: suspend (String) -> Unit,
-    ) {
-        logger.d("Metadata generation | $videoId")
-        try {
-            emit(ProcessingState.MetadataGeneration(ProgressState.InProgress(0f)))
-
-            val video = videoRepository.getVideoById(videoId)
-            val descriptionContext = video.descriptionContext ?: error("Missing description context.")
-
-            openAiRepository.getMetaData(videoId, descriptionContext).collect { progress ->
-                emit(ProcessingState.MetadataGeneration(ProgressState.InProgress(progress)))
-            }
-            emit(ProcessingState.TextProcessing(ProgressState.Success))
-        } catch (e: Exception) {
-            val message = e.message ?: "Text processing failed"
-            onError(message)
-        }
-    }
-
-    private suspend fun FlowCollector<ProcessingState>.uploadToYoutube(
-        videoId: String,
-        config: ProcessingConfig,
-        onError: suspend (String) -> Unit,
-    ) {
-        logger.d("Upload YouTube video | $videoId")
-        try {
-            emit(ProcessingState.UploadVideo.Youtube(ProgressState.InProgress(0f)))
-
-            val channelId = config.channelId
-            youtubeRepository.uploadVideo(videoId, channelId).collect { progress ->
-                emit(ProcessingState.UploadVideo.Youtube(ProgressState.InProgress(progress)))
-            }
-
-            emit(ProcessingState.UploadVideo.Youtube(ProgressState.Success))
-        } catch (e: Exception) {
-            val message = e.message ?: "Text processing failed"
-            onError(message)
-        }
+    private suspend fun uploadYouTubeVideo(
+        video: Video,
+        channelId: String,
+    ): Video {
+        logger.d("Upload YouTube video | ${video.id} | Start")
+        val youtubeVideoId = youtubeRepository.uploadVideo(video, channelId)
+        val newVideo = video.copy(youtubeVideoId = youtubeVideoId)
+        database.videoQueries.upsert(newVideo)
+        logger.d("Upload YouTube video | ${video.id} | Done")
+        return newVideo
     }
 }
+

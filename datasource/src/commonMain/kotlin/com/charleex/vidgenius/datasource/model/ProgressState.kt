@@ -1,7 +1,6 @@
 package com.charleex.vidgenius.datasource.model
 
 sealed interface ProgressState {
-    object None : ProgressState
     object Queued : ProgressState
     data class InProgress(val progress: Float) : ProgressState
     object Success : ProgressState

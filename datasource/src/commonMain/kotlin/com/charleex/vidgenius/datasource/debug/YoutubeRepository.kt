@@ -1,9 +1,8 @@
 package com.charleex.vidgenius.datasource.debug
 
-import com.charleex.vidgenius.datasource.repository.YoutubeRepository
+import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.model.UploadItem
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import com.charleex.vidgenius.datasource.repository.YoutubeRepository
 import kotlinx.datetime.Instant
 
 internal class YoutubeRepositoryDebug : YoutubeRepository {
@@ -17,7 +16,7 @@ internal class YoutubeRepositoryDebug : YoutubeRepository {
     )
 
     override suspend fun uploadVideo(
-        videoId: String,
+        video: Video,
         channelId: String,
-    ): Flow<Float> = flowOf(1f)
+    ): String = "flowOf(1f)"
 }

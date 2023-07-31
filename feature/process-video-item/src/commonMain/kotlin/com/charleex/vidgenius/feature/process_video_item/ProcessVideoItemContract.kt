@@ -1,6 +1,6 @@
 package com.charleex.vidgenius.feature.process_video_item
 
-import com.charleex.vidgenius.feature.process_video_item.model.UIProgressState
+import com.charleex.vidgenius.feature.process_videos.model.UIProgressState
 import com.charleex.vidgenius.feature.process_videos.model.UiVideo
 import com.charleex.vidgenius.feature.process_videos.model.UiVideoCategory
 import java.util.UUID
@@ -8,7 +8,7 @@ import java.util.UUID
 object ProcessVideoItemContract {
     data class State(
         val uiVideo: UiVideo,
-        val uiVideoProcessingState: UIProgressState = UIProgressState.None,
+        val uiVideoProcessingState: UIProgressState = UIProgressState.Queued,
 
         val configId: String = UUID.randomUUID().toString(),
         val channelId: String = "UCjoFpbRmICEmDzE276LP59g",
@@ -18,11 +18,6 @@ object ProcessVideoItemContract {
             name = "Animals",
         ),
         val uploadYouTube: Boolean = true,
-
-        val videoProcessingState: UIProgressState = UIProgressState.None,
-        val textProcessingState: UIProgressState = UIProgressState.None,
-        val metadataGenerationState: UIProgressState = UIProgressState.None,
-        val uploadYouTubeState: UIProgressState = UIProgressState.None,
     )
 
     sealed interface Inputs {
@@ -38,13 +33,6 @@ object ProcessVideoItemContract {
             data class SetNumberOfScreenshots(val numberOfScreenshots: Int) : Video
             data class SetCategory(val category: UiVideoCategory) : Video
             data class SetUploadYouTube(val uploadYouTube: Boolean) : Video
-        }
-
-        sealed interface States : Inputs {
-            data class SetVideoProcessingState(val videoProcessingState: UIProgressState) : Video
-            data class SetTextProcessingState(val textProcessingState: UIProgressState) : Video
-            data class SetMetadataGenerationState(val metadataGenerationState: UIProgressState) : Video
-            data class SetUploadYouTubeState(val uploadYouTubeState: UIProgressState) : Video
         }
     }
 

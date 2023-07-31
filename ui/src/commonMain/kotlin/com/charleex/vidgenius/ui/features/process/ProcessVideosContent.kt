@@ -106,6 +106,9 @@ internal fun ProcessVideosContent(
                             onDeleteClicked = {
                                 vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(video.id))
                             },
+                            onProcessingStateChanged = {
+                                vm.trySend(ProcessVideosContract.Inputs.OnChildProgressStateChanged(video.id, it))
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                         )

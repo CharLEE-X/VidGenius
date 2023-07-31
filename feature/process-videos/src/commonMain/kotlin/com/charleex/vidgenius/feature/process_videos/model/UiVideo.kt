@@ -10,7 +10,7 @@ data class UiVideo(
     val id: String = "",
     val path: String = "",
 
-    val screenshots: List<UiScreenshot> = emptyList(),
+    val screenshots: List<String> = emptyList(),
 
     val descriptions: List<String> = emptyList(),
     val descriptionContext: String? = null,
@@ -29,7 +29,7 @@ internal fun Video.toUiVideo() = UiVideo(
     id = this.id,
     path = this.path,
 
-    screenshots = this.screenshots.map { it.toUiScreenshot() },
+    screenshots = this.screenshots,
 
     descriptions = this.descriptions,
     descriptionContext = this.descriptionContext,
@@ -42,16 +42,6 @@ internal fun Video.toUiVideo() = UiVideo(
 
     createdAt = this.createdAt,
     modifiedAt = this.modifiedAt,
-)
-
-data class UiScreenshot(
-    val id: String,
-    val path: String,
-)
-
-private fun Screenshot.toUiScreenshot() = UiScreenshot(
-    id = id,
-    path = path,
 )
 
 data class UiVideoCategory(

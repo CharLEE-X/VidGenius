@@ -17,10 +17,10 @@ class ProcessVideosViewModel(
         ProcessVideosContract.Events,
         ProcessVideosContract.State>(
     config = BallastViewModelConfiguration.Builder()
-        .apply {
-            this += LoggingInterceptor()
-            logger = { PrintlnLogger() }
-        }
+//        .apply {
+//            this += LoggingInterceptor()
+//            logger = { PrintlnLogger() }
+//        }
         .withViewModel(
             initialState = ProcessVideosContract.State(),
             inputHandler = ProcessVideosInputHandler(),

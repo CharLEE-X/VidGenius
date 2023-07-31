@@ -1,14 +1,13 @@
 package com.charleex.vidgenius.datasource.repository
 
 import co.touchlab.kermit.Logger
+import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.model.AudioTranscription
 import com.charleex.vidgenius.datasource.model.Message
 import com.charleex.vidgenius.datasource.model.MetaData
 import com.charleex.vidgenius.datasource.model.Role
 import com.charleex.vidgenius.datasource.utils.measureTimeMillisPair
-import com.hackathon.cda.repository.db.VidGeniusDatabase
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import okio.FileSystem
 import src.charleex.vidgenius.api.monto_api.MontoApi
 import src.charleex.vidgenius.whisper.ChatService
@@ -22,7 +21,7 @@ import src.charleex.vidgenius.whisper.model.chat.FunctionMode
 
 interface OpenAiRepository {
     suspend fun getDescriptionContext(descriptions: List<String>): String
-    suspend fun getMetaData(videoId: String, descriptionsString: String): Flow<Float>
+    suspend fun getMetaData(video: Video): MetaData
 
     suspend fun chat(
         messageId: Int,
@@ -81,7 +80,6 @@ interface OpenAiRepository {
 internal class OpenAiRepositoryImpl(
     private val logger: Logger,
     private val montoApi: MontoApi,
-    private val database: VidGeniusDatabase,
     private val transcriptionService: TranscriptionService,
     private val translationService: TranslationService,
     private val chatService: ChatService,
@@ -157,48 +155,31 @@ internal class OpenAiRepositoryImpl(
             .joinToString(", ")
     }
 
-    override suspend fun getMetaData(videoId: String, descriptionsString: String): Flow<Float> = flow {
-        val video = getVideoById(videoId)
-        emit(0.1f)
-        val answer = measureTimeMillisPair {
-            chatService.chatCompletion(
-                messages = listOf(
-                    ChatMessage(
-                        role = ChatRole.User.role,
-                        content = "Here is a list of screenshot descriptions for animal funny videos:\n$descriptionsString\n\n" +
-                                "Generate:\n" +
-                                "- TITLE: for the YouTube video with related emojis at the front and back of the title.\n" +
-                                "- DESCRIPTION: SEO friendly\n" +
-                                "- TAGS: 5 best ranking SEO tags."
-                    ),
-                )
+    override suspend fun getMetaData(video: Video): MetaData {
+        val chatCompletion = chatService.chatCompletion(
+            messages = listOf(
+                ChatMessage(
+                    role = ChatRole.User.role,
+                    content = "Here is a list of screenshot descriptions for animal funny videos:\n${video.descriptionContext}\n\n" +
+                            "Generate:\n" +
+                            "- TITLE: for the YouTube video with related emojis at the front and back of the title.\n" +
+                            "- DESCRIPTION: SEO friendly\n" +
+                            "- TAGS: 5 best ranking SEO tags."
+                ),
             )
-        }
-        emit(0.7f)
-        answer.first.choices.firstOrNull()?.message?.let { message ->
-            val inputString = message.content
-            val lines = inputString.lines()
-            val title = lines.find { it.startsWith("TITLE:") }?.removePrefix("TITLE: ") ?: error("Title not found")
-            val description = lines.find { it.startsWith("DESCRIPTION:") }?.removePrefix("DESCRIPTION: ")
-                ?: error("Description not found")
-            val tagsLine = lines.find { it.startsWith("TAGS:") }?.removePrefix("TAGS: ") ?: error("Tags not found")
-            val tags = tagsLine.split(", ").map { it.trim() }
+        )
+        val message = chatCompletion.choices.firstOrNull()?.message ?: error("No message found")
 
-            val metaData = MetaData(title, description, tags)
+        val inputString = message.content
+        val lines = inputString.lines()
+        val title = lines.find { it.startsWith("TITLE:") }?.removePrefix("TITLE: ") ?: error("Title not found")
+        val description = lines.find { it.startsWith("DESCRIPTION:") }?.removePrefix("DESCRIPTION: ")
+            ?: error("Description not found")
+        val tagsLine = lines.find { it.startsWith("TAGS:") }?.removePrefix("TAGS: ") ?: error("Tags not found")
+        val tags = tagsLine.split(", ").map { it.trim() }
 
-            logger.d("[$TAG] MEATADATA: $metaData")
-            val updatedVideo = video.copy(
-                title = metaData.title,
-                description = metaData.description,
-                tags = metaData.tags,
-            )
-            emit(0.85f)
-            database.videoQueries.upsert(updatedVideo)
-            emit(1f)
-        }
+        return MetaData(title, description, tags)
     }
-
-    private fun getVideoById(videoId: String) = database.videoQueries.getById(videoId).executeAsOne()
 
     override suspend fun chat(
         messageId: Int,

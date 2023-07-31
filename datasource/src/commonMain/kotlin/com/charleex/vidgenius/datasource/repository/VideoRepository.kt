@@ -3,7 +3,6 @@ package com.charleex.vidgenius.datasource.repository
 import co.touchlab.kermit.Logger
 import com.benasher44.uuid.uuid4
 import com.charleex.vidgenius.datasource.db.Video
-import com.charleex.vidgenius.datasource.model.Screenshot
 import com.hackathon.cda.repository.db.VidGeniusDatabase
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import kotlinx.coroutines.flow.Flow
@@ -20,10 +19,9 @@ interface VideoRepository {
     fun deleteVideo(videoId: String)
 
     suspend fun captureScreenshots(
-        videoId: String,
+        video: Video,
         numberOfScreenshots: Int,
-        onProgress: suspend (Float) -> Unit,
-    )
+    ): List<String>
 
     suspend fun filterVideos(files: List<*>)
 }
@@ -51,7 +49,7 @@ internal class VideoRepositoryImpl(
         if (video.screenshots.isNotEmpty()) {
             logger.d("Video ${video.path} has screenshots")
             video.screenshots.forEach { screenshot ->
-                deleteScreenshot(video.id, screenshot.id)
+                deleteScreenshot(video.id, screenshot)
             }
         } else {
             logger.d("Video ${video.path} has no screenshots")
@@ -60,31 +58,17 @@ internal class VideoRepositoryImpl(
     }
 
     override suspend fun captureScreenshots(
-        videoId: String,
+        video: Video,
         numberOfScreenshots: Int,
-        onProgress: suspend (Float) -> Unit,
-    ) {
-        logger.d("Getting screenshots for videoId $videoId")
-        val video = getVideoById(videoId)
+    ): List<String> {
+        logger.d("Getting screenshots for videoId $video")
         val file = File(video.path)
-        val videoDuration = getVideoDuration(videoId)
+        val videoDuration = getVideoDuration(video.id)
         val timestamps = getTimestamps(numberOfScreenshots, videoDuration)
 
-        timestamps.forEachIndexed { index: Int, timestamp: Long ->
+        return timestamps.mapIndexed { index: Int, timestamp: Long ->
             val screenshotFile = screenshotCapturing.captureScreenshot(file, timestamp, index)
-            val screenshot = Screenshot(
-                path = screenshotFile.absolutePath,
-            )
-
-            val currentVideo = getVideoById(videoId)
-            val screenshots = currentVideo.screenshots + screenshot
-            val videoToUpdate = video.copy(
-                screenshots = screenshots,
-                modifiedAt = Clock.System.now(),
-            )
-            database.videoQueries.upsert(videoToUpdate)
-            onProgress(index.toFloat() / timestamps.size)
-            logger.d("Screenshot ${screenshotFile.absolutePath} saved")
+            screenshotFile.absolutePath
         }
     }
 
@@ -117,20 +101,21 @@ internal class VideoRepositoryImpl(
 
     private fun deleteScreenshot(videoId: String, screenshotPath: String) {
         val video = getVideoById(videoId)
-        val screenshot = video.screenshots.find { it.path == screenshotPath }
+        val screenshot = video.screenshots.find { it == screenshotPath }
         if (screenshot == null) {
             logger.d("Screenshot $screenshotPath not found")
             return
         }
-        logger.d("Deleting screenshot ${screenshot.id}")
-        val screenshots = video.screenshots.ifEmpty { return }
-        val updatedScreenshots = screenshots - screenshot
+        logger.d("Deleting screenshot $screenshot")
+        if (screenshot !in video.screenshots) return
+
+        val updatedScreenshots = video.screenshots - screenshot
         val updatedVideo = video.copy(
             screenshots = updatedScreenshots,
             modifiedAt = Clock.System.now()
         )
         database.videoQueries.upsert(updatedVideo)
-        fileProcessor.deleteFile(screenshot.path)
+        fileProcessor.deleteFile(screenshot)
     }
 
     private fun getVideoDuration(videoId: String): Long {
