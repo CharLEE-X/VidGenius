@@ -1,13 +1,13 @@
-package com.charleex.vidgenius.feature.process_video
+package com.charleex.vidgenius.feature.process_video_item
 
-import com.charleex.vidgenius.feature.process_video.model.UIProgressState
-import com.charleex.vidgenius.feature.process_video.model.UiVideo
-import com.charleex.vidgenius.feature.process_video.model.UiVideoCategory
+import com.charleex.vidgenius.feature.process_video_item.model.UIProgressState
+import com.charleex.vidgenius.feature.process_videos.model.UiVideo
+import com.charleex.vidgenius.feature.process_videos.model.UiVideoCategory
 import java.util.UUID
 
 object ProcessVideoItemContract {
     data class State(
-        val uiVideo: UiVideo = UiVideo(),
+        val uiVideo: UiVideo,
         val uiVideoProcessingState: UIProgressState = UIProgressState.None,
 
         val configId: String = UUID.randomUUID().toString(),
@@ -27,8 +27,6 @@ object ProcessVideoItemContract {
 
     sealed interface Inputs {
         sealed interface Video : Inputs {
-            object ObserveUiVideo : Video
-            data class SetUiVideo(val uiVideo: UiVideo) : Video
             object StartVideoProcessing : Video
             object CancelProcessingVideo : Video
             data class SetVideoProcessingState(val videoProcessingState: UIProgressState) : Video

@@ -12,6 +12,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(projects.datasource)
+                implementation(projects.feature.processVideos)
 
                 implementation(libs.ballast.core)
                 implementation(libs.ballast.savedState)

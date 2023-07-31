@@ -21,11 +21,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import com.charleex.vidgenius.ui.util.imageFromBufferedImage
+import com.charleex.vidgenius.ui.util.imageFromFile
 import java.io.File
 
 @Composable
-fun ImageFromBufferedImage(
+fun LocalImage(
     modifier: Modifier = Modifier,
     filePath: String,
     contentScale: ContentScale = ContentScale.Crop,
@@ -35,7 +35,7 @@ fun ImageFromBufferedImage(
     var bitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
     LaunchedEffect(filePath) {
-        bitmap = imageFromBufferedImage(file) {
+        bitmap = imageFromFile(file) {
             onError(it)
         }
     }

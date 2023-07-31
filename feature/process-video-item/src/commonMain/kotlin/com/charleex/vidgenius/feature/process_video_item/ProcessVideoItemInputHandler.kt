@@ -1,16 +1,14 @@
-package com.charleex.vidgenius.feature.process_video
+package com.charleex.vidgenius.feature.process_video_item
 
 import com.charleex.vidgenius.datasource.ProcessingConfig
 import com.charleex.vidgenius.datasource.ProcessingState
 import com.charleex.vidgenius.datasource.VideoProcessing
-import com.charleex.vidgenius.datasource.repository.VideoRepository
-import com.charleex.vidgenius.feature.process_video.model.UIProgressState
-import com.charleex.vidgenius.feature.process_video.model.toUiProgressState
-import com.charleex.vidgenius.feature.process_video.model.toUiVideo
-import com.charleex.vidgenius.feature.process_video.model.toVideoCategory
+import com.charleex.vidgenius.feature.process_video_item.model.UIProgressState
+import com.charleex.vidgenius.feature.process_video_item.model.toUiProgressState
+import com.charleex.vidgenius.feature.process_videos.model.UiVideo
+import com.charleex.vidgenius.feature.process_videos.model.toVideoCategory
 import com.copperleaf.ballast.InputHandler
 import com.copperleaf.ballast.InputHandlerScope
-import kotlinx.coroutines.flow.first
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -19,22 +17,17 @@ internal typealias ProcessVideoInputScope = InputHandlerScope<
         ProcessVideoItemContract.Events,
         ProcessVideoItemContract.State>
 
-internal class ProcessVideoItemInputHandler(
-    private val videoId: String,
-) :
+internal class ProcessVideoItemInputHandler :
     KoinComponent,
     InputHandler<ProcessVideoItemContract.Inputs, ProcessVideoItemContract.Events, ProcessVideoItemContract.State> {
 
-    private val videoRepository: VideoRepository by inject()
     private val videoProcessing: VideoProcessing by inject()
 
     override suspend fun ProcessVideoInputScope.handleInput(
         input: ProcessVideoItemContract.Inputs,
     ) = when (input) {
-        is ProcessVideoItemContract.Inputs.Video.ObserveUiVideo -> observeVideo(videoId)
-        is ProcessVideoItemContract.Inputs.Video.SetUiVideo -> updateState { it.copy(uiVideo = input.uiVideo) }
-        is ProcessVideoItemContract.Inputs.Video.StartVideoProcessing -> startProcessingVideo(videoId)
-        is ProcessVideoItemContract.Inputs.Video.CancelProcessingVideo -> cancelProcessingVideo(videoId)
+        is ProcessVideoItemContract.Inputs.Video.StartVideoProcessing -> startProcessingVideo()
+        is ProcessVideoItemContract.Inputs.Video.CancelProcessingVideo -> cancelProcessingVideo()
         is ProcessVideoItemContract.Inputs.Video.SetVideoProcessingState ->
             updateState { it.copy(uiVideoProcessingState = input.videoProcessingState) }
 
@@ -60,20 +53,11 @@ internal class ProcessVideoItemInputHandler(
             updateState { it.copy(uploadYouTubeState = input.uploadYouTubeState) }
     }
 
-    private fun cancelProcessingVideo(videoId: String) {
-        TODO("Not yet implemented")
+    private fun ProcessVideoInputScope.cancelProcessingVideo() {
+        cancelSideJob("startProcessingVideo")
     }
 
-    private suspend fun ProcessVideoInputScope.observeVideo(videoId: String) {
-        sideJob("observeVideo") {
-            videoRepository.flowOfVideo(videoId).collect { video ->
-                val uiVideo = video.toUiVideo()
-                postInput(ProcessVideoItemContract.Inputs.Video.SetUiVideo(uiVideo))
-            }
-        }
-    }
-
-    private suspend fun ProcessVideoInputScope.startProcessingVideo(videoId: String) {
+    private suspend fun ProcessVideoInputScope.startProcessingVideo() {
         val state = getCurrentState()
         sideJob("startProcessingVideo") {
             try {
@@ -81,11 +65,15 @@ internal class ProcessVideoItemInputHandler(
                     id = state.configId,
                     channelId = state.channelId,
                     numberOfScreenshots = state.numberOfScreenshots,
-                    category = state.category?.toVideoCategory() ?: error("Choose a category"),
+                    category = state.category.toVideoCategory(),
                     uploadYouTube = state.uploadYouTube,
                 )
-                videoProcessing.processVideo(videoId, config).collect { processingState ->
-                    postInput(ProcessVideoItemContract.Inputs.Video.SetVideoProcessingState(UIProgressState.InProgress(0F)))
+                videoProcessing.processVideo(state.uiVideo.id, config).collect { processingState ->
+                    postInput(
+                        ProcessVideoItemContract.Inputs.Video.SetVideoProcessingState(
+                            UIProgressState.InProgress(0F)
+                        )
+                    )
                     when (processingState) {
                         is ProcessingState.VideoProcessing -> {
                             val uiProgressState = processingState.progressState.toUiProgressState()

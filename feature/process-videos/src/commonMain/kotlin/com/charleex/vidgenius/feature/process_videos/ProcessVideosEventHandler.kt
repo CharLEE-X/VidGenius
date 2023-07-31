@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.feature.process_video
+package com.charleex.vidgenius.feature.process_videos
 
 import com.copperleaf.ballast.EventHandler
 import com.copperleaf.ballast.EventHandlerScope

@@ -2,6 +2,7 @@ package com.charleex.vidgenius.datasource
 
 import co.touchlab.kermit.Logger
 import com.benasher44.uuid.uuid4
+import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.model.ProgressState
 import com.charleex.vidgenius.datasource.repository.GoogleCloudRepository
 import com.charleex.vidgenius.datasource.repository.OpenAiRepository
@@ -51,7 +52,7 @@ data class VideoCategory(
 )
 
 interface VideoProcessing {
-    fun getVideoIds(): Flow<List<String>>
+    fun getVideos(): Flow<List<Video>>
     suspend fun filterVideosFromFiles(files: List<*>)
     fun processVideo(videoId: String, config: ProcessingConfig): Flow<ProcessingState>
 }
@@ -64,8 +65,8 @@ internal class VideoProcessingImpl(
     private val openAiRepository: OpenAiRepository,
     private val youtubeRepository: YoutubeRepository,
 ) : VideoProcessing {
-    override fun getVideoIds(): Flow<List<String>> {
-        return videoRepository.flowOfVideosId()
+    override fun getVideos(): Flow<List<Video>> {
+        return videoRepository.flowOfVideos()
     }
 
     override suspend fun filterVideosFromFiles(files: List<*>) {
@@ -91,7 +92,6 @@ internal class VideoProcessingImpl(
         generateMetadata(videoId) { message ->
             emit(ProcessingState.MetadataGeneration(ProgressState.Error(message)))
             cancelAllUploads(config)
-            currentCoroutineContext().cancel()
         }
         if (config.uploadYouTube) {
             uploadToYoutube(videoId, config) { message ->
@@ -151,7 +151,7 @@ internal class VideoProcessingImpl(
             val totalSteps = config.numberOfScreenshots + 1
             logger.d("Text processing | Steps: $totalSteps")
 
-            val video = videoRepository.flowOfVideo(videoId).first()
+            val video = videoRepository.getVideoById(videoId)
 
             val descriptions = video.screenshots.mapIndexed { index, screenshot ->
                 val description = googleCloudRepository.getTextFromImage(screenshot.path)
@@ -186,7 +186,7 @@ internal class VideoProcessingImpl(
         try {
             emit(ProcessingState.MetadataGeneration(ProgressState.InProgress(0f)))
 
-            val video = videoRepository.flowOfVideo(videoId).first()
+            val video = videoRepository.getVideoById(videoId)
             val descriptionContext = video.descriptionContext ?: error("Missing description context.")
 
             openAiRepository.getMetaData(videoId, descriptionContext).collect { progress ->

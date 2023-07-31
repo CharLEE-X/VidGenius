@@ -1,5 +1,6 @@
-package com.charleex.vidgenius.feature.process_video
+package com.charleex.vidgenius.feature.process_video_item
 
+import com.charleex.vidgenius.feature.process_videos.model.UiVideo
 import com.copperleaf.ballast.BallastViewModelConfiguration
 import com.copperleaf.ballast.build
 import com.copperleaf.ballast.core.BasicViewModel
@@ -9,30 +10,27 @@ import com.copperleaf.ballast.plusAssign
 import com.copperleaf.ballast.withViewModel
 import kotlinx.coroutines.CoroutineScope
 
-class ProcessVideosViewModel(
+class ProcessVideoItemViewModel(
     scope: CoroutineScope,
+    uiVideo: UiVideo,
     showMessage: (String) -> Unit,
 ) : BasicViewModel<
-        ProcessVideosContract.Inputs,
-        ProcessVideosContract.Events,
-        ProcessVideosContract.State>(
+        ProcessVideoItemContract.Inputs,
+        ProcessVideoItemContract.Events,
+        ProcessVideoItemContract.State>(
     config = BallastViewModelConfiguration.Builder()
         .apply {
             this += LoggingInterceptor()
             logger = { PrintlnLogger() }
         }
         .withViewModel(
-            initialState = ProcessVideosContract.State(),
-            inputHandler = ProcessVideosInputHandler(),
-            name = "ProcessVideoViewModel",
+            initialState = ProcessVideoItemContract.State(uiVideo = uiVideo),
+            inputHandler = ProcessVideoItemInputHandler(),
+            name = "ProcessVideoItemViewModel",
         )
         .build(),
-    eventHandler = ProcessVideosEventHandler(
+    eventHandler = ProcessVideoItemEventHandler(
         showMessage = showMessage,
     ),
     coroutineScope = scope,
-) {
-    init {
-        trySend(ProcessVideosContract.Inputs.ObserveVideosIds)
-    }
-}
+)

@@ -1,11 +1,9 @@
-package com.charleex.vidgenius.feature.process_video
+package com.charleex.vidgenius.feature.process_videos
 
-import com.charleex.vidgenius.datasource.VideoProcessing
 import com.charleex.vidgenius.datasource.repository.VideoRepository
+import com.charleex.vidgenius.feature.process_videos.model.toUiVideo
 import com.copperleaf.ballast.InputHandler
 import com.copperleaf.ballast.InputHandlerScope
-import com.copperleaf.ballast.core.PrintlnLogger
-import kotlinx.coroutines.flow.first
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -23,23 +21,22 @@ internal class ProcessVideosInputHandler :
     override suspend fun ProcessVideoInputScope.handleInput(
         input: ProcessVideosContract.Inputs,
     ) = when (input) {
-        ProcessVideosContract.Inputs.ObserveVideosIds -> observeVideosIds()
-        is ProcessVideosContract.Inputs.SetVideosIds -> updateState { it.copy(videos = input.videos) }
+        ProcessVideosContract.Inputs.ObserveVideos -> observeVideos()
+        is ProcessVideosContract.Inputs.SetVideos -> updateState { it.copy(videos = input.videos) }
         is ProcessVideosContract.Inputs.DeleteVideoId -> deleteVideo(input.videoId, videoRepository)
         is ProcessVideosContract.Inputs.HandleFiles -> handleFiles(input.files, videoRepository)
     }
 
-    private suspend fun ProcessVideoInputScope.observeVideosIds() {
+    private suspend fun ProcessVideoInputScope.observeVideos() {
         sideJob("observeVideosIds") {
-            videoRepository.flowOfVideosId().collect { videoIds ->
-                postInput(ProcessVideosContract.Inputs.SetVideosIds(videos = videoIds))
+            videoRepository.flowOfVideos().collect { videos ->
+                val uiVideos = videos.map { it.toUiVideo() }
+                postInput(ProcessVideosContract.Inputs.SetVideos(videos = uiVideos))
             }
         }
     }
 
     private fun ProcessVideoInputScope.deleteVideo(videoId: String, videoRepository: VideoRepository) {
-        cancelSideJob("observeVideo")
-        cancelSideJob("startProcessingVideo")
         sideJob("deleteVideo") {
             videoRepository.deleteVideo(videoId)
         }

@@ -1,6 +1,8 @@
 package com.charleex.vidgenius.ui.features
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
@@ -14,20 +16,26 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.feature.root.RootViewModel
 import com.charleex.vidgenius.feature.router.RouterScreen
 import com.charleex.vidgenius.ui.AppState
 import com.charleex.vidgenius.ui.components.KXSnackBarHost
+import com.charleex.vidgenius.ui.components.LocalImage
 import com.charleex.vidgenius.ui.theme.AutoYtVidTheme
 import com.charleex.vidgenius.ui.util.Breakpoint
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.painterResource
 
+@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun RootContent(
     modifier: Modifier,
-    window: ComposeWindow
+    window: ComposeWindow,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -51,6 +59,9 @@ fun RootContent(
         false -> RouterScreen.Login
     }
 
+    val darkLightImage = if (isSystemInDarkTheme())
+        "bg/bg_dark.png" else "bg/bg_light.png"
+
     AutoYtVidTheme {
         BoxWithConstraints(
             modifier =
@@ -64,8 +75,16 @@ fun RootContent(
                     )
                 }
         ) {
+            Image(
+                painter = painterResource(darkLightImage),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .blur(100.dp)
+                    .fillMaxSize()
+            )
             RouterContent(
-                modifier = modifier,
+                modifier = modifier.fillMaxSize(),
                 isAuthenticated = state.isAuthenticated,
                 breakpoint = currentBreakpoint,
                 initialRoute = initialRoute,

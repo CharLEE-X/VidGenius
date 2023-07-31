@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.feature.process_video.model
+package com.charleex.vidgenius.feature.process_videos.model
 
 import com.charleex.vidgenius.datasource.VideoCategory
 import com.charleex.vidgenius.datasource.db.Video
@@ -59,12 +59,12 @@ data class UiVideoCategory(
     val name: String,
 )
 
-internal fun VideoCategory.toUiVideoCategory() = UiVideoCategory(
+fun VideoCategory.toUiVideoCategory() = UiVideoCategory(
     id = id,
     name = name,
 )
 
-internal fun UiVideoCategory.toVideoCategory() = VideoCategory(
+fun UiVideoCategory.toVideoCategory() = VideoCategory(
     id = id,
     name = name,
 )

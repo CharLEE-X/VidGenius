@@ -11,6 +11,7 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 
 @Composable
 internal fun AppScaffold(
@@ -24,7 +25,7 @@ internal fun AppScaffold(
         scaffoldState = scaffoldState,
         snackbarHost = snackbarHost,
         topBar = topBar,
-        backgroundColor = MaterialTheme.colors.background,
+        backgroundColor = Color.Transparent,
         modifier = modifier.fillMaxSize()
     ) {
         Box(

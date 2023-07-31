@@ -7,10 +7,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.Clock
 
 internal class VideoRepositoryDebug : VideoRepository {
-    override suspend fun filterVideos(files: List<*>) {}
-
-    override fun flowOfVideo(videoId: String): Flow<Video> = flowOf(
-        Video(
+    override fun getVideoById(videoId: String): Video {
+        return Video(
             id = "1",
             path = "path",
             screenshots = emptyList(),
@@ -23,9 +21,27 @@ internal class VideoRepositoryDebug : VideoRepository {
             createdAt = Clock.System.now(),
             modifiedAt = Clock.System.now(),
         )
-    )
+    }
 
-    override fun flowOfVideosId(): Flow<List<String>> = flowOf(listOf("1"))
+    override suspend fun filterVideos(files: List<*>) {}
+
+    override fun flowOfVideos(): Flow<List<Video>> = flowOf(
+        listOf(
+            Video(
+                id = "1",
+                path = "path",
+                screenshots = emptyList(),
+                descriptions = listOf("description"),
+                descriptionContext = "descriptionContext",
+                title = "title",
+                description = "description",
+                tags = emptyList(),
+                youtubeVideoId = "youtubeId",
+                createdAt = Clock.System.now(),
+                modifiedAt = Clock.System.now(),
+            )
+        )
+    )
 
     override fun deleteVideo(videoId: String) {}
 

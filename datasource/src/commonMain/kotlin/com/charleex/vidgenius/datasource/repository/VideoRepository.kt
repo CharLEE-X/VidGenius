@@ -7,16 +7,16 @@ import com.charleex.vidgenius.datasource.model.Screenshot
 import com.hackathon.cda.repository.db.VidGeniusDatabase
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.Clock
 import src.charleex.vidgenius.processor.file.FileProcessor
 import src.charleex.vidgenius.processor.screenshot.ScreenshotCapturing
 import java.io.File
 
 interface VideoRepository {
-    fun flowOfVideo(videoId: String): Flow<Video>
-    fun flowOfVideosId(): Flow<List<String>>
+    fun getVideoById(videoId: String): Video
+    fun flowOfVideos(): Flow<List<Video>>
     fun deleteVideo(videoId: String)
 
     suspend fun captureScreenshots(
@@ -34,19 +34,15 @@ internal class VideoRepositoryImpl(
     private val screenshotCapturing: ScreenshotCapturing,
     private val database: VidGeniusDatabase,
 ) : VideoRepository {
-    override fun flowOfVideo(videoId: String): Flow<Video> {
-        logger.d("Getting flow of video $videoId")
-        return database.videoQueries.getById(videoId).asFlow()
-            .map { it.executeAsOne() }
-            .catch { logger.e(it) { "Error getting video $videoId: ${it.message}" } }
+    override fun getVideoById(videoId: String): Video {
+        return database.videoQueries.getById(videoId).executeAsOne()
     }
 
-    override fun flowOfVideosId(): Flow<List<String>> {
+    override fun flowOfVideos(): Flow<List<Video>> {
         logger.d("Getting flow of all videos")
         return database.videoQueries.getAll().asFlow()
-            .map {
-                it.executeAsList().map { video -> video.id }
-            }
+            .map { it.executeAsList() }
+            .onEach { logger.d("Videos: $it") }
     }
 
     override fun deleteVideo(videoId: String) {
@@ -62,6 +58,7 @@ internal class VideoRepositoryImpl(
         }
         database.videoQueries.delete(video.id)
     }
+
     override suspend fun captureScreenshots(
         videoId: String,
         numberOfScreenshots: Int,
@@ -141,10 +138,6 @@ internal class VideoRepositoryImpl(
         val file = File(video.path)
         if (!file.exists()) error("File does not exist")
         return screenshotCapturing.getVideoDuration(file)
-    }
-
-    private fun getVideoById(videoId: String): Video {
-        return database.videoQueries.getById(videoId).executeAsOne()
     }
 
     private fun getTimestamps(

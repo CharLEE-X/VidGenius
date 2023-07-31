@@ -7,7 +7,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import javax.imageio.ImageIO
 
-suspend fun imageFromBufferedImage(file: File, onError: (filePath: String) -> Unit): ImageBitmap? {
+suspend fun imageFromFile(file: File, onError: (filePath: String) -> Unit): ImageBitmap? {
     val image = withContext(Dispatchers.IO) {
         try {
             ImageIO.read(file)

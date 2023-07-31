@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.feature.process_video.model
+package com.charleex.vidgenius.feature.process_videos.model
 
 import com.charleex.vidgenius.datasource.model.ProgressState
 
