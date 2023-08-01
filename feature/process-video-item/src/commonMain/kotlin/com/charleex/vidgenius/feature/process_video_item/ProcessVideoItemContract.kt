@@ -7,7 +7,7 @@ import java.util.UUID
 object ProcessVideoItemContract {
     data class State(
         val configId: String = UUID.randomUUID().toString(),
-        val channelId: String = "UCjoFpbRmICEmDzE276LP59g",
+        val channelId: String = "UCmWNmg5PyF1VKUCttVcVzuw",
         val numberOfScreenshots: Int = 3,
         val category: UiVideoCategory = UiVideoCategory(
             id = "1",

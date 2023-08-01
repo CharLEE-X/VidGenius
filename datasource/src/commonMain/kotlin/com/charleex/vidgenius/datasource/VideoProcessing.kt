@@ -68,7 +68,11 @@ internal class VideoProcessingImpl(
 
     private suspend fun processVideo(video: Video, config: ProcessingConfig): Video {
         val hasScreenshots = video.screenshots.size == config.numberOfScreenshots
+        if (!hasScreenshots) {
+            logger.d("No screenshots | ${video.id}")
+        }
         val screenshotsHaveText = video.descriptions.all { it.isNotEmpty() }
+
         val allFilesExist = video.screenshots.all { File(it).exists() }
         if (hasScreenshots && screenshotsHaveText && allFilesExist) return video
 
@@ -82,7 +86,13 @@ internal class VideoProcessingImpl(
 
     private suspend fun processScreenshotsToText(video: Video, numberOfScreenshots: Int): Video {
         val hasDescriptions = video.descriptions.size == numberOfScreenshots
+        if (!hasDescriptions) {
+            logger.d("No descriptions | ${video.id}")
+        }
         val allDescriptionsHaveText = video.descriptions.all { it.isNotEmpty() }
+        if (!allDescriptionsHaveText) {
+            logger.d("Not all descriptions have text | ${video.id}")
+        }
         if (hasDescriptions && allDescriptionsHaveText) return video
 
         logger.d("Text processing | ${video.id} | Start")

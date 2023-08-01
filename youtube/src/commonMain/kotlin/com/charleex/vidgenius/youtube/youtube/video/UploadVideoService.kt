@@ -43,26 +43,24 @@ class UploadVideoServiceImpl(
         channelId: String,
     ): String {
         logger.d { "Uploading: ${videoFile.path}" }
-        val videoStatus = VideoStatus().apply {
-            privacyStatus = "public"
-        }
 
-        val snippet = VideoSnippet().apply {
-            setTitle(title)
-            setDescription(description)
-            setTags(tags)
-            setChannelId(channelId)
-        }
+        val videoStatus = VideoStatus()
+        videoStatus.privacyStatus = "public"
 
-        val videoObjectDefiningMetadata = Video().apply {
-            status = videoStatus
-            setSnippet(snippet)
-        }
+        val snippet = VideoSnippet()
+        snippet.title = title
+        snippet.description = description
+        snippet.tags = tags
+        snippet.channelId = channelId
+
+        val video = Video()
+            video.status = videoStatus
+            video.setSnippet(snippet)
 
         val mediaContent = InputStreamContent(VIDEO_FILE_FORMAT, videoFile.inputStream())
 
         val videoInsert = youtube.videos()
-            .insert(listOf("snippet", "statistics", "status"), videoObjectDefiningMetadata, mediaContent)
+            .insert(listOf("snippet", "statistics", "status"), video, mediaContent)
 //                .setOnBehalfOfContentOwner("joFpbRmICEmDzE276LP59g")
 //                .setOnBehalfOfContentOwnerChannel(channelId)
 
