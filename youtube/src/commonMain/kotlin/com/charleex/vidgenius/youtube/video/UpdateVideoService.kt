@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.youtube.youtube.video
+package com.charleex.vidgenius.youtube.video
 
 import co.touchlab.kermit.Logger
 import com.google.api.client.googleapis.json.GoogleJsonResponseException

@@ -55,7 +55,7 @@ fun RootContent(
     }
 
     val initialRoute = when (state.isAuthenticated) {
-        true -> RouterScreen.FeatureList
+        true -> RouterScreen.ProcessVideos
         false -> RouterScreen.Login
     }
 

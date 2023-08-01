@@ -8,6 +8,10 @@ import kotlinx.datetime.toLocalDateTime
 fun Instant.pretty(): String {
     val localDateTime = toLocalDateTime(TimeZone.currentSystemDefault())
     val date = localDateTime.date
-    val time = localDateTime.time
-    return "$date $time"
+    val day = date.dayOfMonth
+    val month = date.monthNumber
+    val year = date.year
+    val hour = localDateTime.time.hour
+    val minute = localDateTime.time.minute
+    return "$day/$month/$year $hour:$minute"
 }

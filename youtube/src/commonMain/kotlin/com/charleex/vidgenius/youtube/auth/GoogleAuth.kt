@@ -27,6 +27,8 @@ interface GoogleAuth {
      * @param credentialDatastore name of the credential datastore to cache OAuth tokens
      */
     fun authorize(scopes: List<String>, credentialDatastore: String): Credential
+
+    fun logOut(credentialDatastore: String)
 }
 
 internal class GoogleAuthImpl(
@@ -49,7 +51,7 @@ internal class GoogleAuthImpl(
         ) {
             logger.e {
                 "Enter Client ID and Secret from https://console.developers.google.com/project/_/apiui/credential " +
-                        "into src/main/resources/client_secrets.json"
+                        "into src/main/resources/client_secrets_1.json"
             }
         }
 
@@ -61,6 +63,11 @@ internal class GoogleAuthImpl(
 
         val localReceiver = getLocalServerReceiver()
         return AuthorizationCodeInstalledApp(flow, localReceiver).authorize("user")
+    }
+
+    override fun logOut(credentialDatastore: String) {
+        val datastore = getDataStore(credentialDatastore)
+        datastore?.clear()
     }
 
     // Build the local server and bind it to port 8080
@@ -77,12 +84,8 @@ internal class GoogleAuthImpl(
 
     private fun getGoogleClientSecrets(): GoogleClientSecrets? {
         val inputStream = this::class.java
-            .getResourceAsStream("/client_secrets.json")
+            .getResourceAsStream("/client_secrets_1.json")
         val inputStreamReader = InputStreamReader(inputStream)
         return GoogleClientSecrets.load(jsonFactory, inputStreamReader)
     }
 }
-
-
-private val GOOGLE_CREDENTIALS_JSON =
-    "/Users/adrianwitaszak/.config/gcloud/application_default_credentials.json"

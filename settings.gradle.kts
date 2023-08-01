@@ -21,5 +21,4 @@ include(
     ":feature:video-list",
     ":feature:video-detail",
     ":feature:process-videos",
-    ":feature:process-video-item",
 )

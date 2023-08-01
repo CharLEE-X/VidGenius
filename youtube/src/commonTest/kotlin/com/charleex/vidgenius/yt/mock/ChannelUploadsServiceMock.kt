@@ -1,7 +1,7 @@
 package com.charleex.vidgenius.yt.mock
 
-import com.charleex.vidgenius.youtube.youtube.video.ChannelUploadsService
-import com.charleex.vidgenius.youtube.youtube.model.ChannelUploadsItem
+import com.charleex.vidgenius.youtube.video.ChannelUploadsService
+import com.charleex.vidgenius.youtube.model.ChannelUploadsItem
 import kotlinx.coroutines.delay
 import kotlinx.datetime.Instant
 

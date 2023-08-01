@@ -1,8 +1,10 @@
-package com.charleex.vidgenius.youtube.youtube.video
+package com.charleex.vidgenius.youtube.video
 
 // SOURCE: https://github.com/htchien/youtube-api-samples-kotlin/blob/master/src/main/kotlin/tw/htchien/youtube/api/data/UploadVideo.kt
 
 import co.touchlab.kermit.Logger
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
+import com.google.api.client.googleapis.media.MediaHttpUploader
 import com.google.api.client.googleapis.media.MediaHttpUploaderProgressListener
 import com.google.api.client.http.InputStreamContent
 import com.google.api.services.youtube.YouTube
@@ -54,8 +56,8 @@ class UploadVideoServiceImpl(
         snippet.channelId = channelId
 
         val video = Video()
-            video.status = videoStatus
-            video.setSnippet(snippet)
+        video.status = videoStatus
+        video.setSnippet(snippet)
 
         val mediaContent = InputStreamContent(VIDEO_FILE_FORMAT, videoFile.inputStream())
 
@@ -68,11 +70,23 @@ class UploadVideoServiceImpl(
         uploader.isDirectUploadEnabled = false
 
         val progressListener = MediaHttpUploaderProgressListener { mediaHttpUploader ->
-            println("Upload state: ${mediaHttpUploader.uploadState}")
+            when (mediaHttpUploader.uploadState) {
+                MediaHttpUploader.UploadState.INITIATION_STARTED -> println("Initiation Started")
+                MediaHttpUploader.UploadState.INITIATION_COMPLETE -> println("Initiation Completed")
+                MediaHttpUploader.UploadState.MEDIA_IN_PROGRESS -> println("Upload in progress")
+                MediaHttpUploader.UploadState.MEDIA_COMPLETE -> println("Upload Completed!")
+                MediaHttpUploader.UploadState.NOT_STARTED -> println("Upload Not Started!")
+                null -> println("Upload state is null!")
+            }
         }
         uploader.progressListener = progressListener
 
-        val returnedVideo = videoInsert.execute() ?: error("No video uploaded.")
+        val returnedVideo = try {
+            videoInsert.execute() ?: error("No video uploaded.")
+        } catch (e: GoogleJsonResponseException) {
+            val isQuotaError = e.details.errors.toString().contains("youtube.quota")
+            if (isQuotaError) error("QUOTA_EXCEEDED") else throw e
+        }
 
         println("\n================== Returned Video ==================\n")
         println("  - Id: " + returnedVideo.id)

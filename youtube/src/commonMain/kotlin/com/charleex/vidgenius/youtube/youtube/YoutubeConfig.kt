@@ -2,7 +2,7 @@ package com.charleex.vidgenius.youtube.youtube
 
 import com.google.common.collect.Lists
 
-internal object YoutubeConfig {
+object YoutubeConfig {
     object UploadList {
         const val NAME = "youtube-cmdline-myuploads-sample"
         const val STORE = "updatevideo"

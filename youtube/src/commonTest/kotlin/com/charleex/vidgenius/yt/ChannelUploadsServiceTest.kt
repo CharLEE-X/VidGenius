@@ -2,7 +2,7 @@ package com.charleex.vidgenius.yt
 
 import com.charleex.vidgenius.youtube.youtubeModule
 import com.charleex.vidgenius.yt.mock.channelUploadServiceMock
-import com.charleex.vidgenius.youtube.youtube.video.ChannelUploadsService
+import com.charleex.vidgenius.youtube.video.ChannelUploadsService
 import kotlinx.coroutines.test.runTest
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin

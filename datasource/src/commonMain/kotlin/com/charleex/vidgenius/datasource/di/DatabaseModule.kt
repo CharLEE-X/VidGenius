@@ -1,5 +1,6 @@
 package com.charleex.vidgenius.datasource.di
 
+import com.charleex.vidgenius.datasource.db.CurrentQuota
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.model.Screenshot
 import com.hackathon.cda.repository.db.VidGeniusDatabase
@@ -16,10 +17,20 @@ internal val databaseModule = module {
         VidGeniusDatabase(
             driver = get(),
             VideoAdapter = get(),
+            CurrentQuotaAdapter = get(),
         )
     }
     single {
         Video.Adapter(
+            screenshotsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
+            descriptionsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
+            createdAtAdapter = InstantComponentSerializer.asColumnAdapter(),
+            modifiedAtAdapter = InstantComponentSerializer.asColumnAdapter(),
+            tagsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
+        )
+    }
+    single {
+        CurrentQuota.Adapter(
             screenshotsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
             descriptionsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
             createdAtAdapter = InstantComponentSerializer.asColumnAdapter(),

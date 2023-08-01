@@ -23,4 +23,8 @@ internal class YoutubeRepositoryDebug : YoutubeRepository {
         delay(1000)
         return "flowOf(1f)"
     }
+
+    override fun logOut(credentialStore: String) {
+
+    }
 }

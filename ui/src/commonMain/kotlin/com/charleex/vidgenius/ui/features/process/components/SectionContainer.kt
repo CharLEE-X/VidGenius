@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -45,19 +46,23 @@ import com.charleex.vidgenius.ui.components.AppFlexSpacer
 internal fun SectionContainer(
     modifier: Modifier = Modifier,
     name: String,
-    isOpen: Boolean = false,
+    enabled: Boolean = true,
+    openInitially: Boolean = true,
+    progress: Int? = null,
     headerBgColor: Color = MaterialTheme.colors.background.copy(alpha = 0.3f),
     extra: @Composable RowScope.() -> Unit,
     block: @Composable ColumnScope.() -> Unit,
 ) {
-    var open by remember { mutableStateOf(isOpen) }
     val indicationSource = remember { MutableInteractionSource() }
+    var isOpen by remember { mutableStateOf(openInitially) }
     val headerBackgroundColor by animateColorAsState(
-        targetValue = when (open) {
+        targetValue = when (isOpen) {
             true -> headerBgColor.copy(alpha = 0.1f)
             false -> headerBgColor.copy(alpha = 0.2f)
         }
     )
+    var isHeaderHovered by remember { mutableStateOf(false) }
+    val iconRotationState by animateFloatAsState(if (isOpen) 180f else 0f)
 
     AppCard(
         modifier = modifier,
@@ -67,39 +72,38 @@ internal fun SectionContainer(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            var isHeaderHovered by remember { mutableStateOf(false) }
-            val iconRotationState by animateFloatAsState(if (isOpen) 180f else 0f)
-
             Surface(
                 color = headerBackgroundColor,
                 elevation = 0.dp,
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .animateContentSize()
+                    .onPointerEvent(PointerEventType.Enter) {
+                        isHeaderHovered = true
+                    }
+                    .onPointerEvent(PointerEventType.Exit) {
+                        isHeaderHovered = false
+                    }
+                    .pointerHoverIcon(
+                        if (isHeaderHovered && enabled)
+                            PointerIcon.Hand else PointerIcon.Default
+                    )
+                    .clickable(
+                        indication = null,
+                        interactionSource = indicationSource,
+                        onClick = { isOpen = !isOpen },
+                        enabled = enabled,
+                        role = Role.Button,
+                    )
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
                             vertical = 20.dp,
                             horizontal = 48.dp
-                        )
-                        .onPointerEvent(PointerEventType.Enter) {
-                            isHeaderHovered = true
-                        }
-                        .onPointerEvent(PointerEventType.Exit) {
-                            isHeaderHovered = false
-                        }
-                        .pointerHoverIcon(if (isHeaderHovered) PointerIcon.Hand else PointerIcon.Default)
-                        .clickable(
-                            indication = null,
-                            interactionSource = indicationSource,
-                            onClick = {
-                                open = !open
-                            },
-                            role = Role.Button,
                         )
                 ) {
                     Text(
@@ -108,19 +112,28 @@ internal fun SectionContainer(
                     )
                     AppFlexSpacer()
                     extra()
-                    Icon(
-                        imageVector = Icons.Outlined.ArrowDropDown,
-                        contentDescription = "",
-                        tint = MaterialTheme.colors.onSurface,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .graphicsLayer(
-                                rotationZ = iconRotationState,
-                            )
-                    )
+                    AnimatedVisibility(enabled) {
+                        Icon(
+                            imageVector = Icons.Outlined.ArrowDropDown,
+                            contentDescription = "",
+                            tint = MaterialTheme.colors.onSurface,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .graphicsLayer(
+                                    rotationZ = iconRotationState,
+                                )
+                        )
+                    }
                 }
             }
-            AnimatedVisibility(open) {
+            progress?.let {
+                LinearProgressIndicator(
+                    progress = it / 100f,
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = MaterialTheme.colors.surface,
+                )
+            }
+            AnimatedVisibility(isOpen) {
                 block()
             }
         }

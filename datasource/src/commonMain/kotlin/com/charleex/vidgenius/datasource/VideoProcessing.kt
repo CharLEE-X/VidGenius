@@ -8,16 +8,9 @@ import com.charleex.vidgenius.datasource.repository.OpenAiRepository
 import com.charleex.vidgenius.datasource.repository.VideoRepository
 import com.charleex.vidgenius.datasource.repository.YoutubeRepository
 import com.hackathon.cda.repository.db.VidGeniusDatabase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import java.io.File
-
-data class ProcessingConfig(
-    val id: String = uuid4().toString(),
-    val channelId: String,
-    val numberOfScreenshots: Int,
-    val category: VideoCategory,
-    val uploadYouTube: Boolean,
-)
 
 data class VideoCategory(
     val id: String = uuid4().toString(),
@@ -27,7 +20,13 @@ data class VideoCategory(
 interface VideoProcessing {
     fun getVideos(): Flow<List<Video>>
     suspend fun filterVideosFromFiles(files: List<*>)
-    suspend fun processAndUploadVideo(videoId: String, config: ProcessingConfig)
+    suspend fun processAndUploadVideo(
+        videoId: String,
+        channelId: String,
+        numberOfScreenshots: Int,
+        category: String,
+        uploadYouTube: Boolean,
+    )
 }
 
 internal class VideoProcessingImpl(
@@ -48,26 +47,32 @@ internal class VideoProcessingImpl(
     }
 
 
-    override suspend fun processAndUploadVideo(videoId: String, config: ProcessingConfig) {
+    override suspend fun processAndUploadVideo(
+        videoId: String,
+        channelId: String,
+        numberOfScreenshots: Int,
+        category: String,
+        uploadYouTube: Boolean,
+    ) {
         logger.d("Processing video $videoId")
 
         val video = videoRepository.getVideoById(videoId)
 
-        val videoWithScreenshots = processVideo(video, config)
+        val videoWithScreenshots = processVideo(video, numberOfScreenshots)
 
-        val videoWithDescriptions = processScreenshotsToText(videoWithScreenshots, config.numberOfScreenshots)
+        val videoWithDescriptions = processScreenshotsToText(videoWithScreenshots, numberOfScreenshots)
 
         val videoWithDescriptionContext = processDescriptions(videoWithDescriptions)
 
         val videoWithMetadata = generateMetaData(videoWithDescriptionContext)
 
-        if (config.uploadYouTube) {
-            uploadYouTubeVideo(videoWithMetadata, config.channelId)
+        if (uploadYouTube) {
+            uploadYouTubeVideo(videoWithMetadata, channelId)
         }
     }
 
-    private suspend fun processVideo(video: Video, config: ProcessingConfig): Video {
-        val hasScreenshots = video.screenshots.size == config.numberOfScreenshots
+    private suspend fun processVideo(video: Video, numberOfScreenshots: Int): Video {
+        val hasScreenshots = video.screenshots.size == numberOfScreenshots
         if (!hasScreenshots) {
             logger.d("No screenshots | ${video.id}")
         }
@@ -77,7 +82,12 @@ internal class VideoProcessingImpl(
         if (hasScreenshots && screenshotsHaveText && allFilesExist) return video
 
         logger.d("Video processing | ${video.id} | Start")
-        val screenshots = videoRepository.captureScreenshots(video, config.numberOfScreenshots)
+        val screenshots = try {
+            videoRepository.captureScreenshots(video, numberOfScreenshots)
+        } catch (e: Exception) {
+            logger.e(e) { "Error generating screenshots" }
+            throw e
+        }
         val newVideo = video.copy(screenshots = screenshots)
         database.videoQueries.upsert(newVideo)
         logger.d("Video processing | ${video.id} | Done | $screenshots")
@@ -96,8 +106,13 @@ internal class VideoProcessingImpl(
         if (hasDescriptions && allDescriptionsHaveText) return video
 
         logger.d("Text processing | ${video.id} | Start")
-        val descriptions = video.screenshots.map { screenshot ->
-            googleCloudRepository.getTextFromImage(screenshot)
+        val descriptions = try {
+            video.screenshots.map { screenshot ->
+                googleCloudRepository.getTextFromImage(screenshot)
+            }
+        } catch (e: Exception) {
+            logger.e(e) { "Error generating descriptions" }
+            throw e
         }
         val newVideo = video.copy(descriptions = descriptions)
         database.videoQueries.upsert(newVideo)
@@ -110,7 +125,12 @@ internal class VideoProcessingImpl(
         if (hasDescriptionContext) return video
 
         logger.d("Description processing | ${video.id} | Start")
-        val context = openAiRepository.getDescriptionContext(video.descriptions)
+        val context = try {
+            openAiRepository.getDescriptionContext(video.descriptions)
+        } catch (e: Exception) {
+            logger.e(e) { "Error generating description context" }
+            throw e
+        }
         val newVideo = video.copy(descriptionContext = context)
         database.videoQueries.upsert(newVideo)
         logger.d("Description processing | ${video.id} | Done | $context")
@@ -125,7 +145,12 @@ internal class VideoProcessingImpl(
         if (hasTitle && hasDescription && hasTags && tagsHaveText) return video
 
         logger.d("Metadata generation | ${video.id} | Start")
-        val metadata = openAiRepository.getMetaData(video)
+        val metadata = try {
+            openAiRepository.getMetaData(video)
+        } catch (e: Exception) {
+            logger.e(e) { "Error generating metadata" }
+            throw e
+        }
         val newVideo = video.copy(
             title = metadata.title,
             description = metadata.description,
@@ -136,16 +161,51 @@ internal class VideoProcessingImpl(
         return newVideo
     }
 
+    companion object {
+        const val UPLOAD_STORE = "uploadvideo"
+        private const val INSERT_QUOTA_COST = 1_600
+    }
+
+    var counter = 0
+
     private suspend fun uploadYouTubeVideo(
         video: Video,
         channelId: String,
     ): Video {
         logger.d("Upload YouTube video | ${video.id} | Start")
-        val youtubeVideoId = youtubeRepository.uploadVideo(video, channelId)
+        val youtubeVideoId = try {
+            youtubeRepository.uploadVideo(
+                video = video,
+                channelId = channelId,
+            )
+        } catch (e: Exception) {
+            if (e.message?.contains("QUOTA_EXCEEDED") == true) {
+                logger.e(e) { "YouTube quota exceeded. Counter: $counter" }
+
+                counter++
+                if (counter > 3) {
+                    throw e
+                } else {
+                    youtubeRepository.logOut(UPLOAD_STORE)
+                    delay(100)
+                    youtubeRepository.signIn(UPLOAD_STORE)
+                    delay(100)
+                    uploadYouTubeVideo(video, channelId)
+                }
+            } else {
+                logger.e(e) { "Error uploading video" }
+            }
+            throw e
+        }
         val newVideo = video.copy(youtubeVideoId = youtubeVideoId)
         database.videoQueries.upsert(newVideo)
         logger.d("Upload YouTube video | ${video.id} | Done | $youtubeVideoId")
         return newVideo
     }
+}
+
+enum class YTCONFIG(val configName: String) {
+    FIRST("client_secrets_1.json"),
+    SECOND("client_secret_2.json"),
 }
 

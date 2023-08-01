@@ -1,21 +1,39 @@
 package com.charleex.vidgenius.ui.features.process
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedButton
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,11 +47,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.charleex.vidgenius.feature.process_videos.Category
 import com.charleex.vidgenius.feature.process_videos.ProcessVideosContract
 import com.charleex.vidgenius.feature.process_videos.ProcessVideosViewModel
 import com.charleex.vidgenius.feature.process_videos.model.UiVideo
+import com.charleex.vidgenius.ui.components.AppOutlinedButton
 import com.charleex.vidgenius.ui.components.DragArea
 import com.charleex.vidgenius.ui.features.process.components.SectionContainer
+import com.charleex.vidgenius.ui.features.process.item.CompletedVideoItemContent
+import com.charleex.vidgenius.ui.features.process.item.QueuedVideoItemContent
 import com.charleex.vidgenius.ui.util.Breakpoint
 
 @Composable
@@ -50,30 +72,18 @@ internal fun ProcessVideosContent(
         )
     }
     val state by vm.observeStates().collectAsState()
-    var queued by remember { mutableStateOf(listOf<UiVideo>()) }
-    var progress by remember { mutableStateOf(listOf<UiVideo>()) }
-    var completed by remember { mutableStateOf(listOf<UiVideo>()) }
     val layColumnState = rememberLazyListState()
 
-    LaunchedEffect(state.videos) {
-        queued = state.videos.filter {
-            !it.hasScreenshots(3) &&
-                    !it.hasDescriptions(3) &&
-                    !it.hasContext() &&
-                    !it.hasMetadata() &&
-                    !it.hasYoutubeVideoId()
-        }
-        progress = state.videos.filter {
-            (
-                    it.hasScreenshots(3) ||
-                            it.hasDescriptions(3) ||
-                            it.hasContext() ||
-                            it.hasMetadata()
-                    ) && !it.hasYoutubeVideoId()
-        }
-        completed = state.videos.filter { it.hasYoutubeVideoId() }
+    var queued by remember { mutableStateOf(listOf<UiVideo>()) }
+    var completed by remember { mutableStateOf(listOf<UiVideo>()) }
 
-        println("videos: ${state.videos}")
+    LaunchedEffect(state.videos) {
+        queued = state.videos.filter { !it.hasYoutubeVideoId() }
+            .sortedBy { it.modifiedAt }
+
+        completed = state.videos
+            .filter { it.hasYoutubeVideoId() }
+            .sortedBy { it.modifiedAt }
     }
 
     Box(
@@ -83,15 +93,14 @@ internal fun ProcessVideosContent(
         LazyColumn(
             state = layColumnState,
             verticalArrangement = Arrangement.spacedBy(24.dp),
+            contentPadding = PaddingValues(24.dp),
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 24.dp)
-                .padding(horizontal = 24.dp)
         ) {
             item {
                 SectionContainer(
                     name = "Drag and drop videos",
-                    isOpen = queued.isEmpty(),
+                    headerBgColor = Color.Magenta,
                     extra = {},
                     modifier = Modifier
                 ) {
@@ -111,24 +120,29 @@ internal fun ProcessVideosContent(
                 SectionContainer(
                     name = "Queued videos: ${queued.size}",
                     headerBgColor = Color.LightGray,
-                    isOpen = queued.isNotEmpty(),
                     extra = {
-                        OutlinedButton(
-                            onClick = {}
+                        AnimatedVisibility(
+                            visible = queued.isNotEmpty(),
+                            enter = fadeIn(),
+                            exit = fadeOut()
                         ) {
-                            Text(
-                                text = "Clear all",
-                                style = MaterialTheme.typography.button,
-                                color = MaterialTheme.colors.onSurface,
+                            AppOutlinedButton(
+                                label = "Clear All",
+                                icon = Icons.Default.Delete,
+                                onClick = {
+                                    queued.forEach {
+                                        vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(it.id))
+                                    }
+                                },
                             )
-                        }
-                        OutlinedButton(
-                            onClick = {}
-                        ) {
-                            Text(
-                                text = "Run all",
-                                style = MaterialTheme.typography.button,
-                                color = MaterialTheme.colors.onSurface,
+                            AppOutlinedButton(
+                                label = "Start All",
+                                icon = Icons.Default.PlayArrow,
+                                onClick = {
+                                    queued.forEach {
+                                        vm.trySend(ProcessVideosContract.Inputs.StartVideoProcessing(it.id))
+                                    }
+                                },
                             )
                         }
                     },
@@ -154,56 +168,127 @@ internal fun ProcessVideosContent(
                             .fillMaxWidth()
                             .padding(24.dp)
                     ) {
+                        AnimatedVisibility(queued.isNotEmpty()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                            ) {
+                                var categoryDropdownOpen by remember { mutableStateOf(false) }
+                                Box {
+                                    AppOutlinedButton(
+                                        label = "Category",
+                                        icon = Icons.Default.Category,
+                                        onClick = {
+                                            categoryDropdownOpen = !categoryDropdownOpen
+                                        },
+                                    )
+                                    DropdownMenu(
+                                        expanded = categoryDropdownOpen,
+                                        onDismissRequest = { categoryDropdownOpen = false },
+                                    ) {
+                                        Category.values().forEach { category ->
+                                            DropdownMenuItem(
+                                                onClick = {
+                                                    categoryDropdownOpen = false
+                                                    vm.trySend(ProcessVideosContract.Inputs.SetCategory(category))
+                                                }
+                                            ) {
+                                                Surface {
+                                                    Text(text = category.name)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                var screenshotsDropdownOpen by remember { mutableStateOf(false) }
+                                Box {
+                                    OutlinedButton(
+                                        shape = RoundedCornerShape(10.dp),
+                                        elevation = null,
+                                        border = BorderStroke(
+                                            width = 1.dp,
+                                            color = MaterialTheme.colors.primary,
+                                        ),
+                                        onClick = {
+                                            screenshotsDropdownOpen = !screenshotsDropdownOpen
+//                                        vm.trySend(ProcessVideosContract.Inputs.SetCategory(Category.ANIMALS))
+
+                                        },
+                                    ) {
+                                        Text(
+                                            text = "Screenshots:",
+                                            style = MaterialTheme.typography.button,
+                                            color = MaterialTheme.colors.onSurface,
+                                        )
+                                        Spacer(modifier = Modifier.size(8.dp))
+                                        Text(
+                                            text = state.numberOfScreenshots.toString(),
+                                            style = MaterialTheme.typography.button,
+                                            color = MaterialTheme.colors.onSurface,
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = screenshotsDropdownOpen,
+                                        onDismissRequest = { screenshotsDropdownOpen = false },
+                                    ) {
+                                        (1..5).forEach { number ->
+                                            DropdownMenuItem(
+                                                onClick = {
+                                                    screenshotsDropdownOpen = false
+                                                    vm.trySend(
+                                                        ProcessVideosContract.Inputs.SetNumberOfScreenshots(
+                                                            number
+                                                        )
+                                                    )
+                                                }
+                                            ) {
+                                                Surface {
+                                                    Text(text = number.toString())
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                val ytColor by animateColorAsState(
+                                    if (state.uploadYouTube) MaterialTheme.colors.primary else MaterialTheme.colors.surface
+                                )
+                                AppOutlinedButton(
+                                    label = "YT Upload",
+                                    icon = if (state.uploadYouTube) Icons.Default.Check else Icons.Default.Close,
+                                    bgColor = ytColor,
+                                    labelColor = Color.White,
+                                    onClick = {
+                                        vm.trySend(
+                                            ProcessVideosContract.Inputs.SetUploadYouTube(
+                                                state.uploadYouTube.not()
+                                            )
+                                        )
+                                    },
+                                )
+                            }
+                        }
                         queued.forEach { video ->
-                            ProcessVideoItemContent(
+                            QueuedVideoItemContent(
                                 uiVideo = video,
                                 breakpoint = breakpoint,
-                                displayMessage = displayMessage,
                                 onDeleteClicked = {
+                                    vm.trySend(
+                                        ProcessVideosContract.Inputs.CancelProcessingVideo(
+                                            video.id
+                                        )
+                                    )
                                     vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(video.id))
                                 },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                }
-            }
-            item {
-                SectionContainer(
-                    name = "Progress videos: ${progress.size}",
-                    headerBgColor = Color.Blue,
-                    isOpen = progress.isNotEmpty(),
-                    extra = {
-                    },
-                    modifier = Modifier
-                ) {
-                    AnimatedVisibility(queued.isEmpty()) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "No videos in progress",
-                                style = MaterialTheme.typography.h6,
-                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f),
-                                modifier = Modifier.padding(64.dp)
-                            )
-                        }
-                    }
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp)
-                    ) {
-                        progress.forEach { video ->
-                            ProcessVideoItemContent(
-                                uiVideo = video,
-                                breakpoint = breakpoint,
-                                displayMessage = displayMessage,
-                                onDeleteClicked = {
-                                    vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(video.id))
+                                onStartProcessingClicked = {
+                                    vm.trySend(
+                                        ProcessVideosContract.Inputs.StartVideoProcessing(
+                                            video.id
+                                        )
+                                    )
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -214,22 +299,20 @@ internal fun ProcessVideosContent(
             item {
                 SectionContainer(
                     name = "Completed videos: ${completed.size}",
-                    isOpen = completed.isNotEmpty(),
                     headerBgColor = Color.Green,
                     extra = {
                         AnimatedVisibility(completed.isNotEmpty()) {
-                            OutlinedButton(
-                                onClick = {}
-                            ) {
-                                Text(
-                                    text = "Clear all",
-                                    style = MaterialTheme.typography.button,
-                                    color = MaterialTheme.colors.onSurface,
-                                )
-                            }
+                            AppOutlinedButton(
+                                label = "Clear All",
+                                icon = Icons.Default.Delete,
+                                onClick = {
+                                    completed.forEach {
+                                        vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(it.id))
+                                    }
+                                },
+                            )
                         }
                     },
-                    modifier = Modifier
                 ) {
                     AnimatedVisibility(completed.isEmpty()) {
                         Box(
@@ -252,76 +335,10 @@ internal fun ProcessVideosContent(
                             .padding(24.dp)
                     ) {
                         completed.forEach { video ->
-                            ProcessVideoItemContent(
+                            CompletedVideoItemContent(
                                 uiVideo = video,
                                 breakpoint = breakpoint,
-                                displayMessage = displayMessage,
-                                onDeleteClicked = {
-                                    vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(video.id))
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                }
-            }
-            item {
-                SectionContainer(
-                    name = "Failed videos: ${state.failed.size}",
-                    isOpen = state.failed.isNotEmpty(),
-                    headerBgColor = Color.Red,
-                    extra = {
-                        AnimatedVisibility(state.failed.isNotEmpty()) {
-                            OutlinedButton(
-                                onClick = {}
-                            ) {
-                                Text(
-                                    text = "Clear all",
-                                    style = MaterialTheme.typography.button,
-                                    color = MaterialTheme.colors.onSurface,
-                                )
-                            }
-                        }
-                        AnimatedVisibility(state.failed.isNotEmpty()) {
-                            OutlinedButton(
-                                onClick = {}
-                            ) {
-                                Text(
-                                    text = "Run again",
-                                    style = MaterialTheme.typography.button,
-                                    color = MaterialTheme.colors.onSurface,
-                                )
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                ) {
-                    AnimatedVisibility(state.failed.isEmpty()) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "No videos completed.",
-                                style = MaterialTheme.typography.h6,
-                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f),
-                                modifier = Modifier.padding(64.dp)
-                            )
-                        }
-                    }
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp)
-                    ) {
-                        state.videos.filter { it.id in state.failed }.forEach { video ->
-                            ProcessVideoItemContent(
-                                uiVideo = video,
-                                breakpoint = breakpoint,
-                                displayMessage = displayMessage,
-                                onDeleteClicked = {
+                                onDeleteClicked = { // Not used
                                     vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(video.id))
                                 },
                                 modifier = Modifier.fillMaxWidth()

@@ -3,9 +3,11 @@ package com.charleex.vidgenius.datasource.repository
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.model.UploadItem
-import com.charleex.vidgenius.youtube.youtube.model.ChannelUploadsItem
-import com.charleex.vidgenius.youtube.youtube.video.ChannelUploadsService
-import com.charleex.vidgenius.youtube.youtube.video.UploadVideoService
+import com.charleex.vidgenius.youtube.auth.GoogleAuth
+import com.charleex.vidgenius.youtube.model.ChannelUploadsItem
+import com.charleex.vidgenius.youtube.video.ChannelUploadsService
+import com.charleex.vidgenius.youtube.video.UploadVideoService
+import com.charleex.vidgenius.youtube.youtube.YoutubeConfig
 import java.io.File
 
 interface YoutubeRepository {
@@ -15,10 +17,14 @@ interface YoutubeRepository {
         video: Video,
         channelId: String,
     ): String
+
+    fun logOut(credentialStore: String)
+    fun signIn(uploadStore: String)
 }
 
 internal class YoutubeRepositoryImpl(
     private val logger: Logger,
+    private val googleAuth: GoogleAuth,
     private val channelUploadsService: ChannelUploadsService,
     private val uploadVideoService: UploadVideoService,
 ) : YoutubeRepository {
@@ -46,6 +52,14 @@ internal class YoutubeRepositoryImpl(
             tags = video.tags,
             channelId = channelId,
         )
+    }
+
+    override fun logOut(credentialStore: String) {
+        googleAuth.logOut(credentialStore)
+    }
+
+    override fun signIn(uploadStore: String) {
+        googleAuth.authorize(YoutubeConfig.UploadVideo.scope, uploadStore)
     }
 }
 

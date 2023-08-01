@@ -14,7 +14,6 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/datasource" />
             <option value="$PROJECT_DIR$/feature" />
-            <option value="$PROJECT_DIR$/feature/process-video-item" />
             <option value="$PROJECT_DIR$/feature/process-videos" />
             <option value="$PROJECT_DIR$/feature/root" />
             <option value="$PROJECT_DIR$/feature/router" />

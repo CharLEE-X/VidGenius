@@ -80,6 +80,7 @@ val repositoryModule = module {
         if (getIsDebugBuild()) YoutubeRepositoryDebug().also { println("YoutubeRepository in DEBUG mode") }
         else YoutubeRepositoryImpl(
             logger = withTag(YoutubeRepository::class.simpleName!!),
+            googleAuth = get(),
             channelUploadsService = get(),
             uploadVideoService = get(),
         ).also { println("YoutubeRepository in RELEASE mode") }
