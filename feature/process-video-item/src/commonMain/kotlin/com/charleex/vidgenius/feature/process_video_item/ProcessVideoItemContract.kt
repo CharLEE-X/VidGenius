@@ -1,15 +1,11 @@
 package com.charleex.vidgenius.feature.process_video_item
 
-import com.charleex.vidgenius.feature.process_videos.model.UIProgressState
 import com.charleex.vidgenius.feature.process_videos.model.UiVideo
 import com.charleex.vidgenius.feature.process_videos.model.UiVideoCategory
 import java.util.UUID
 
 object ProcessVideoItemContract {
     data class State(
-        val uiVideo: UiVideo,
-        val uiVideoProcessingState: UIProgressState = UIProgressState.Queued,
-
         val configId: String = UUID.randomUUID().toString(),
         val channelId: String = "UCjoFpbRmICEmDzE276LP59g",
         val numberOfScreenshots: Int = 3,
@@ -18,13 +14,14 @@ object ProcessVideoItemContract {
             name = "Animals",
         ),
         val uploadYouTube: Boolean = true,
+
+        val uiVideo: UiVideo,
     )
 
     sealed interface Inputs {
         sealed interface Video : Inputs {
             object StartVideoProcessing : Video
             object CancelProcessingVideo : Video
-            data class SetVideoProcessingState(val videoProcessingState: UIProgressState) : Video
         }
 
         sealed interface Config : Inputs {
@@ -40,4 +37,3 @@ object ProcessVideoItemContract {
         data class ShowError(val message: String) : Events
     }
 }
-

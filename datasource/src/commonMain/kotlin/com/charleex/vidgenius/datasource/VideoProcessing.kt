@@ -3,16 +3,13 @@ package com.charleex.vidgenius.datasource
 import co.touchlab.kermit.Logger
 import com.benasher44.uuid.uuid4
 import com.charleex.vidgenius.datasource.db.Video
-import com.charleex.vidgenius.datasource.model.ProgressState
 import com.charleex.vidgenius.datasource.repository.GoogleCloudRepository
 import com.charleex.vidgenius.datasource.repository.OpenAiRepository
 import com.charleex.vidgenius.datasource.repository.VideoRepository
 import com.charleex.vidgenius.datasource.repository.YoutubeRepository
 import com.hackathon.cda.repository.db.VidGeniusDatabase
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import java.io.File
-
 
 data class ProcessingConfig(
     val id: String = uuid4().toString(),
@@ -30,7 +27,7 @@ data class VideoCategory(
 interface VideoProcessing {
     fun getVideos(): Flow<List<Video>>
     suspend fun filterVideosFromFiles(files: List<*>)
-    fun processAndUploadVideo(videoId: String, config: ProcessingConfig): Flow<ProgressState>
+    suspend fun processAndUploadVideo(videoId: String, config: ProcessingConfig)
 }
 
 internal class VideoProcessingImpl(
@@ -51,30 +48,22 @@ internal class VideoProcessingImpl(
     }
 
 
-    override fun processAndUploadVideo(videoId: String, config: ProcessingConfig): Flow<ProgressState> = flow {
+    override suspend fun processAndUploadVideo(videoId: String, config: ProcessingConfig) {
         logger.d("Processing video $videoId")
-        emit(ProgressState.InProgress(0F))
 
         val video = videoRepository.getVideoById(videoId)
 
         val videoWithScreenshots = processVideo(video, config)
-        emit(ProgressState.InProgress(0.2F))
 
         val videoWithDescriptions = processScreenshotsToText(videoWithScreenshots, config.numberOfScreenshots)
-        emit(ProgressState.InProgress(0.45F))
 
         val videoWithDescriptionContext = processDescriptions(videoWithDescriptions)
-        emit(ProgressState.InProgress(0.65F))
 
         val videoWithMetadata = generateMetaData(videoWithDescriptionContext)
-        emit(ProgressState.InProgress(0.8F))
 
         if (config.uploadYouTube) {
             uploadYouTubeVideo(videoWithMetadata, config.channelId)
-            emit(ProgressState.InProgress(0.9F))
         }
-        emit(ProgressState.InProgress(1F))
-        emit(ProgressState.Success)
     }
 
     private suspend fun processVideo(video: Video, config: ProcessingConfig): Video {
@@ -87,7 +76,7 @@ internal class VideoProcessingImpl(
         val screenshots = videoRepository.captureScreenshots(video, config.numberOfScreenshots)
         val newVideo = video.copy(screenshots = screenshots)
         database.videoQueries.upsert(newVideo)
-        logger.d("Video processing | ${video.id} | Done")
+        logger.d("Video processing | ${video.id} | Done | $screenshots")
         return newVideo
     }
 
@@ -102,7 +91,7 @@ internal class VideoProcessingImpl(
         }
         val newVideo = video.copy(descriptions = descriptions)
         database.videoQueries.upsert(newVideo)
-        logger.d("Text processing | ${video.id} | Done")
+        logger.d("Text processing | ${video.id} | Done | $descriptions")
         return newVideo
     }
 
@@ -114,7 +103,7 @@ internal class VideoProcessingImpl(
         val context = openAiRepository.getDescriptionContext(video.descriptions)
         val newVideo = video.copy(descriptionContext = context)
         database.videoQueries.upsert(newVideo)
-        logger.d("Description processing | ${video.id} | Done")
+        logger.d("Description processing | ${video.id} | Done | $context")
         return newVideo
     }
 
@@ -133,7 +122,7 @@ internal class VideoProcessingImpl(
             tags = metadata.tags,
         )
         database.videoQueries.upsert(newVideo)
-        logger.d("Metadata generation | ${video.id} | Done")
+        logger.d("Metadata generation | ${video.id} | Done | $metadata")
         return newVideo
     }
 
@@ -145,7 +134,7 @@ internal class VideoProcessingImpl(
         val youtubeVideoId = youtubeRepository.uploadVideo(video, channelId)
         val newVideo = video.copy(youtubeVideoId = youtubeVideoId)
         database.videoQueries.upsert(newVideo)
-        logger.d("Upload YouTube video | ${video.id} | Done")
+        logger.d("Upload YouTube video | ${video.id} | Done | $youtubeVideoId")
         return newVideo
     }
 }

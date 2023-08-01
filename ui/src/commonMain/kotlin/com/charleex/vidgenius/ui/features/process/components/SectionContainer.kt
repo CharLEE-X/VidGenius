@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,19 +40,22 @@ import com.charleex.vidgenius.ui.components.AppCard
 import com.charleex.vidgenius.ui.components.AppFlexSpacer
 
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun SectionContainer(
     modifier: Modifier = Modifier,
     name: String,
     isOpen: Boolean = false,
+    headerBgColor: Color = MaterialTheme.colors.background.copy(alpha = 0.3f),
+    extra: @Composable RowScope.() -> Unit,
     block: @Composable ColumnScope.() -> Unit,
 ) {
     var open by remember { mutableStateOf(isOpen) }
     val indicationSource = remember { MutableInteractionSource() }
-    val headerBgColor by animateColorAsState(
+    val headerBackgroundColor by animateColorAsState(
         targetValue = when (open) {
-            true -> MaterialTheme.colors.background.copy(alpha = 0.3f)
-            false -> MaterialTheme.colors.surface
+            true -> headerBgColor.copy(alpha = 0.1f)
+            false -> headerBgColor.copy(alpha = 0.2f)
         }
     )
 
@@ -63,77 +67,62 @@ internal fun SectionContainer(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            SectionHeader(
-                name = name,
-                bgColor = headerBgColor,
-                isOpen = open,
-                modifier = Modifier
-                    .clickable(
-                        indication = null,
-                        interactionSource = indicationSource,
-                        onClick = {
-                            open = !open
-                        },
-                        role = Role.Button,
+            var isHeaderHovered by remember { mutableStateOf(false) }
+            val iconRotationState by animateFloatAsState(if (isOpen) 180f else 0f)
+
+            Surface(
+                color = headerBackgroundColor,
+                elevation = 0.dp,
+                modifier = modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            vertical = 20.dp,
+                            horizontal = 48.dp
+                        )
+                        .onPointerEvent(PointerEventType.Enter) {
+                            isHeaderHovered = true
+                        }
+                        .onPointerEvent(PointerEventType.Exit) {
+                            isHeaderHovered = false
+                        }
+                        .pointerHoverIcon(if (isHeaderHovered) PointerIcon.Hand else PointerIcon.Default)
+                        .clickable(
+                            indication = null,
+                            interactionSource = indicationSource,
+                            onClick = {
+                                open = !open
+                            },
+                            role = Role.Button,
+                        )
+                ) {
+                    Text(
+                        text = name,
+                        color = MaterialTheme.colors.onSurface,
                     )
-            )
+                    AppFlexSpacer()
+                    extra()
+                    Icon(
+                        imageVector = Icons.Outlined.ArrowDropDown,
+                        contentDescription = "",
+                        tint = MaterialTheme.colors.onSurface,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .graphicsLayer(
+                                rotationZ = iconRotationState,
+                            )
+                    )
+                }
+            }
             AnimatedVisibility(open) {
                 block()
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-private fun SectionHeader(
-    modifier: Modifier = Modifier,
-    name: String,
-    bgColor: Color,
-    isOpen: Boolean,
-) {
-    var isLinkHovered by remember { mutableStateOf(false) }
-    val iconRotationState by animateFloatAsState(if (isOpen) 180f else 0f)
-
-    Surface(
-        color = bgColor,
-        elevation = 0.dp,
-        modifier = modifier
-            .fillMaxWidth()
-            .animateContentSize()
-            .onPointerEvent(PointerEventType.Enter) {
-                isLinkHovered = true
-            }
-            .onPointerEvent(PointerEventType.Exit) {
-                isLinkHovered = false
-            }
-            .pointerHoverIcon(if (isLinkHovered) PointerIcon.Hand else PointerIcon.Default)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(48.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    vertical = 20.dp,
-                    horizontal = 48.dp
-                )
-        ) {
-            Text(
-                text = name,
-                color = MaterialTheme.colors.onSurface,
-            )
-            AppFlexSpacer()
-            Icon(
-                imageVector = Icons.Outlined.ArrowDropDown,
-                contentDescription = "",
-                tint = MaterialTheme.colors.onSurface,
-                modifier = Modifier
-                    .size(32.dp)
-                    .graphicsLayer(
-                        rotationZ = iconRotationState,
-                    )
-            )
         }
     }
 }

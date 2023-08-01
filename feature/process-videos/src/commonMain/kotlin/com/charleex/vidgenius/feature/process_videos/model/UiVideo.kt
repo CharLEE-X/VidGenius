@@ -2,7 +2,6 @@ package com.charleex.vidgenius.feature.process_videos.model
 
 import com.charleex.vidgenius.datasource.VideoCategory
 import com.charleex.vidgenius.datasource.db.Video
-import com.charleex.vidgenius.datasource.model.Screenshot
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
@@ -23,7 +22,34 @@ data class UiVideo(
 
     val createdAt: Instant = Clock.System.now(),
     val modifiedAt: Instant = Clock.System.now(),
-)
+) {
+    fun hasScreenshots(numberOfScreenshots: Int): Boolean {
+        return screenshots.isNotEmpty() &&
+                screenshots.all { it.isNotEmpty() } &&
+                screenshots.size == numberOfScreenshots
+    }
+
+    fun hasDescriptions(numberOfDescriptions: Int): Boolean {
+        return descriptions.isNotEmpty() &&
+                descriptions.all { it.isNotEmpty() } &&
+                descriptions.size == numberOfDescriptions
+    }
+
+    fun hasContext(): Boolean {
+        return !descriptionContext.isNullOrEmpty()
+    }
+
+    fun hasMetadata(): Boolean {
+        return !title.isNullOrEmpty() &&
+                !description.isNullOrEmpty() &&
+                tags.isNotEmpty() &&
+                tags.all { it.isNotEmpty() }
+    }
+
+    fun hasYoutubeVideoId(): Boolean {
+        return !youtubeVideoId.isNullOrEmpty()
+    }
+}
 
 internal fun Video.toUiVideo() = UiVideo(
     id = this.id,

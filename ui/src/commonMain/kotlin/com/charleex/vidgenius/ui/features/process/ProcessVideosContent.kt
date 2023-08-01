@@ -14,18 +14,24 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.feature.process_videos.ProcessVideosContract
 import com.charleex.vidgenius.feature.process_videos.ProcessVideosViewModel
+import com.charleex.vidgenius.feature.process_videos.model.UiVideo
 import com.charleex.vidgenius.ui.components.DragArea
 import com.charleex.vidgenius.ui.features.process.components.SectionContainer
 import com.charleex.vidgenius.ui.util.Breakpoint
@@ -44,7 +50,31 @@ internal fun ProcessVideosContent(
         )
     }
     val state by vm.observeStates().collectAsState()
+    var queued by remember { mutableStateOf(listOf<UiVideo>()) }
+    var progress by remember { mutableStateOf(listOf<UiVideo>()) }
+    var completed by remember { mutableStateOf(listOf<UiVideo>()) }
     val layColumnState = rememberLazyListState()
+
+    LaunchedEffect(state.videos) {
+        queued = state.videos.filter {
+            !it.hasScreenshots(3) &&
+                    !it.hasDescriptions(3) &&
+                    !it.hasContext() &&
+                    !it.hasMetadata() &&
+                    !it.hasYoutubeVideoId()
+        }
+        progress = state.videos.filter {
+            (
+                    it.hasScreenshots(3) ||
+                            it.hasDescriptions(3) ||
+                            it.hasContext() ||
+                            it.hasMetadata()
+                    ) && !it.hasYoutubeVideoId()
+        }
+        completed = state.videos.filter { it.hasYoutubeVideoId() }
+
+        println("videos: ${state.videos}")
+    }
 
     Box(
         contentAlignment = Alignment.TopCenter,
@@ -61,7 +91,8 @@ internal fun ProcessVideosContent(
             item {
                 SectionContainer(
                     name = "Drag and drop videos",
-                    isOpen = state.videos.isEmpty(),
+                    isOpen = queued.isEmpty(),
+                    extra = {},
                     modifier = Modifier
                 ) {
                     DragArea(
@@ -78,17 +109,38 @@ internal fun ProcessVideosContent(
             }
             item {
                 SectionContainer(
-                    name = "Queued videos",
-                    isOpen = state.videos.isEmpty(),
+                    name = "Queued videos: ${queued.size}",
+                    headerBgColor = Color.LightGray,
+                    isOpen = queued.isNotEmpty(),
+                    extra = {
+                        OutlinedButton(
+                            onClick = {}
+                        ) {
+                            Text(
+                                text = "Clear all",
+                                style = MaterialTheme.typography.button,
+                                color = MaterialTheme.colors.onSurface,
+                            )
+                        }
+                        OutlinedButton(
+                            onClick = {}
+                        ) {
+                            Text(
+                                text = "Run all",
+                                style = MaterialTheme.typography.button,
+                                color = MaterialTheme.colors.onSurface,
+                            )
+                        }
+                    },
                     modifier = Modifier
                 ) {
-                    AnimatedVisibility(state.videos.isEmpty()) {
+                    AnimatedVisibility(queued.isEmpty()) {
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "No videos",
+                                text = "No videos queued",
                                 style = MaterialTheme.typography.h6,
                                 color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f),
                                 modifier = Modifier.padding(64.dp)
@@ -102,19 +154,177 @@ internal fun ProcessVideosContent(
                             .fillMaxWidth()
                             .padding(24.dp)
                     ) {
-                        state.videos.forEach { video ->
+                        queued.forEach { video ->
                             ProcessVideoItemContent(
-                                video = video,
+                                uiVideo = video,
                                 breakpoint = breakpoint,
                                 displayMessage = displayMessage,
                                 onDeleteClicked = {
                                     vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(video.id))
                                 },
-                                onProcessingStateChanged = {
-                                    vm.trySend(ProcessVideosContract.Inputs.OnChildProgressStateChanged(video.id, it))
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+            }
+            item {
+                SectionContainer(
+                    name = "Progress videos: ${progress.size}",
+                    headerBgColor = Color.Blue,
+                    isOpen = progress.isNotEmpty(),
+                    extra = {
+                    },
+                    modifier = Modifier
+                ) {
+                    AnimatedVisibility(queued.isEmpty()) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "No videos in progress",
+                                style = MaterialTheme.typography.h6,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f),
+                                modifier = Modifier.padding(64.dp)
+                            )
+                        }
+                    }
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp)
+                    ) {
+                        progress.forEach { video ->
+                            ProcessVideoItemContent(
+                                uiVideo = video,
+                                breakpoint = breakpoint,
+                                displayMessage = displayMessage,
+                                onDeleteClicked = {
+                                    vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(video.id))
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+            }
+            item {
+                SectionContainer(
+                    name = "Completed videos: ${completed.size}",
+                    isOpen = completed.isNotEmpty(),
+                    headerBgColor = Color.Green,
+                    extra = {
+                        AnimatedVisibility(completed.isNotEmpty()) {
+                            OutlinedButton(
+                                onClick = {}
+                            ) {
+                                Text(
+                                    text = "Clear all",
+                                    style = MaterialTheme.typography.button,
+                                    color = MaterialTheme.colors.onSurface,
+                                )
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                ) {
+                    AnimatedVisibility(completed.isEmpty()) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "No videos completed.",
+                                style = MaterialTheme.typography.h6,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f),
+                                modifier = Modifier.padding(64.dp)
+                            )
+                        }
+                    }
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp)
+                    ) {
+                        completed.forEach { video ->
+                            ProcessVideoItemContent(
+                                uiVideo = video,
+                                breakpoint = breakpoint,
+                                displayMessage = displayMessage,
+                                onDeleteClicked = {
+                                    vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(video.id))
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+            }
+            item {
+                SectionContainer(
+                    name = "Failed videos: ${state.failed.size}",
+                    isOpen = state.failed.isNotEmpty(),
+                    headerBgColor = Color.Red,
+                    extra = {
+                        AnimatedVisibility(state.failed.isNotEmpty()) {
+                            OutlinedButton(
+                                onClick = {}
+                            ) {
+                                Text(
+                                    text = "Clear all",
+                                    style = MaterialTheme.typography.button,
+                                    color = MaterialTheme.colors.onSurface,
+                                )
+                            }
+                        }
+                        AnimatedVisibility(state.failed.isNotEmpty()) {
+                            OutlinedButton(
+                                onClick = {}
+                            ) {
+                                Text(
+                                    text = "Run again",
+                                    style = MaterialTheme.typography.button,
+                                    color = MaterialTheme.colors.onSurface,
+                                )
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                ) {
+                    AnimatedVisibility(state.failed.isEmpty()) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "No videos completed.",
+                                style = MaterialTheme.typography.h6,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f),
+                                modifier = Modifier.padding(64.dp)
+                            )
+                        }
+                    }
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp)
+                    ) {
+                        state.videos.filter { it.id in state.failed }.forEach { video ->
+                            ProcessVideoItemContent(
+                                uiVideo = video,
+                                breakpoint = breakpoint,
+                                displayMessage = displayMessage,
+                                onDeleteClicked = {
+                                    vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(video.id))
+                                },
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }

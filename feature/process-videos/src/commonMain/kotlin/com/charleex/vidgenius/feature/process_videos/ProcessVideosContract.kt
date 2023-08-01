@@ -20,8 +20,6 @@ object ProcessVideosContract {
         data class DeleteVideoId(val videoId: String) : Inputs
         data class HandleFiles(val files: List<*>) : Inputs
 
-        data class OnChildProgressStateChanged(val videoId: String, val processingState: UIProgressState) : Inputs
-
         data class SetQueue(val queue: Set<String>) : Inputs
         data class SetProgress(val progress: Set<String>) : Inputs
         data class SetDone(val done: Set<String>) : Inputs

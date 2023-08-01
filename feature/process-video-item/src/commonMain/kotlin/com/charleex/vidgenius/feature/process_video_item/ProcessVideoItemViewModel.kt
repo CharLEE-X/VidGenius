@@ -1,6 +1,5 @@
 package com.charleex.vidgenius.feature.process_video_item
 
-import com.charleex.vidgenius.feature.process_videos.model.UIProgressState
 import com.charleex.vidgenius.feature.process_videos.model.UiVideo
 import com.copperleaf.ballast.BallastViewModelConfiguration
 import com.copperleaf.ballast.build
@@ -12,7 +11,6 @@ class ProcessVideoItemViewModel(
     scope: CoroutineScope,
     uiVideo: UiVideo,
     showMessage: (String) -> Unit,
-    onProcessingStateChanged: (UIProgressState) -> Unit,
 ) : BasicViewModel<
         ProcessVideoItemContract.Inputs,
         ProcessVideoItemContract.Events,
@@ -23,10 +21,10 @@ class ProcessVideoItemViewModel(
 //            logger = { PrintlnLogger() }
 //        }
         .withViewModel(
-            initialState = ProcessVideoItemContract.State(uiVideo = uiVideo),
-            inputHandler = ProcessVideoItemInputHandler(
-                onProcessingStateChanged = onProcessingStateChanged
+            initialState = ProcessVideoItemContract.State(
+                uiVideo = uiVideo,
             ),
+            inputHandler = ProcessVideoItemInputHandler(),
             name = "ProcessVideoItemViewModel",
         )
         .build(),
