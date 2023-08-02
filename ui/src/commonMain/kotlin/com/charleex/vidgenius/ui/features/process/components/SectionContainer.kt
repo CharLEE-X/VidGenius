@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -49,6 +50,7 @@ internal fun SectionContainer(
     enabled: Boolean = true,
     openInitially: Boolean = true,
     progress: Int? = null,
+    isMainHeader: Boolean = false,
     headerBgColor: Color = MaterialTheme.colors.background.copy(alpha = 0.3f),
     extra: @Composable RowScope.() -> Unit,
     block: @Composable ColumnScope.() -> Unit,
@@ -103,27 +105,30 @@ internal fun SectionContainer(
                         .fillMaxWidth()
                         .padding(
                             vertical = 20.dp,
-                            horizontal = 48.dp
+                        )
+                        .padding(
+                            start = 48.dp,
+                            end = if (isMainHeader) 38.dp else 16.dp,
                         )
                 ) {
                     Text(
                         text = name,
                         color = MaterialTheme.colors.onSurface,
+                        modifier = Modifier
+                            .fillMaxWidth(.6f)
                     )
                     AppFlexSpacer()
                     extra()
-                    AnimatedVisibility(enabled) {
-                        Icon(
-                            imageVector = Icons.Outlined.ArrowDropDown,
-                            contentDescription = "",
-                            tint = MaterialTheme.colors.onSurface,
-                            modifier = Modifier
-                                .size(32.dp)
-                                .graphicsLayer(
-                                    rotationZ = iconRotationState,
-                                )
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Outlined.ArrowDropDown,
+                        contentDescription = "",
+                        tint = MaterialTheme.colors.onSurface,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .graphicsLayer(
+                                rotationZ = iconRotationState,
+                            )
+                    )
                 }
             }
             progress?.let {

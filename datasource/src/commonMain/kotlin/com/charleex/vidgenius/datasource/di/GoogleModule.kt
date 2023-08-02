@@ -1,15 +1,15 @@
-package com.charleex.vidgenius.youtube
+package com.charleex.vidgenius.datasource.di
 
 import co.touchlab.kermit.Logger.Companion.withTag
-import com.charleex.vidgenius.youtube.auth.GoogleAuth
-import com.charleex.vidgenius.youtube.auth.GoogleAuthImpl
-import com.charleex.vidgenius.youtube.youtube.YoutubeConfig
-import com.charleex.vidgenius.youtube.video.ChannelUploadsService
-import com.charleex.vidgenius.youtube.video.ChannelUploadsServiceImpl
-import com.charleex.vidgenius.youtube.video.UpdateVideoService
-import com.charleex.vidgenius.youtube.video.UpdateVideoServiceImpl
-import com.charleex.vidgenius.youtube.video.UploadVideoService
-import com.charleex.vidgenius.youtube.video.UploadVideoServiceImpl
+import com.charleex.vidgenius.datasource.youtube.auth.GoogleAuth
+import com.charleex.vidgenius.datasource.youtube.auth.GoogleAuthImpl
+import com.charleex.vidgenius.datasource.youtube.video.ChannelUploadsService
+import com.charleex.vidgenius.datasource.youtube.video.ChannelUploadsServiceImpl
+import com.charleex.vidgenius.datasource.youtube.video.UpdateVideoService
+import com.charleex.vidgenius.datasource.youtube.video.UpdateVideoServiceImpl
+import com.charleex.vidgenius.datasource.youtube.video.UploadVideoService
+import com.charleex.vidgenius.datasource.youtube.video.UploadVideoServiceImpl
+import com.charleex.vidgenius.datasource.youtube.youtube.YoutubeConfig
 import com.google.api.client.auth.oauth2.Credential
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.http.javanet.NetHttpTransport

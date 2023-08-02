@@ -1,4 +1,4 @@
-//package com.charleex.vidgenius.youtube.youtube.analytics
+package com.charleex.vidgenius.datasource.youtube.analytics//package com.charleex.vidgenius.youtube.youtube.analytics
 //
 //import co.touchlab.kermit.Logger
 //import com.google.api.services.youtube.YouTube

@@ -3,11 +3,12 @@ package com.charleex.vidgenius.datasource.repository
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.model.UploadItem
-import com.charleex.vidgenius.youtube.auth.GoogleAuth
-import com.charleex.vidgenius.youtube.model.ChannelUploadsItem
-import com.charleex.vidgenius.youtube.video.ChannelUploadsService
-import com.charleex.vidgenius.youtube.video.UploadVideoService
-import com.charleex.vidgenius.youtube.youtube.YoutubeConfig
+import com.charleex.vidgenius.datasource.youtube.auth.GoogleAuth
+import com.charleex.vidgenius.datasource.youtube.model.ChannelUploadsItem
+import com.charleex.vidgenius.datasource.youtube.video.ChannelUploadsService
+import com.charleex.vidgenius.datasource.youtube.video.UploadVideoService
+import com.charleex.vidgenius.datasource.youtube.youtube.YoutubeConfig
+import kotlinx.coroutines.delay
 import java.io.File
 
 interface YoutubeRepository {
@@ -18,8 +19,9 @@ interface YoutubeRepository {
         channelId: String,
     ): String
 
-    fun logOut(credentialStore: String)
-    fun signIn(uploadStore: String)
+    suspend fun switchConfig(index: Int)
+    fun login()
+    fun logOut()
 }
 
 internal class YoutubeRepositoryImpl(
@@ -54,12 +56,19 @@ internal class YoutubeRepositoryImpl(
         )
     }
 
-    override fun logOut(credentialStore: String) {
-        googleAuth.logOut(credentialStore)
+    override fun login() {
+        googleAuth.authorize(YoutubeConfig.UploadVideo.scope, "uploadvideo", 2)
     }
 
-    override fun signIn(uploadStore: String) {
-        googleAuth.authorize(YoutubeConfig.UploadVideo.scope, uploadStore)
+    override fun logOut() {
+        googleAuth.logOut("uploadvideo")
+    }
+
+    override suspend fun switchConfig(index: Int) {
+        val credentialDatastore = "uploadvideo"
+        googleAuth.logOut(credentialDatastore)
+        delay(100)
+        googleAuth.authorize(YoutubeConfig.UploadVideo.scope, credentialDatastore, index)
     }
 }
 

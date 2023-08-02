@@ -24,7 +24,14 @@ internal class YoutubeRepositoryDebug : YoutubeRepository {
         return "flowOf(1f)"
     }
 
-    override fun logOut(credentialStore: String) {
 
+    override suspend fun switchConfig(index: Int) {
+
+    }
+
+    override fun login() {
+    }
+
+    override fun logOut() {
     }
 }

@@ -7,10 +7,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -38,6 +38,7 @@ internal fun QueuedVideoItemContent(
     modifier: Modifier = Modifier,
     uiVideo: UiVideo,
     breakpoint: Breakpoint,
+    youtubeUploadOn: Boolean,
     onDeleteClicked: () -> Unit,
     onStartProcessingClicked: () -> Unit,
 ) {
@@ -45,19 +46,15 @@ internal fun QueuedVideoItemContent(
     val animatedProgress by animateIntAsState(targetValue = progress)
 
     LaunchedEffect(uiVideo) {
-        if (uiVideo.hasYoutubeVideoId()) {
+        if (youtubeUploadOn && uiVideo.hasYoutubeVideoId()) {
             progress = 100
-        }
-        if (uiVideo.hasMetadata()) {
-            progress = 70
-        }
-        if (uiVideo.hasContext()) {
+        } else if (uiVideo.hasMetadata()) {
+            progress = if (youtubeUploadOn) 80 else 100
+        } else if (uiVideo.hasContext()) {
             progress = 60
-        }
-        if (uiVideo.hasDescriptions(3)) {
+        } else if (uiVideo.hasDescriptions(3)) {
             progress = 50
-        }
-        if (uiVideo.hasScreenshots(3)) {
+        } else if (uiVideo.hasScreenshots(3)) {
             progress = 30
         }
     }
@@ -94,70 +91,9 @@ internal fun QueuedVideoItemContent(
         },
         modifier = modifier
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(16.dp),
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                uiVideo.screenshots.forEach {
-                    LocalImage(
-                        filePath = it,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(100.dp)
-                    ) {
-                        // TODO: Placeholder
-                    }
-                }
-            }
-            Text(
-                text = "Descriptions",
-                color = MaterialTheme.colors.onSurface,
-            )
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(start = 16.dp),
-            ) {
-                uiVideo.descriptions.forEach {
-                    Text(
-                        text = "- $it",
-                        color = MaterialTheme.colors.onSurface,
-                    )
-                }
-            }
-            Text(
-                text = "Context: ${uiVideo.descriptionContext}",
-                color = MaterialTheme.colors.onSurface,
-            )
-            Text(
-                text = "Title: ${uiVideo.title}",
-                color = MaterialTheme.colors.onSurface,
-            )
-            Text(
-                text = "Description: ${uiVideo.description}",
-                color = MaterialTheme.colors.onSurface,
-            )
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = "Tags: ",
-                    color = MaterialTheme.colors.onSurface,
-                )
-                uiVideo.tags.forEach {
-                    Text(
-                        text = it,
-                        color = MaterialTheme.colors.onSurface,
-                    )
-                }
-            }
-            Text(
-                text = "Youtube Video Id: ${uiVideo.youtubeVideoId}",
-                color = MaterialTheme.colors.onSurface,
-            )
-        }
+        ContentText(
+            uiVideo = uiVideo,
+            modifier = Modifier.padding(32.dp),
+        )
     }
 }

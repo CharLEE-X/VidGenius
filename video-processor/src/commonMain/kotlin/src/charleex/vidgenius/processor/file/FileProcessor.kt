@@ -14,26 +14,23 @@ internal class FileProcessorImpl(
     private val logger: Logger,
 ) : FileProcessor {
     override fun filterVideoFiles(items: List<*>): List<File> {
-        logger.d("Processing file system items")
+        logger.d("Processing file system items ${items.size}")
         val videoFiles = mutableListOf<File>()
         items.forEach { item ->
             try {
                 val file = item as File
-                when {
-                    file.isFile -> {
-                        handleFile(file)?.let {
-                            videoFiles.add(it)
-                        }
+//                if (file.isFile) {
+                    val newFile = handleFile(file)
+                    if (newFile != null) {
+                        videoFiles.add(newFile)
+                    } else {
+                        logger.d("File is not a video file.")
                     }
-
-                    file.isDirectory -> {
-                        videoFiles += handleDirectory(file)
-                    }
-
-                    else -> {
-                        logger.d("item is not type file or directory.")
-                    }
-                }
+//                } else if (file.isDirectory) {
+//                    videoFiles += handleDirectory(file)
+//                } else {
+//                    logger.v { "item is not type file or directory." }
+//                }
             } catch (e: Exception) {
                 logger.d("Error while processing file system item: ${e.message}")
             }
@@ -55,6 +52,7 @@ internal class FileProcessorImpl(
     private fun handleDirectory(file: File): List<File> {
         val filesInDirectory = file.listFiles()
         return if (filesInDirectory != null) {
+            logger.d("files in directory is not null.")
             filterVideoFiles(filesInDirectory.toList())
         } else {
             logger.d("files in directory is null.")
@@ -63,9 +61,10 @@ internal class FileProcessorImpl(
     }
 
     private fun handleFile(file: File): File? {
-        val contentType = Files.probeContentType(Paths.get(file.absolutePath))
-        val isVideoFile = contentType?.startsWith("video/") ?: false
-        return if (isVideoFile) {
+//        val contentType = Files.probeContentType(Paths.get(file.absolutePath))
+//        val isVideoFile = contentType?.startsWith("video/") ?: false
+        return if (true) {
+            logger.d("File is a video file.")
             file
         } else {
             logger.d("File is not a video file.")

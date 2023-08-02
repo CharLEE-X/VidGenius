@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.youtube.youtube
+package com.charleex.vidgenius.datasource.youtube.youtube
 
 import com.google.common.collect.Lists
 

@@ -1,8 +1,8 @@
-package com.charleex.vidgenius.youtube.video
+package com.charleex.vidgenius.datasource.youtube.video
 
 import co.touchlab.kermit.Logger
-import com.charleex.vidgenius.youtube.model.ChannelUploadsItem
-import com.charleex.vidgenius.youtube.model.toUploadListItem
+import com.charleex.vidgenius.datasource.youtube.model.ChannelUploadsItem
+import com.charleex.vidgenius.datasource.youtube.model.toUploadListItem
 import com.google.api.services.youtube.YouTube
 import com.google.api.services.youtube.model.Channel
 import com.google.api.services.youtube.model.ChannelListResponse

@@ -1,8 +1,9 @@
-package com.charleex.vidgenius.youtube.video
+package com.charleex.vidgenius.datasource.youtube.video
 
 // SOURCE: https://github.com/htchien/youtube-api-samples-kotlin/blob/master/src/main/kotlin/tw/htchien/youtube/api/data/UploadVideo.kt
 
 import co.touchlab.kermit.Logger
+import com.google.api.client.auth.oauth2.TokenResponseException
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.googleapis.media.MediaHttpUploader
 import com.google.api.client.googleapis.media.MediaHttpUploaderProgressListener
@@ -86,6 +87,8 @@ class UploadVideoServiceImpl(
         } catch (e: GoogleJsonResponseException) {
             val isQuotaError = e.details.errors.toString().contains("youtube.quota")
             if (isQuotaError) error("QUOTA_EXCEEDED") else throw e
+        } catch (e: TokenResponseException) {
+            if (e.statusCode == 401) error("UNAUTHORIZED") else throw e
         }
 
         println("\n================== Returned Video ==================\n")

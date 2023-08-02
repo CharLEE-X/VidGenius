@@ -7,10 +7,13 @@ import com.charleex.vidgenius.datasource.repository.GoogleCloudRepository
 import com.charleex.vidgenius.datasource.repository.OpenAiRepository
 import com.charleex.vidgenius.datasource.repository.VideoRepository
 import com.charleex.vidgenius.datasource.repository.YoutubeRepository
+import com.charleex.vidgenius.datasource.utils.renameFile
 import com.hackathon.cda.repository.db.VidGeniusDatabase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import okio.Path.Companion.toPath
 import java.io.File
+import java.nio.file.Files
 
 data class VideoCategory(
     val id: String = uuid4().toString(),
@@ -57,18 +60,53 @@ internal class VideoProcessingImpl(
         logger.d("Processing video $videoId")
 
         val video = videoRepository.getVideoById(videoId)
-
         val videoWithScreenshots = processVideo(video, numberOfScreenshots)
-
-        val videoWithDescriptions = processScreenshotsToText(videoWithScreenshots, numberOfScreenshots)
-
+        val videoWithDescriptions =
+            processScreenshotsToText(videoWithScreenshots, numberOfScreenshots)
         val videoWithDescriptionContext = processDescriptions(videoWithDescriptions)
-
         val videoWithMetadata = generateMetaData(videoWithDescriptionContext)
-
-        if (uploadYouTube) {
-            uploadYouTubeVideo(videoWithMetadata, channelId)
+        val finalVideo = if (uploadYouTube) videoWithMetadata else {
+            renameVideo(videoWithMetadata)
         }
+        if (uploadYouTube) {
+            uploadYouTubeVideo(finalVideo, channelId)
+            moveFileToUploaded(finalVideo)
+        }
+    }
+
+    private fun moveFileToUploaded(finalVideo: Video) {
+        val file = File(finalVideo.path)
+        val parentDir = file.parent
+        val fileName = file.name
+        val extension = file.extension
+        val newDir = "yt-uploaded"
+        val newPath = "$parentDir/${newDir}/${fileName}.${extension}"
+        val movedPath = Files.move(file.toPath(), newPath.toPath().toFile().toPath())
+        val newVideo = finalVideo.copy(path = movedPath.toAbsolutePath().toString())
+        database.videoQueries.upsert(newVideo)
+        logger.d("Video renamed | ${finalVideo.id} | $fileName -> $newPath")
+    }
+
+    private fun renameVideo(video: Video): Video {
+        return video.title?.removeEmojis()?.let { cleanedTitle ->
+            val file = File(video.path)
+            val oldDirectory = file.parent
+            val oldName = file.name
+            val oldExtension = file.extension
+            val newName = "${cleanedTitle}.${oldExtension}"
+            if (video.path.contains(newName)) return video
+            val newFileName = renameFile(oldDirectory, oldName, newName)
+            val newPath = "$oldDirectory/${newFileName}.${oldExtension}"
+            val newVideo = video.copy(path = newPath)
+            database.videoQueries.upsert(newVideo)
+            logger.d("Video renamed | ${video.id} | $oldName -> $newPath")
+            newVideo
+        } ?: video
+    }
+
+    private fun String.removeEmojis(): String {
+        val emojiRegex = Regex("[\\uD83C-\\uDBFF\\uDC00-\\uDFFF]+")
+        return this.replace(emojiRegex, "")
     }
 
     private suspend fun processVideo(video: Video, numberOfScreenshots: Int): Video {
@@ -172,8 +210,8 @@ internal class VideoProcessingImpl(
         video: Video,
         channelId: String,
     ): Video {
-        logger.d("Upload YouTube video | ${video.id} | Start")
-        val youtubeVideoId = try {
+        logger.d("Upload YouTube video | ${video.id} | Start | Counter: $counter")
+        val youtubeVideoId: String? = try {
             youtubeRepository.uploadVideo(
                 video = video,
                 channelId = channelId,
@@ -184,11 +222,11 @@ internal class VideoProcessingImpl(
 
                 counter++
                 if (counter > 3) {
-                    throw e
+                    counter = 1
+                    logger.d("Ending error flow and switching to default config $counter")
                 } else {
-                    youtubeRepository.logOut(UPLOAD_STORE)
-                    delay(100)
-                    youtubeRepository.signIn(UPLOAD_STORE)
+                    logger.d("Switching to config $counter")
+                    youtubeRepository.switchConfig(index = counter)
                     delay(100)
                     uploadYouTubeVideo(video, channelId)
                 }
@@ -196,6 +234,18 @@ internal class VideoProcessingImpl(
                 logger.e(e) { "Error uploading video" }
             }
             throw e
+        } catch (e: Exception) {
+            if (e.message?.contains("UNAUTHORIZED") == true) {
+                logger.e(e) { "Recived unauthorized. Signing in." }
+                youtubeRepository.logOut()
+                delay(100)
+                youtubeRepository.login()
+                delay(100)
+                uploadYouTubeVideo(video, channelId).youtubeVideoId
+            } else {
+                logger.e(e) { "Error uploading video" }
+                throw e
+            }
         }
         val newVideo = video.copy(youtubeVideoId = youtubeVideoId)
         database.videoQueries.upsert(newVideo)
@@ -203,9 +253,3 @@ internal class VideoProcessingImpl(
         return newVideo
     }
 }
-
-enum class YTCONFIG(val configName: String) {
-    FIRST("client_secrets_1.json"),
-    SECOND("client_secret_2.json"),
-}
-

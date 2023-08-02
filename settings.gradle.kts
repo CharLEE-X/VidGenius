@@ -10,7 +10,6 @@ include(
     ":api",
     ":datasource",
     ":ai",
-    ":youtube",
     ":video-processor",
     ":vision-ai",
 )

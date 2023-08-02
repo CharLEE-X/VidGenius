@@ -78,11 +78,17 @@ internal fun ProcessVideosContent(
     var completed by remember { mutableStateOf(listOf<UiVideo>()) }
 
     LaunchedEffect(state.videos) {
-        queued = state.videos.filter { !it.hasYoutubeVideoId() }
+        queued = state.videos.filter {
+            if (state.uploadYouTube)
+                !it.hasYoutubeVideoId() else !it.hasMetadata()
+        }
             .sortedBy { it.modifiedAt }
 
         completed = state.videos
-            .filter { it.hasYoutubeVideoId() }
+            .filter {
+                if (state.uploadYouTube)
+                    it.hasYoutubeVideoId() else it.hasMetadata()
+            }
             .sortedBy { it.modifiedAt }
     }
 
@@ -101,6 +107,7 @@ internal fun ProcessVideosContent(
                 SectionContainer(
                     name = "Drag and drop videos",
                     headerBgColor = Color.Magenta,
+                    isMainHeader = true,
                     extra = {},
                     modifier = Modifier
                 ) {
@@ -120,30 +127,39 @@ internal fun ProcessVideosContent(
                 SectionContainer(
                     name = "Queued videos: ${queued.size}",
                     headerBgColor = Color.LightGray,
+                    isMainHeader = true,
                     extra = {
                         AnimatedVisibility(
                             visible = queued.isNotEmpty(),
                             enter = fadeIn(),
                             exit = fadeOut()
                         ) {
-                            AppOutlinedButton(
-                                label = "Clear All",
-                                icon = Icons.Default.Delete,
-                                onClick = {
-                                    queued.forEach {
-                                        vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(it.id))
-                                    }
-                                },
-                            )
-                            AppOutlinedButton(
-                                label = "Start All",
-                                icon = Icons.Default.PlayArrow,
-                                onClick = {
-                                    queued.forEach {
-                                        vm.trySend(ProcessVideosContract.Inputs.StartVideoProcessing(it.id))
-                                    }
-                                },
-                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            ) {
+                                AppOutlinedButton(
+                                    label = "Clear All",
+                                    icon = Icons.Default.Delete,
+                                    onClick = {
+                                        queued.forEach {
+                                            vm.trySend(ProcessVideosContract.Inputs.DeleteVideoId(it.id))
+                                        }
+                                    },
+                                )
+                                AppOutlinedButton(
+                                    label = "Start All",
+                                    icon = Icons.Default.PlayArrow,
+                                    onClick = {
+                                        queued.forEach {
+                                            vm.trySend(
+                                                ProcessVideosContract.Inputs.StartVideoProcessing(
+                                                    it.id
+                                                )
+                                            )
+                                        }
+                                    },
+                                )
+                            }
                         }
                     },
                     modifier = Modifier
@@ -192,7 +208,11 @@ internal fun ProcessVideosContent(
                                             DropdownMenuItem(
                                                 onClick = {
                                                     categoryDropdownOpen = false
-                                                    vm.trySend(ProcessVideosContract.Inputs.SetCategory(category))
+                                                    vm.trySend(
+                                                        ProcessVideosContract.Inputs.SetCategory(
+                                                            category
+                                                        )
+                                                    )
                                                 }
                                             ) {
                                                 Surface {
@@ -234,7 +254,7 @@ internal fun ProcessVideosContent(
                                         expanded = screenshotsDropdownOpen,
                                         onDismissRequest = { screenshotsDropdownOpen = false },
                                     ) {
-                                        (1..5).forEach { number ->
+                                        (1..7).forEach { number ->
                                             DropdownMenuItem(
                                                 onClick = {
                                                     screenshotsDropdownOpen = false
@@ -275,6 +295,7 @@ internal fun ProcessVideosContent(
                             QueuedVideoItemContent(
                                 uiVideo = video,
                                 breakpoint = breakpoint,
+                                youtubeUploadOn = state.uploadYouTube,
                                 onDeleteClicked = {
                                     vm.trySend(
                                         ProcessVideosContract.Inputs.CancelProcessingVideo(
@@ -300,6 +321,7 @@ internal fun ProcessVideosContent(
                 SectionContainer(
                     name = "Completed videos: ${completed.size}",
                     headerBgColor = Color.Green,
+                    isMainHeader = true,
                     extra = {
                         AnimatedVisibility(completed.isNotEmpty()) {
                             AppOutlinedButton(

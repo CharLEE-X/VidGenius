@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.youtube.auth
+package com.charleex.vidgenius.datasource.youtube.auth
 
 import co.touchlab.kermit.Logger
 import com.google.api.client.auth.oauth2.Credential
@@ -26,7 +26,7 @@ interface GoogleAuth {
      * @param scopes              list of scopes needed to run youtube upload.
      * @param credentialDatastore name of the credential datastore to cache OAuth tokens
      */
-    fun authorize(scopes: List<String>, credentialDatastore: String): Credential
+    fun authorize(scopes: List<String>, credentialDatastore: String, index: Int = 1): Credential
 
     fun logOut(credentialDatastore: String)
 }
@@ -38,8 +38,10 @@ internal class GoogleAuthImpl(
     private val credentialDirectory: String,
 ) : GoogleAuth {
     @Throws(IOException::class)
-    override fun authorize(scopes: List<String>, credentialDatastore: String): Credential {
-        val clientSecrets = getGoogleClientSecrets()
+    override fun authorize(scopes: List<String>, credentialDatastore: String, index: Int): Credential {
+        val configFile = "/client_secret_$index.json"
+        logger.d("Using config $configFile")
+        val clientSecrets = getGoogleClientSecrets(configFile)
 
         // Checks that the defaults have been replaced (Default = "Enter X here").
         if (
@@ -51,7 +53,7 @@ internal class GoogleAuthImpl(
         ) {
             logger.e {
                 "Enter Client ID and Secret from https://console.developers.google.com/project/_/apiui/credential " +
-                        "into src/main/resources/client_secrets_1.json"
+                        "into src/main/resources/client_secret_1.json"
             }
         }
 
@@ -82,9 +84,9 @@ internal class GoogleAuthImpl(
         return fileDataStoreFactory.getDataStore(credentialDatastore)
     }
 
-    private fun getGoogleClientSecrets(): GoogleClientSecrets? {
+    private fun getGoogleClientSecrets(configName: String): GoogleClientSecrets? {
         val inputStream = this::class.java
-            .getResourceAsStream("/client_secrets_1.json")
+            .getResourceAsStream(configName)
         val inputStreamReader = InputStreamReader(inputStream)
         return GoogleClientSecrets.load(jsonFactory, inputStreamReader)
     }

@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.youtube.model
+package com.charleex.vidgenius.datasource.youtube.model
 
 import com.google.api.services.youtube.model.PlaylistItem
 import com.google.api.services.youtube.model.Video

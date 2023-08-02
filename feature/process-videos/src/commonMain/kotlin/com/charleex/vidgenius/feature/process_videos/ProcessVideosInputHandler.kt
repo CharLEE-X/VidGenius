@@ -90,8 +90,7 @@ internal class ProcessVideosInputHandler :
                 numberOfScreenshots = state.numberOfScreenshots,
                 category = state.category.name,
                 uploadYouTube = state.uploadYouTube,
-
-                )
+            )
         }
     }
 }
