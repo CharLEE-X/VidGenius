@@ -1,14 +1,14 @@
 package src.charleex.vidgenius.datasource
 
-import com.charleex.vidgenius.datasource.repository.OpenAiRepository
+import com.charleex.vidgenius.datasource.feature.open_ai.OpenAiRepository
 import kotlinx.coroutines.test.runTest
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.get
-import com.charleex.vidgenius.datasource.di.repositoryModule
-import src.charleex.vidgenius.whisper.model.chat.ChatMessage
-import src.charleex.vidgenius.whisper.model.chat.ChatRole
+import com.charleex.vidgenius.datasource.repositoryModule
+import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatMessage
+import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatRole
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test

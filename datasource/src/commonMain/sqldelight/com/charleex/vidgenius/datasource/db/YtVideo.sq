@@ -1,0 +1,20 @@
+import java.lang.String;
+import kotlin.collections.List;
+
+CREATE TABLE IF NOT EXISTS YtVideo (
+  id TEXT PRIMARY KEY NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  privacyStatus TEXT,
+  tags TEXT AS List<String> NOT NULL,
+  publishedAt TEXT AS kotlinx.datetime.Instant NOT NULL
+);
+
+getAll:
+SELECT * FROM YtVideo ORDER BY publishedAt DESC, id ASC;
+
+upsert:
+INSERT OR REPLACE INTO YtVideo VALUES ?;
+
+delete:
+DELETE FROM YtVideo WHERE id = :id;

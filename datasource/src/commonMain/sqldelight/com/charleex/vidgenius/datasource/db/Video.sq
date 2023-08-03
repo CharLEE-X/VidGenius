@@ -1,23 +1,21 @@
 import java.lang.String;
+import kotlin.Boolean;
 import kotlin.collections.List;
+import kotlinx.datetime.Instant;
 
 CREATE TABLE IF NOT EXISTS Video (
   id TEXT PRIMARY KEY NOT NULL,
+  youtubeId TEXT NOT NULL,
   path TEXT NOT NULL,
---  Video processing
   screenshots TEXT AS List<String> NOT NULL,
---  Text processing
   descriptions TEXT AS List<String> NOT NULL,
   descriptionContext TEXT,
---  Video metadata
   title TEXT,
   description TEXT,
   tags TEXT AS List<String> NOT NULL,
--- Upload
-  youtubeVideoId TEXT,
--- Time tracking
-  createdAt TEXT AS kotlinx.datetime.Instant NOT NULL,
-  modifiedAt TEXT AS kotlinx.datetime.Instant NOT NULL
+  isCompleted INTEGER AS Boolean DEFAULT 0 NOT NULL,
+  createdAt TEXT AS Instant NOT NULL,
+  modifiedAt TEXT AS Instant NOT NULL
 );
 
 getById:
