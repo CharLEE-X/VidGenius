@@ -1,112 +1,124 @@
 package com.charleex.vidgenius.datasource
 
 import co.touchlab.kermit.Logger
-import com.benasher44.uuid.uuid4
 import com.charleex.vidgenius.datasource.db.Video
-import com.charleex.vidgenius.datasource.repository.GoogleCloudRepository
-import com.charleex.vidgenius.datasource.repository.OpenAiRepository
-import com.charleex.vidgenius.datasource.repository.VideoRepository
-import com.charleex.vidgenius.datasource.repository.YoutubeRepository
-import com.charleex.vidgenius.datasource.utils.renameFile
+import com.charleex.vidgenius.datasource.db.YtVideo
+import com.charleex.vidgenius.datasource.feature.open_ai.OpenAiRepository
+import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepository
+import com.charleex.vidgenius.datasource.feature.vision_ai.GoogleCloudRepository
+import com.charleex.vidgenius.datasource.feature.youtube.PrivacyStatus
+import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
 import com.hackathon.cda.repository.db.VidGeniusDatabase
 import kotlinx.coroutines.flow.Flow
-import okio.Path.Companion.toPath
+import kotlinx.coroutines.flow.first
 import java.io.File
-import java.nio.file.Files
-
-data class VideoCategory(
-    val id: String = uuid4().toString(),
-    val name: String,
-)
 
 interface VideoProcessing {
-    fun getVideos(): Flow<List<Video>>
-    suspend fun filterVideosFromFiles(files: List<*>)
-    suspend fun processAndUploadVideo(
-        videoId: String,
-        channelId: String,
-        numberOfScreenshots: Int,
-        category: String,
-        uploadYouTube: Boolean,
+    val videos: Flow<List<Video>>
+    val ytVideos: Flow<List<YtVideo>>
+
+    suspend fun fetchUploads(privacyStatus: PrivacyStatus)
+    suspend fun addVideos(files: List<*>)
+    fun deleteVideo(videoId: String)
+    suspend fun startProcessing(
+        video: Video,
+        numberOfScreenshots: Int = 1,
+        onError: (String) -> Unit,
     )
+
+    fun signOut()
 }
 
 internal class VideoProcessingImpl(
     private val logger: Logger,
-    private val videoRepository: VideoRepository,
     private val database: VidGeniusDatabase,
+    private val videoFileRepository: VideoFileRepository,
     private val googleCloudRepository: GoogleCloudRepository,
     private val openAiRepository: OpenAiRepository,
     private val youtubeRepository: YoutubeRepository,
 ) : VideoProcessing {
-    override fun getVideos(): Flow<List<Video>> {
-        return videoRepository.flowOfVideos()
+    override val videos: Flow<List<Video>>
+        get() = videoFileRepository.flowOfVideos()
+
+    override val ytVideos: Flow<List<YtVideo>>
+        get() = youtubeRepository.flowOfYtVideos()
+
+    override suspend fun fetchUploads(privacyStatus: PrivacyStatus) {
+        logger.d("Fetching uploads")
+        youtubeRepository.fetchUploads(privacyStatus)
     }
 
-    override suspend fun filterVideosFromFiles(files: List<*>) {
-        logger.d("Getting videos from files $files")
-        videoRepository.filterVideos(files)
+    override suspend fun addVideos(files: List<*>) {
+        logger.d("Adding videos $files")
+        videoFileRepository.filterVideos(files)
     }
 
+    override fun deleteVideo(videoId: String) {
+        logger.d("Deleting video $videoId")
+        videoFileRepository.deleteVideo(videoId)
+    }
 
-    override suspend fun processAndUploadVideo(
-        videoId: String,
-        channelId: String,
+    override suspend fun startProcessing(
+        video: Video,
         numberOfScreenshots: Int,
-        category: String,
-        uploadYouTube: Boolean,
+        onError: (String) -> Unit,
     ) {
-        logger.d("Processing video $videoId")
+        logger.d("Processing video ${video.id}")
 
-        val video = videoRepository.getVideoById(videoId)
-        val videoWithScreenshots = processVideo(video, numberOfScreenshots)
+        val ytVideo = youtubeRepository.flowOfYtVideos().first()
+            .firstOrNull { it.title == video.youtubeId }
+            ?: error("No yt video found for ${video.youtubeId}")
+
+        val videoWithScreenshots = processVideo(video, 3)
         val videoWithDescriptions =
             processScreenshotsToText(videoWithScreenshots, numberOfScreenshots)
         val videoWithDescriptionContext = processDescriptions(videoWithDescriptions)
+
+        logger.d { "Context: $videoWithDescriptionContext" }
+
         val videoWithMetadata = generateMetaData(videoWithDescriptionContext)
-        val finalVideo = if (uploadYouTube) videoWithMetadata else {
-            renameVideo(videoWithMetadata)
-        }
-        if (uploadYouTube) {
-            uploadYouTubeVideo(finalVideo, channelId)
-            moveFileToUploaded(finalVideo)
-        }
+        updateYouTubeVideo(ytVideo, videoWithMetadata)
+        logger.v { "Processing $video | Finished" }
     }
 
-    private fun moveFileToUploaded(finalVideo: Video) {
-        val file = File(finalVideo.path)
-        val parentDir = file.parent
-        val fileName = file.name
-        val extension = file.extension
-        val newDir = "yt-uploaded"
-        val newPath = "$parentDir/${newDir}/${fileName}.${extension}"
-        val movedPath = Files.move(file.toPath(), newPath.toPath().toFile().toPath())
-        val newVideo = finalVideo.copy(path = movedPath.toAbsolutePath().toString())
-        database.videoQueries.upsert(newVideo)
-        logger.d("Video renamed | ${finalVideo.id} | $fileName -> $newPath")
+    override fun signOut() {
+        youtubeRepository.signOut()
     }
 
-    private fun renameVideo(video: Video): Video {
-        val title = video.title
-        val file = File(video.path)
-        val oldDirectory = file.parent
-        val oldName = file.name
-        val oldExtension = file.extension
-        val newName = "${title}.${oldExtension}"
-        if (video.path.contains(newName)) return video
-        val newFileName = renameFile(oldDirectory, oldName, newName)
-        val newPath = "$oldDirectory/${newFileName}.${oldExtension}"
-        val newVideo = video.copy(path = newPath)
-        database.videoQueries.upsert(newVideo)
-        logger.d("Video renamed | ${video.id} | $oldName -> $newPath")
-        return newVideo
-    }
-
-    private fun String.removeEmojis(): String {
-        val emojiRegex = Regex("[\\uD83C-\\uDBFF\\uDC00-\\uDFFF]+")
-        return this.replace(emojiRegex, "")
-    }
-
+    //    private fun moveFileToUploaded(finalVideo: Video) {
+//        val file = File(finalVideo.path)
+//        val parentDir = file.parent
+//        val fileName = file.name
+//        val extension = file.extension
+//        val newDir = "yt-uploaded"
+//        val newPath = "$parentDir/${newDir}/${fileName}.${extension}"
+//        val movedPath = Files.move(file.toPath(), newPath.toPath().toFile().toPath())
+//        val newVideo = finalVideo.copy(path = movedPath.toAbsolutePath().toString())
+//        database.videoQueries.upsert(newVideo)
+//        logger.d("Video renamed | ${finalVideo.id} | $fileName -> $newPath")
+//    }
+//
+//    private fun renameVideo(video: Video): Video {
+//        val title = video.title
+//        val file = File(video.path)
+//        val oldDirectory = file.parent
+//        val oldName = file.name
+//        val oldExtension = file.extension
+//        val newName = "${title}.${oldExtension}"
+//        if (video.path.contains(newName)) return video
+//        val newFileName = renameFile(oldDirectory, oldName, newName)
+//        val newPath = "$oldDirectory/${newFileName}.${oldExtension}"
+//        val newVideo = video.copy(path = newPath)
+//        database.videoQueries.upsert(newVideo)
+//        logger.d("Video renamed | ${video.id} | $oldName -> $newPath")
+//        return newVideo
+//    }
+//
+//    private fun String.removeEmojis(): String {
+//        val emojiRegex = Regex("[\\uD83C-\\uDBFF\\uDC00-\\uDFFF]+")
+//        return this.replace(emojiRegex, "")
+//    }
+//
     private suspend fun processVideo(video: Video, numberOfScreenshots: Int): Video {
         val hasScreenshots = video.screenshots.size == numberOfScreenshots
         if (!hasScreenshots) {
@@ -118,15 +130,13 @@ internal class VideoProcessingImpl(
         if (hasScreenshots && screenshotsHaveText && allFilesExist) return video
 
         logger.d("Video processing | ${video.id} | Start")
-        val screenshots = try {
-            videoRepository.captureScreenshots(video, numberOfScreenshots)
+        val newVideo = try {
+            videoFileRepository.captureScreenshots(video, numberOfScreenshots)
         } catch (e: Exception) {
             logger.e(e) { "Error generating screenshots" }
             throw e
         }
-        val newVideo = video.copy(screenshots = screenshots)
-        database.videoQueries.upsert(newVideo)
-        logger.d("Video processing | ${video.id} | Done | $screenshots")
+        logger.d("Video processing | ${video.id} | Done | ${newVideo.screenshots}")
         return newVideo
     }
 
@@ -142,17 +152,13 @@ internal class VideoProcessingImpl(
         if (hasDescriptions && allDescriptionsHaveText) return video
 
         logger.d("Text processing | ${video.id} | Start")
-        val descriptions = try {
-            video.screenshots.map { screenshot ->
-                googleCloudRepository.getTextFromImage(screenshot)
-            }
+        val newVideo = try {
+            googleCloudRepository.getTextFromImages(video)
         } catch (e: Exception) {
             logger.e(e) { "Error generating descriptions" }
             throw e
         }
-        val newVideo = video.copy(descriptions = descriptions)
-        database.videoQueries.upsert(newVideo)
-        logger.d("Text processing | ${video.id} | Done | $descriptions")
+        logger.d("Text processing | ${video.id} | Done | ${newVideo.descriptions}")
         return newVideo
     }
 
@@ -161,15 +167,13 @@ internal class VideoProcessingImpl(
         if (hasDescriptionContext) return video
 
         logger.d("Description processing | ${video.id} | Start")
-        val context = try {
-            openAiRepository.getDescriptionContext(video.descriptions)
+        val newVideo = try {
+            openAiRepository.getDescriptionContext(video)
         } catch (e: Exception) {
             logger.e(e) { "Error generating description context" }
             throw e
         }
-        val newVideo = video.copy(descriptionContext = context)
-        database.videoQueries.upsert(newVideo)
-        logger.d("Description processing | ${video.id} | Done | $context")
+        logger.d("Description processing | ${video.id} | Done | ${newVideo.descriptionContext}")
         return newVideo
     }
 
@@ -181,31 +185,29 @@ internal class VideoProcessingImpl(
         if (hasTitle && hasDescription && hasTags && tagsHaveText) return video
 
         logger.d("Metadata generation | ${video.id} | Start")
-        val metadata = try {
+        val newVideo = try {
             openAiRepository.getMetaData(video)
         } catch (e: Exception) {
             logger.e(e) { "Error generating metadata" }
             throw e
         }
-        val newVideo = video.copy(
-            title = metadata.title,
-            description = metadata.description,
-            tags = metadata.tags,
-        )
-        database.videoQueries.upsert(newVideo)
-        logger.d("Metadata generation | ${video.id} | Done | $metadata")
+        logger.d("Metadata generation | ${video.id} | Done | ${newVideo.title}")
         return newVideo
     }
 
-    private suspend fun uploadYouTubeVideo(
+    private suspend fun updateYouTubeVideo(
+        ytVideo: YtVideo,
         video: Video,
-        channelId: String,
-    ): Video {
-        logger.d("Upload YouTube video | ${video.id} | Start")
-        val youtubeVideoId = youtubeRepository.uploadVideo(video, channelId)
-        val newVideo = video.copy(youtubeVideoId = youtubeVideoId)
-        database.videoQueries.upsert(newVideo)
-        logger.d("Upload YouTube video | ${video.id} | Done | $youtubeVideoId")
-        return newVideo
+    ) {
+        logger.d("Updating YouTube video | ${video.youtubeId} | Start")
+        val result = youtubeRepository.updateVideo(ytVideo, video)
+        if (result) {
+            val newVideo = video.copy(isCompleted = true)
+            database.videoQueries.upsert(newVideo)
+            database.ytVideoQueries.delete(video.youtubeId)
+            logger.d("Upload YouTube video | ${video.id} | Done | $result")
+        } else {
+            logger.e { "Error updating YouTube video | ${video.youtubeId}" }
+        }
     }
 }
