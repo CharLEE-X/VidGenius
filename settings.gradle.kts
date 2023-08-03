@@ -12,6 +12,7 @@ include(
     ":ai",
     ":video-processor",
     ":vision-ai",
+    ":youtube",
 )
 
 include(

@@ -9,7 +9,6 @@ import com.charleex.vidgenius.datasource.repository.VideoRepository
 import com.charleex.vidgenius.datasource.repository.YoutubeRepository
 import com.charleex.vidgenius.datasource.utils.renameFile
 import com.hackathon.cda.repository.db.VidGeniusDatabase
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import okio.Path.Companion.toPath
 import java.io.File
@@ -88,20 +87,19 @@ internal class VideoProcessingImpl(
     }
 
     private fun renameVideo(video: Video): Video {
-        return video.title?.removeEmojis()?.let { cleanedTitle ->
-            val file = File(video.path)
-            val oldDirectory = file.parent
-            val oldName = file.name
-            val oldExtension = file.extension
-            val newName = "${cleanedTitle}.${oldExtension}"
-            if (video.path.contains(newName)) return video
-            val newFileName = renameFile(oldDirectory, oldName, newName)
-            val newPath = "$oldDirectory/${newFileName}.${oldExtension}"
-            val newVideo = video.copy(path = newPath)
-            database.videoQueries.upsert(newVideo)
-            logger.d("Video renamed | ${video.id} | $oldName -> $newPath")
-            newVideo
-        } ?: video
+        val title = video.title
+        val file = File(video.path)
+        val oldDirectory = file.parent
+        val oldName = file.name
+        val oldExtension = file.extension
+        val newName = "${title}.${oldExtension}"
+        if (video.path.contains(newName)) return video
+        val newFileName = renameFile(oldDirectory, oldName, newName)
+        val newPath = "$oldDirectory/${newFileName}.${oldExtension}"
+        val newVideo = video.copy(path = newPath)
+        database.videoQueries.upsert(newVideo)
+        logger.d("Video renamed | ${video.id} | $oldName -> $newPath")
+        return newVideo
     }
 
     private fun String.removeEmojis(): String {
@@ -199,54 +197,12 @@ internal class VideoProcessingImpl(
         return newVideo
     }
 
-    companion object {
-        const val UPLOAD_STORE = "uploadvideo"
-        private const val INSERT_QUOTA_COST = 1_600
-    }
-
-    var counter = 0
-
     private suspend fun uploadYouTubeVideo(
         video: Video,
         channelId: String,
     ): Video {
-        logger.d("Upload YouTube video | ${video.id} | Start | Counter: $counter")
-        val youtubeVideoId: String? = try {
-            youtubeRepository.uploadVideo(
-                video = video,
-                channelId = channelId,
-            )
-        } catch (e: Exception) {
-            if (e.message?.contains("QUOTA_EXCEEDED") == true) {
-                logger.e(e) { "YouTube quota exceeded. Counter: $counter" }
-
-                counter++
-                if (counter > 3) {
-                    counter = 1
-                    logger.d("Ending error flow and switching to default config $counter")
-                } else {
-                    logger.d("Switching to config $counter")
-                    youtubeRepository.switchConfig(index = counter)
-                    delay(100)
-                    uploadYouTubeVideo(video, channelId)
-                }
-            } else {
-                logger.e(e) { "Error uploading video" }
-            }
-            throw e
-        } catch (e: Exception) {
-            if (e.message?.contains("UNAUTHORIZED") == true) {
-                logger.e(e) { "Recived unauthorized. Signing in." }
-                youtubeRepository.logOut()
-                delay(100)
-                youtubeRepository.login()
-                delay(100)
-                uploadYouTubeVideo(video, channelId).youtubeVideoId
-            } else {
-                logger.e(e) { "Error uploading video" }
-                throw e
-            }
-        }
+        logger.d("Upload YouTube video | ${video.id} | Start")
+        val youtubeVideoId = youtubeRepository.uploadVideo(video, channelId)
         val newVideo = video.copy(youtubeVideoId = youtubeVideoId)
         database.videoQueries.upsert(newVideo)
         logger.d("Upload YouTube video | ${video.id} | Done | $youtubeVideoId")

@@ -103,9 +103,7 @@ internal fun SectionContainer(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(
-                            vertical = 20.dp,
-                        )
+                        .padding(vertical = 20.dp,)
                         .padding(
                             start = 48.dp,
                             end = if (isMainHeader) 38.dp else 16.dp,
@@ -115,7 +113,7 @@ internal fun SectionContainer(
                         text = name,
                         color = MaterialTheme.colors.onSurface,
                         modifier = Modifier
-                            .fillMaxWidth(.6f)
+                            .fillMaxWidth(.5f)
                     )
                     AppFlexSpacer()
                     extra()

@@ -16,6 +16,7 @@ import com.charleex.vidgenius.datasource.repository.YoutubeRepository
 import com.charleex.vidgenius.datasource.repository.YoutubeRepositoryImpl
 import com.charleex.vidgenius.datasource.utils.getIsDebugBuild
 import com.charleex.vidgenius.vision_ai.visionAiModule
+import com.charleex.vidgenius.youtube.youtubeModule
 import org.koin.dsl.module
 import src.charleex.vidgenius.api.apiModule
 import src.charleex.vidgenius.processor.processorModule
@@ -79,8 +80,7 @@ val repositoryModule = module {
         if (getIsDebugBuild()) YoutubeRepositoryDebug().also { println("YoutubeRepository in DEBUG mode") }
         else YoutubeRepositoryImpl(
             logger = withTag(YoutubeRepository::class.simpleName!!),
-            googleAuth = get(),
-            channelUploadsService = get(),
+            myUploadsService = get(),
             uploadVideoService = get(),
         ).also { println("YoutubeRepository in RELEASE mode") }
     }

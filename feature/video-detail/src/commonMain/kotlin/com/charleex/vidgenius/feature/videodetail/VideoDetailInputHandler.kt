@@ -1,12 +1,12 @@
 package com.charleex.vidgenius.feature.videodetail
 
+import com.charleex.vidgenius.datasource.repository.YoutubeRepository
 import com.copperleaf.ballast.InputHandler
 import com.copperleaf.ballast.InputHandlerScope
 import com.copperleaf.ballast.core.PrintlnLogger
 import com.copperleaf.ballast.postInput
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import com.charleex.vidgenius.datasource.repository.YoutubeRepository
 
 private typealias VideoDetailInputScope = InputHandlerScope<
         VideoDetailContract.Inputs,

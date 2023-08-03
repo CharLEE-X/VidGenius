@@ -172,10 +172,10 @@ internal class OpenAiRepositoryImpl(
 
         val inputString = message.content
         val lines = inputString.lines()
-        val title = lines.find { it.startsWith("TITLE:") }?.removePrefix("TITLE: ") ?: error("Title not found")
-        val description = lines.find { it.startsWith("DESCRIPTION:") }?.removePrefix("DESCRIPTION: ")
+        val title = lines.find { it.startsWith("TITLE:", true) }?.removePrefix("Title: ") ?: error("Title not found")
+        val description = lines.find { it.startsWith("DESCRIPTION:", true) }?.removePrefix("DESCRIPTION: ")
             ?: error("Description not found")
-        val tagsLine = lines.find { it.startsWith("TAGS:") }?.removePrefix("TAGS: ") ?: error("Tags not found")
+        val tagsLine = lines.find { it.startsWith("TAGS:", true) }?.removePrefix("TAGS: ") ?: error("Tags not found")
         val tags = tagsLine.split(", ").map { it.trim() }
 
         return MetaData(title, description, tags)

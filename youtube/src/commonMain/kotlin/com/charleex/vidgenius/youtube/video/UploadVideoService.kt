@@ -1,24 +1,23 @@
-package com.charleex.vidgenius.datasource.youtube.video
+package com.charleex.vidgenius.youtube.video
 
 // SOURCE: https://github.com/htchien/youtube-api-samples-kotlin/blob/master/src/main/kotlin/tw/htchien/youtube/api/data/UploadVideo.kt
 
 import co.touchlab.kermit.Logger
+import com.charleex.vidgenius.youtube.auth.GoogleAuth
 import com.google.api.client.auth.oauth2.TokenResponseException
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.googleapis.media.MediaHttpUploader
 import com.google.api.client.googleapis.media.MediaHttpUploaderProgressListener
+import com.google.api.client.http.HttpTransport
 import com.google.api.client.http.InputStreamContent
+import com.google.api.client.json.JsonFactory
 import com.google.api.services.youtube.YouTube
 import com.google.api.services.youtube.model.Video
 import com.google.api.services.youtube.model.VideoSnippet
 import com.google.api.services.youtube.model.VideoStatus
+import com.google.common.collect.Lists
 import java.io.File
 
-/**
- * Upload a video to the authenticated user's channel. Use OAuth 2.0 to
- * authorize the request. Note that you must add your video files to the
- * project folder to upload them with this application.
- */
 interface UploadVideoService {
     fun uploadVideo(
         videoFile: File,
@@ -29,14 +28,26 @@ interface UploadVideoService {
     ): String
 }
 
-
-class UploadVideoServiceImpl(
+internal class UploadVideoServiceImpl(
     private val logger: Logger,
-    private val youtube: YouTube,
+    private val googleAuth: GoogleAuth,
+    private val httpTransport: HttpTransport,
+    private val jsonFactory: JsonFactory,
 ) : UploadVideoService {
     companion object {
+        const val QUOTA_COST = 1_600
+        private const val STORE = "uploadvideo"
         private const val VIDEO_FILE_FORMAT = "video/*"
+        private const val APP_NAME = "youtube-cmdline-uploadvideo-sample"
+        private const val PRIVACY_STATUS_PUBLIC = "public"
     }
+
+    // This OAuth 2.0 access scope allows an application to upload files
+    // to the authenticated user's YouTube channel, but doesn't allow
+    // other types of access.
+    private val scopes = Lists.newArrayList("https://www.googleapis.com/auth/youtube.upload")
+
+    private var youtube: YouTube? = null
 
     override fun uploadVideo(
         videoFile: File,
@@ -47,8 +58,15 @@ class UploadVideoServiceImpl(
     ): String {
         logger.d { "Uploading: ${videoFile.path}" }
 
+        val credential = googleAuth.authorize(scopes, STORE)
+
+        youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
+            .setApplicationName(APP_NAME)
+            .build()
+            ?: error("Unable to create YouTube client")
+
         val videoStatus = VideoStatus()
-        videoStatus.privacyStatus = "public"
+        videoStatus.privacyStatus = PRIVACY_STATUS_PUBLIC
 
         val snippet = VideoSnippet()
         snippet.title = title
@@ -62,7 +80,7 @@ class UploadVideoServiceImpl(
 
         val mediaContent = InputStreamContent(VIDEO_FILE_FORMAT, videoFile.inputStream())
 
-        val videoInsert = youtube.videos()
+        val videoInsert = youtube!!.videos()
             .insert(listOf("snippet", "statistics", "status"), video, mediaContent)
 //                .setOnBehalfOfContentOwner("joFpbRmICEmDzE276LP59g")
 //                .setOnBehalfOfContentOwnerChannel(channelId)

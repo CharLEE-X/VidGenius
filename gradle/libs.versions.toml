@@ -5,11 +5,15 @@ compose = "1.4.1"
 coroutines = "1.7.1"
 dateTime = "0.4.0"
 detekt = "1.23.0"
+ffmpeg = "0.7.0"
+javacv = "1.5.9"
 kermit = "2.0.0-RC5"
 koin = "3.4.0"
 kotlin = "1.8.20"
+ksp = "1.8.20-1.0.11"
 ktLint = "10.2.1"
 ktor = "2.3.1"
+mockative = "1.4.1"
 serialization = "1.5.1"
 settings = "1.0.0"
 sqlDelight = "1.5.5"
@@ -30,6 +34,9 @@ ballast-navigation = { module = "io.github.copper-leaf:ballast-navigation", vers
 
 buildKonfig = { module = "com.codingfeline.buildkonfig:buildkonfig-gradle-plugin", version.ref = "buildKonfig" }
 
+java-ffmpeg = { module = "net.bramp.ffmpeg:ffmpeg", version.ref = "ffmpeg" }
+java-javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv" }
+
 jetbrains-compose-ui-util = { group = "org.jetbrains.compose.ui", name = "ui-util", version.ref = "compose" }
 
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
@@ -41,6 +48,7 @@ kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", 
 kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
+kotlin-ksp = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 kotlin-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "serialization" }
 kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 kotlin-uuid = { module = "com.benasher44:uuid", version.ref = "uuid" }
@@ -72,6 +80,8 @@ sqlDelight-runtime = { module = "com.squareup.sqldelight:runtime", version.ref =
 sqlDelight-runtimeJdk = { module = "com.squareup.sqldelight:runtime-jvm", version.ref = "sqlDelight" }
 
 test-kotlin-turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+test-mockative-core = { module = "io.mockative:mockative", version.ref = "mockative" }
+test-mockative-processor = { module = "io.mockative:mockative-processor", version.ref = "mockative" }
 
 [plugins]
 buildKonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildKonfig" }

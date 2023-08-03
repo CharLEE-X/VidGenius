@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.datasource.youtube.auth
+package com.charleex.vidgenius.youtube.auth
 
 import co.touchlab.kermit.Logger
 import com.google.api.client.auth.oauth2.Credential
@@ -26,7 +26,7 @@ interface GoogleAuth {
      * @param scopes              list of scopes needed to run youtube upload.
      * @param credentialDatastore name of the credential datastore to cache OAuth tokens
      */
-    fun authorize(scopes: List<String>, credentialDatastore: String, index: Int = 1): Credential
+    fun authorize(scopes: List<String>, credentialDatastore: String): Credential
 
     fun logOut(credentialDatastore: String)
 }
@@ -38,24 +38,9 @@ internal class GoogleAuthImpl(
     private val credentialDirectory: String,
 ) : GoogleAuth {
     @Throws(IOException::class)
-    override fun authorize(scopes: List<String>, credentialDatastore: String, index: Int): Credential {
-        val configFile = "/client_secret_$index.json"
-        logger.d("Using config $configFile")
-        val clientSecrets = getGoogleClientSecrets(configFile)
-
-        // Checks that the defaults have been replaced (Default = "Enter X here").
-        if (
-            clientSecrets != null &&
-            (
-                    clientSecrets.details.clientId.startsWith("Enter") ||
-                            clientSecrets.details.clientSecret.startsWith("Enter ")
-                    )
-        ) {
-            logger.e {
-                "Enter Client ID and Secret from https://console.developers.google.com/project/_/apiui/credential " +
-                        "into src/main/resources/client_secret_1.json"
-            }
-        }
+    override fun authorize(scopes: List<String>, credentialDatastore: String): Credential {
+        logger.d { "Authorizing ${scopes}..." }
+        val clientSecrets = getGoogleClientSecrets()
 
         val datastore = getDataStore(credentialDatastore)
         val flow = GoogleAuthorizationCodeFlow
@@ -64,12 +49,13 @@ internal class GoogleAuthImpl(
             .build()
 
         val localReceiver = getLocalServerReceiver()
-        return AuthorizationCodeInstalledApp(flow, localReceiver).authorize("user")
+        return AuthorizationCodeInstalledApp(flow, localReceiver)
+            .authorize("user")
     }
 
     override fun logOut(credentialDatastore: String) {
         val datastore = getDataStore(credentialDatastore)
-        datastore?.clear()
+        datastore.clear()
     }
 
     // Build the local server and bind it to port 8080
@@ -78,16 +64,18 @@ internal class GoogleAuthImpl(
     }
 
     // This creates the credentials datastore at ~/.oauth-credentials/${credentialDatastore}
-    private fun getDataStore(credentialDatastore: String): DataStore<StoredCredential>? {
-        val fileDataStoreFactory =
-            FileDataStoreFactory(File(System.getProperty("user.home") + "/" + credentialDirectory))
-        return fileDataStoreFactory.getDataStore(credentialDatastore)
+    private fun getDataStore(credentialDatastore: String): DataStore<StoredCredential> {
+        val dataStoreDir = File(System.getProperty("user.home") + "/" + credentialDirectory)
+        val fileDataStoreFactory = FileDataStoreFactory(dataStoreDir)
+        return fileDataStoreFactory.getDataStore(credentialDatastore) ?: error("Datastore not found: $credentialDatastore")
     }
 
-    private fun getGoogleClientSecrets(configName: String): GoogleClientSecrets? {
-        val inputStream = this::class.java
+    private fun getGoogleClientSecrets(): GoogleClientSecrets {
+        val configName = "/client_secret_1.json"
+        val inputStreamReader = this::class.java
             .getResourceAsStream(configName)
-        val inputStreamReader = InputStreamReader(inputStream)
+            ?.let { InputStreamReader(it) }
+            ?: error("Resource not found: $configName")
         return GoogleClientSecrets.load(jsonFactory, inputStreamReader)
     }
 }

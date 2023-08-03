@@ -1,15 +1,12 @@
-package com.charleex.vidgenius.datasource.youtube.model
+package com.charleex.vidgenius.youtube.model
 
 import com.google.api.services.youtube.model.PlaylistItem
-import com.google.api.services.youtube.model.Video
-import com.google.api.services.youtube.model.VideoContentDetails
-import com.google.api.services.youtube.model.VideoSnippet
 import kotlinx.datetime.Instant
 
 data class ChannelUploadsItem(
     val videoId: String,
-    val title: String = "no title",
-    val description: String = "no description",
+    val title: String,
+    val description: String? = null,
     val publishedAt: Instant = Instant.DISTANT_PAST,
 )
 

@@ -16,6 +16,7 @@ kotlin {
                 implementation(projects.api)
                 implementation(projects.videoProcessor)
                 implementation(projects.visionAi)
+                implementation(projects.youtube)
 
                 implementation(libs.koin.core)
                 implementation(libs.kotlin.dateTime)
@@ -29,16 +30,6 @@ kotlin {
                 implementation(libs.multiplatformSettings.core)
                 implementation(libs.multiplatformSettings.coroutines)
                 implementation(libs.multiplatformSettings.serialization)
-
-                // YT
-                val yt = "v3-rev20230521-2.0.0"
-                val jetty = "1.34.0"
-                val client = "2.2.0"
-                val jackson = "1.43.3"
-                implementation("com.google.http-client:google-http-client-jackson2:$jackson")
-                implementation("com.google.api-client:google-api-client:$client")
-                implementation("com.google.oauth-client:google-oauth-client-jetty:$jetty")
-                implementation("com.google.apis:google-api-services-youtube:$yt")
             }
         }
         val commonTest by getting {

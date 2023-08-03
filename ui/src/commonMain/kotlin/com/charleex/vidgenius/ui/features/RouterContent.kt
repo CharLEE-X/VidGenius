@@ -120,15 +120,6 @@ internal fun RouterContent(
                     RouterScreen.VideoList -> VideoListContent(
                         breakpoint = breakpoint,
                         displayMessage = displayMessage,
-                        goToDragAndDrop = {
-                            router.trySend(
-                                RouterContract.Inputs.GoToDestination(
-                                    RouterScreen.ProcessVideos
-                                        .directions()
-                                        .build()
-                                )
-                            )
-                        },
                         goToVideoDetail = { id ->
                             router.trySend(
                                 RouterContract.Inputs.GoToDestination(

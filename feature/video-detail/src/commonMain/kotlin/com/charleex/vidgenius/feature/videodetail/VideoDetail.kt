@@ -1,17 +1,17 @@
 package com.charleex.vidgenius.feature.videodetail
 
-import com.charleex.vidgenius.datasource.model.UploadItem
+import com.charleex.vidgenius.datasource.model.YtUploadItem
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
 data class VideoDetail(
     val id: String = "",
     val title: String = "",
-    val description: String = "",
+    val description: String? = null,
     val publishedAt: Instant = Clock.System.now(),
 )
 
-internal fun UploadItem.toVideoDetail(): VideoDetail {
+internal fun YtUploadItem.toVideoDetail(): VideoDetail {
     return VideoDetail(
         id = this.id,
         title = this.title,

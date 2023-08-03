@@ -12,7 +12,7 @@ object ProcessVideosContract {
         val channelId: String = "UCmWNmg5PyF1VKUCttVcVzuw",
         val numberOfScreenshots: Int = 3,
         val category: Category = Category.ANIMALS,
-        val uploadYouTube: Boolean = true,
+        val uploadYouTube: Boolean = false,
 
         val queue: Set<String> = setOf(),
         val progress: Set<String> = setOf(),

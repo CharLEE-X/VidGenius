@@ -1,13 +1,13 @@
 package com.charleex.vidgenius.feature.videolist
 
+import com.charleex.vidgenius.datasource.model.YtUploadItem
+import com.charleex.vidgenius.datasource.repository.YoutubeRepository
 import com.copperleaf.ballast.InputHandler
 import com.copperleaf.ballast.InputHandlerScope
 import com.copperleaf.ballast.core.PrintlnLogger
 import com.copperleaf.ballast.postInput
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import com.charleex.vidgenius.datasource.repository.YoutubeRepository
-import com.charleex.vidgenius.datasource.model.UploadItem
 
 private typealias VideoListInputScope = InputHandlerScope<
         VideoListContract.Inputs,
@@ -39,7 +39,7 @@ private suspend fun VideoListInputScope.getVideos(repository: YoutubeRepository)
     sideJob("GetVideos") {
         postInput(VideoListContract.Inputs.Update.ShowLoader(true))
         try {
-            val channelUploads: List<UploadItem> = repository.getYtChannelUploads()
+            val channelUploads: List<YtUploadItem> = repository.getYtChannelUploads()
             val videoListItems = channelUploads.toVideoListItems()
             PrintlnLogger().debug("GetVideos | videoListItems: $videoListItems")
             postInput(VideoListContract.Inputs.Update.SetList(videoListItems))

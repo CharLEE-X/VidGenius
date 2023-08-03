@@ -32,6 +32,8 @@ import com.charleex.vidgenius.ui.components.CounterAnimation
 import com.charleex.vidgenius.ui.components.LocalImage
 import com.charleex.vidgenius.ui.features.process.components.SectionContainer
 import com.charleex.vidgenius.ui.util.Breakpoint
+import java.io.File
+import java.util.Locale
 
 @Composable
 internal fun QueuedVideoItemContent(
@@ -44,6 +46,21 @@ internal fun QueuedVideoItemContent(
 ) {
     var progress by remember { mutableStateOf(0) }
     val animatedProgress by animateIntAsState(targetValue = progress)
+
+    val name = File(uiVideo.path).name
+    val descWithTag = "${
+        uiVideo.tags.joinToString(", ") {
+            "#${
+                it.replaceFirstChar {
+                    if (it.isLowerCase())
+                        it.titlecase(Locale.UK) else it.toString()
+                }
+            }"
+        }
+    }\n\n" +
+            "${uiVideo.description ?: "No description"}\n\n" +
+            "Youtube: @RoaringAnimals-FunnyAnimals\n" +
+            "TikTok: @Roaring_Laughter"
 
     LaunchedEffect(uiVideo) {
         if (youtubeUploadOn && uiVideo.hasYoutubeVideoId()) {
@@ -59,7 +76,7 @@ internal fun QueuedVideoItemContent(
         }
     }
     SectionContainer(
-        name = uiVideo.path,
+        name = name,
         openInitially = false,
         progress = animatedProgress,
         extra = {
@@ -93,6 +110,7 @@ internal fun QueuedVideoItemContent(
     ) {
         ContentText(
             uiVideo = uiVideo,
+            descWithTag = descWithTag,
             modifier = Modifier.padding(32.dp),
         )
     }

@@ -2,9 +2,9 @@ package com.charleex.vidgenius.datasource.model
 
 import kotlinx.datetime.Instant
 
-data class UploadItem(
+data class YtUploadItem(
     val id: String,
     val title: String,
-    val description: String,
+    val description: String? = null,
     val publishedAt: Instant,
 )

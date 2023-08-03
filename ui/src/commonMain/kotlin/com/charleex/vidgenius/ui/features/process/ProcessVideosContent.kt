@@ -235,7 +235,6 @@ internal fun ProcessVideosContent(
                                         onClick = {
                                             screenshotsDropdownOpen = !screenshotsDropdownOpen
 //                                        vm.trySend(ProcessVideosContract.Inputs.SetCategory(Category.ANIMALS))
-
                                         },
                                     ) {
                                         Text(

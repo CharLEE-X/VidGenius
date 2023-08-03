@@ -1,22 +1,20 @@
-package com.charleex.vidgenius.datasource.di
+package com.charleex.vidgenius.youtube
 
 import co.touchlab.kermit.Logger.Companion.withTag
-import com.charleex.vidgenius.datasource.youtube.auth.GoogleAuth
-import com.charleex.vidgenius.datasource.youtube.auth.GoogleAuthImpl
-import com.charleex.vidgenius.datasource.youtube.video.ChannelUploadsService
-import com.charleex.vidgenius.datasource.youtube.video.ChannelUploadsServiceImpl
-import com.charleex.vidgenius.datasource.youtube.video.UpdateVideoService
-import com.charleex.vidgenius.datasource.youtube.video.UpdateVideoServiceImpl
-import com.charleex.vidgenius.datasource.youtube.video.UploadVideoService
-import com.charleex.vidgenius.datasource.youtube.video.UploadVideoServiceImpl
-import com.charleex.vidgenius.datasource.youtube.youtube.YoutubeConfig
+import com.charleex.vidgenius.youtube.auth.GoogleAuth
+import com.charleex.vidgenius.youtube.auth.GoogleAuthImpl
+import com.charleex.vidgenius.youtube.video.MyUploadsService
+import com.charleex.vidgenius.youtube.video.MyUploadsServiceImpl
+import com.charleex.vidgenius.youtube.video.UpdateVideoService
+import com.charleex.vidgenius.youtube.video.UpdateVideoServiceImpl
+import com.charleex.vidgenius.youtube.video.UploadVideoService
+import com.charleex.vidgenius.youtube.video.UploadVideoServiceImpl
 import com.google.api.client.auth.oauth2.Credential
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.youtube.YouTube
-import org.koin.core.parameter.parametersOf
 import org.koin.dsl.module
 
 private const val CREDENTIALS_DIRECTORY = ".oauth-credentials"
@@ -58,40 +56,28 @@ fun youtubeModule() = module {
             credentialDirectory = CREDENTIALS_DIRECTORY,
         )
     }
-    single<ChannelUploadsService> {
-        val googleAuth = get<GoogleAuth>()
-        val credential = googleAuth.authorize(
-            YoutubeConfig.UploadList.scope,
-            YoutubeConfig.UploadList.STORE
-        )
-        val youtube = get<YouTube> { parametersOf(credential, YoutubeConfig.UploadList.NAME) }
-        ChannelUploadsServiceImpl(
-            logger = withTag(ChannelUploadsService::class.simpleName!!),
-            youtube = youtube,
+    single<MyUploadsService> {
+        MyUploadsServiceImpl(
+            logger = withTag(MyUploadsService::class.simpleName!!),
+            googleAuth = get(),
+            httpTransport = get(),
+            jsonFactory = get(),
         )
     }
     single<UploadVideoService> {
-        val googleAuth = get<GoogleAuth>()
-        val credential = googleAuth.authorize(
-            YoutubeConfig.UploadVideo.scope,
-            YoutubeConfig.UploadVideo.STORE
-        )
-        val youtube = get<YouTube> { parametersOf(credential, YoutubeConfig.UploadVideo.NAME) }
         UploadVideoServiceImpl(
             logger = withTag(UploadVideoService::class.simpleName!!),
-            youtube = youtube,
+            googleAuth = get(),
+            httpTransport = get(),
+            jsonFactory = get(),
         )
     }
     single<UpdateVideoService> {
-        val googleAuth = get<GoogleAuth>()
-        val credential = googleAuth.authorize(
-            YoutubeConfig.UpdateVideo.scope,
-            YoutubeConfig.UpdateVideo.STORE,
-        )
-        val youtube = get<YouTube> { parametersOf(credential, YoutubeConfig.UpdateVideo.NAME) }
         UpdateVideoServiceImpl(
             logger = withTag(UpdateVideoService::class.simpleName!!),
-            youtube = youtube,
+            googleAuth = get(),
+            httpTransport = get(),
+            jsonFactory = get(),
         )
     }
 //    single<YouTubeAnalyticsReports> {

@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -40,7 +39,6 @@ import com.charleex.vidgenius.ui.util.pretty
 internal fun VideoListContent(
     breakpoint: Breakpoint,
     displayMessage: (String) -> Unit,
-    goToDragAndDrop: () -> Unit,
     goToVideoDetail: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -106,6 +104,9 @@ fun VideoListItem(
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
             Row {
 
@@ -120,10 +121,12 @@ fun VideoListItem(
             ItemText(
                 text = item.title,
             )
-            ItemText(
-                text = item.description,
-                maxLines = 3,
-            )
+            item.description?.let {
+                ItemText(
+                    text = it,
+                    maxLines = 3,
+                )
+            }
         }
     }
 }
@@ -136,7 +139,7 @@ internal fun ItemText(
 ) {
     Text(
         text = text,
-        color = MaterialTheme.colors.onBackground,
+        color = MaterialTheme.colors.onSurface,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier

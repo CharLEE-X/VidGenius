@@ -17,11 +17,18 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -32,6 +39,7 @@ import com.charleex.vidgenius.ui.components.LocalImage
 import com.charleex.vidgenius.ui.features.process.components.SectionContainer
 import com.charleex.vidgenius.ui.util.Breakpoint
 import com.charleex.vidgenius.ui.util.pretty
+import java.io.File
 import java.util.Locale
 
 @Composable
@@ -41,9 +49,28 @@ internal fun CompletedVideoItemContent(
     breakpoint: Breakpoint,
     onDeleteClicked: () -> Unit,
 ) {
+    val clipboardManager = LocalClipboardManager.current
+    val name = File(uiVideo.path).name
+    val descWithTag = "${
+        uiVideo.tags.joinToString(", ") {
+            "#${
+                it.replaceFirstChar {
+                    if (it.isLowerCase())
+                        it.titlecase(Locale.UK) else it.toString()
+                }
+            }"
+        }
+    }\n\n" +
+            "${uiVideo.description ?: "No description"}\n\n" +
+            "Youtube: @RoaringAnimals-FunnyAnimals\n" +
+            "TikTok: @Roaring_Laughter"
+
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
     SectionContainer(
-        name = uiVideo.path,
+        name = name,
         openInitially = false,
+        modifier = modifier,
         extra = {
             SelectionContainer {
                 Text(
@@ -52,16 +79,50 @@ internal fun CompletedVideoItemContent(
                     modifier = Modifier
                 )
             }
+            if (showDeleteConfirm) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                ) {
+                    AppOutlinedButton(
+                        label = "YES",
+                        icon = null,
+                        bgColor = Color.Green,
+                        labelColor = Color.Black,
+                        iconTint = Color.Black,
+                        onClick = {
+                            onDeleteClicked()
+                            showDeleteConfirm = false
+                        },
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    AppOutlinedButton(
+                        label = "NO",
+                        bgColor = Color.Red,
+                        labelColor = Color.Black,
+                        iconTint = Color.Black,
+                        icon = null,
+                        onClick = { showDeleteConfirm = false },
+                    )
+                }
+            } else {
+                AppOutlinedButton(
+                    label = "Delete",
+                    icon = Icons.Default.PlayArrow,
+                    onClick = { showDeleteConfirm = true },
+                )
+            }
             AppOutlinedButton(
-                label = "Delete",
-                icon = Icons.Default.PlayArrow,
-                onClick = onDeleteClicked,
+                label = "COPY",
+                icon = Icons.Default.CopyAll,
+                onClick = {
+                    clipboardManager.setText(AnnotatedString(descWithTag))
+                },
             )
-        },
-        modifier = modifier
+        }
     ) {
         ContentText(
             uiVideo = uiVideo,
+            descWithTag = descWithTag,
             modifier = Modifier.padding(32.dp),
         )
     }
@@ -70,6 +131,7 @@ internal fun CompletedVideoItemContent(
 @Composable
 internal fun ContentText(
     uiVideo: UiVideo,
+    descWithTag: String,
     modifier: Modifier = Modifier,
 ) {
     val clipboardManager = LocalClipboardManager.current
@@ -171,20 +233,6 @@ internal fun ContentText(
                     .align(Alignment.CenterHorizontally)
                     .padding(24.dp)
             ) {
-                val descWithTag = "${
-                    uiVideo.tags.joinToString(", ") {
-                        "#${
-                            it.replaceFirstChar {
-                                if (it.isLowerCase())
-                                    it.titlecase(Locale.UK) else it.toString()
-                            }
-                        }"
-                    }
-                }\n\n" +
-                        "${uiVideo.description ?: "No description"}\n\n" +
-                        "Youtube: @RoaringAnimals-FunnyAnimals\n" +
-                        "TikTok: @Roaring_Laughter"
-
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier

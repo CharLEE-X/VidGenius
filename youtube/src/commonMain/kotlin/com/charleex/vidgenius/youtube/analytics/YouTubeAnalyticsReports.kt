@@ -1,4 +1,6 @@
-package com.charleex.vidgenius.datasource.youtube.analytics//package com.charleex.vidgenius.youtube.youtube.analytics
+package com.charleex.vidgenius.youtube.analytics
+
+//package com.charleex.vidgenius.youtube.youtube.analytics
 //
 //import co.touchlab.kermit.Logger
 //import com.google.api.services.youtube.YouTube
@@ -29,6 +31,12 @@ package com.charleex.vidgenius.datasource.youtube.analytics//package com.charlee
 //    private val youtube: YouTube,
 //    private val analytics: YouTubeAnalytics
 //) : YouTubeAnalyticsReports {
+//companionObject {
+//    const val NAME = "youtube-analytics-api-report-example"
+//    const val STORE = "analyticsreports"
+//    val scope = YoutubeConfig.Scopes.readOnlyAnalytics
+//}
+
 //    override fun getAnalytics() {
 //        logger.d { "Getting analytics data." }
 //        try {

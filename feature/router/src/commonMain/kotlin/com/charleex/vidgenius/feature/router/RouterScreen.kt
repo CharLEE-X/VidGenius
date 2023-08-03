@@ -9,7 +9,7 @@ private const val ROOT = "/root"
 private const val FEATURE_LIST = "/feature-list"
 private const val LOGIN = "/login"
 private const val VIDEO_LIST = "/videos"
-private const val VIDEO_DETAIL = "/videos/{videoId}"
+private const val VIDEO_DETAIL = "/videos/{id}"
 private const val PROCESS_VIDEOS = "/process-video"
 
 @Serializable
@@ -32,6 +32,6 @@ fun RouterScreen?.label(): String = when (this) {
     RouterScreen.Login -> "Login"
     RouterScreen.VideoList -> "Video List"
     RouterScreen.VideoDetail -> "Video Detail"
-    RouterScreen.ProcessVideos -> "Process Videos"
+    RouterScreen.ProcessVideos -> "Nat's Generator"
     null -> ""
 }

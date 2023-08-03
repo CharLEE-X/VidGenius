@@ -1,6 +1,5 @@
 import java.lang.String;
 import kotlin.collections.List;
-import com.charleex.vidgenius.datasource.model.Screenshot;
 
 CREATE TABLE IF NOT EXISTS Video (
   id TEXT PRIMARY KEY NOT NULL,

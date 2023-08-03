@@ -2,42 +2,34 @@ package com.charleex.vidgenius.datasource.repository
 
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.db.Video
-import com.charleex.vidgenius.datasource.model.UploadItem
-import com.charleex.vidgenius.datasource.youtube.auth.GoogleAuth
-import com.charleex.vidgenius.datasource.youtube.model.ChannelUploadsItem
-import com.charleex.vidgenius.datasource.youtube.video.ChannelUploadsService
-import com.charleex.vidgenius.datasource.youtube.video.UploadVideoService
-import com.charleex.vidgenius.datasource.youtube.youtube.YoutubeConfig
-import kotlinx.coroutines.delay
+import com.charleex.vidgenius.datasource.model.YtUploadItem
+import com.charleex.vidgenius.youtube.model.ChannelUploadsItem
+import com.charleex.vidgenius.youtube.video.MyUploadsService
+import com.charleex.vidgenius.youtube.video.UploadVideoService
 import java.io.File
 
 interface YoutubeRepository {
-    suspend fun getYtChannelUploads(): List<UploadItem>
-    suspend fun getYtVideoDetail(videoId: String): UploadItem
+    suspend fun getYtChannelUploads(): List<YtUploadItem>
+    suspend fun getYtVideoDetail(videoId: String): YtUploadItem
     suspend fun uploadVideo(
         video: Video,
         channelId: String,
     ): String
-
-    suspend fun switchConfig(index: Int)
-    fun login()
-    fun logOut()
 }
 
 internal class YoutubeRepositoryImpl(
     private val logger: Logger,
-    private val googleAuth: GoogleAuth,
-    private val channelUploadsService: ChannelUploadsService,
+    private val myUploadsService: MyUploadsService,
     private val uploadVideoService: UploadVideoService,
 ) : YoutubeRepository {
-    override suspend fun getYtChannelUploads(): List<UploadItem> {
+    override suspend fun getYtChannelUploads(): List<YtUploadItem> {
         logger.d { "Getting channel uploads" }
-        return channelUploadsService.getUploadList().toUploadItems()
+        return myUploadsService.getUploadList().map { it.toUploadItem() }
     }
 
-    override suspend fun getYtVideoDetail(videoId: String): UploadItem {
+    override suspend fun getYtVideoDetail(videoId: String): YtUploadItem {
         logger.d { "Getting video detail $videoId" }
-        return channelUploadsService.getVideoDetail(videoId).toUploadItem()
+        return myUploadsService.getVideoDetail(videoId).toUploadItem()
     }
 
     override suspend fun uploadVideo(
@@ -55,29 +47,10 @@ internal class YoutubeRepositoryImpl(
             channelId = channelId,
         )
     }
-
-    override fun login() {
-        googleAuth.authorize(YoutubeConfig.UploadVideo.scope, "uploadvideo", 2)
-    }
-
-    override fun logOut() {
-        googleAuth.logOut("uploadvideo")
-    }
-
-    override suspend fun switchConfig(index: Int) {
-        val credentialDatastore = "uploadvideo"
-        googleAuth.logOut(credentialDatastore)
-        delay(100)
-        googleAuth.authorize(YoutubeConfig.UploadVideo.scope, credentialDatastore, index)
-    }
 }
 
-private fun List<ChannelUploadsItem>.toUploadItems(): List<UploadItem> {
-    return map { it.toUploadItem() }
-}
-
-private fun ChannelUploadsItem.toUploadItem(): UploadItem {
-    return UploadItem(
+private fun ChannelUploadsItem.toUploadItem(): YtUploadItem {
+    return YtUploadItem(
         id = this.videoId,
         title = this.title,
         description = this.description,
