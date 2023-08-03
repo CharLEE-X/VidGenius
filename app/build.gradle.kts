@@ -39,6 +39,10 @@ compose.desktop {
             packageName = "VidGenius"
             packageVersion = "1.0.0"
             copyright = "©2023 VidGenius by Adrian Witaszak. All rights reserved."
+
+            macOS {
+                iconFile.set(project.file("icon.icns"))
+            }
         }
     }
 }
