@@ -80,18 +80,21 @@ internal class OpenAiRepositoryImpl(
             .find { it.startsWith("TITLE:", true) }
             ?.removePrefix("TITLE: ")
             ?.removePrefix("Title: ")
+            ?.removePrefix("title: ")
             ?: error("Title not found")
 
         val description = lines
             .find { it.startsWith("DESCRIPTION:", true) }
             ?.removePrefix("DESCRIPTION: ")
             ?.removePrefix("Description: ")
+            ?.removePrefix("description: ")
             ?: error("Description not found")
 
         val tagsLine = lines
             .find { it.startsWith("TAGS:", true) }
             ?.removePrefix("TAGS: ")
             ?.removePrefix("Tags: ")
+            ?.removePrefix("tags: ")
             ?: error("Tags not found")
 
         val tags = tagsLine
