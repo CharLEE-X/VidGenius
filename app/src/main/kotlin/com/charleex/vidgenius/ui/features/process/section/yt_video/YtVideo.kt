@@ -1,5 +1,6 @@
 package com.charleex.vidgenius.ui.features.process.section.yt_video
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -77,7 +78,7 @@ internal fun YtVideoItem(
                             .fillMaxWidth(.5f)
                     )
                     AppFlexSpacer()
-                    if (isFoundLocally) {
+                    AnimatedVisibility (isFoundLocally) {
                         AppOutlinedButton(
                             label = "Found locally",
                             icon = Icons.Default.Check,
@@ -86,7 +87,8 @@ internal fun YtVideoItem(
                             onClick = {},
                             modifier = Modifier
                         )
-                    } else {
+                    }
+                    AnimatedVisibility (!isFoundLocally) {
                         AppOutlinedButton(
                             label = "Not found locally",
                             icon = Icons.Default.Close,

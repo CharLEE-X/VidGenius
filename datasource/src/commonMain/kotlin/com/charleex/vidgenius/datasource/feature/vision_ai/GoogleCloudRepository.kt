@@ -1,8 +1,8 @@
 package com.charleex.vidgenius.datasource.feature.vision_ai
 
 import co.touchlab.kermit.Logger
+import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
-import com.hackathon.cda.repository.db.VidGeniusDatabase
 
 interface GoogleCloudRepository {
     suspend fun getTextFromImages(video: Video): Video

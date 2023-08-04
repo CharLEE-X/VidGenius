@@ -4,8 +4,13 @@ import java.io.FileReader
 import java.util.Properties
 
 fun getIsDebugBuild(): Boolean {
-    val properties = Properties()
-    properties.load(FileReader("/Users/adrianwitaszak/CharLEEX/VidGenius/local.properties"))
-    val isDebugBuildString = properties.getProperty("isDebugBuild")
-    return isDebugBuildString?.toBoolean() ?: false
+    return try {
+        val properties = Properties()
+        properties.load(FileReader("/Users/adrianwitaszak/CharLEEX/VidGenius/local.properties"))
+        val isDebugBuildString = properties.getProperty("isDebugBuild")
+        isDebugBuildString?.toBoolean() ?: false
+    } catch (e: Exception) {
+        e.printStackTrace()
+        false
+    }
 }

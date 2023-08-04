@@ -1,6 +1,7 @@
 package com.charleex.vidgenius.datasource
 
 import co.touchlab.kermit.Logger
+import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
 import com.charleex.vidgenius.datasource.feature.open_ai.OpenAiRepository
@@ -8,7 +9,7 @@ import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepository
 import com.charleex.vidgenius.datasource.feature.vision_ai.GoogleCloudRepository
 import com.charleex.vidgenius.datasource.feature.youtube.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
-import com.hackathon.cda.repository.db.VidGeniusDatabase
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.io.File
@@ -17,14 +18,10 @@ interface VideoProcessing {
     val videos: Flow<List<Video>>
     val ytVideos: Flow<List<YtVideo>>
 
-    suspend fun fetchUploads(privacyStatus: PrivacyStatus)
-    suspend fun addVideos(files: List<*>)
+    fun fetchUploads()
+    fun addVideos(files: List<*>)
     fun deleteVideo(videoId: String)
-    suspend fun startProcessing(
-        video: Video,
-        numberOfScreenshots: Int = 1,
-        onError: (String) -> Unit,
-    )
+    fun processAll(videos: List<Video>, onError: (String) -> Unit)
 
     fun signOut()
 }
@@ -36,6 +33,7 @@ internal class VideoProcessingImpl(
     private val googleCloudRepository: GoogleCloudRepository,
     private val openAiRepository: OpenAiRepository,
     private val youtubeRepository: YoutubeRepository,
+    private val scope: CoroutineScope,
 ) : VideoProcessing {
     override val videos: Flow<List<Video>>
         get() = videoFileRepository.flowOfVideos()
@@ -43,14 +41,18 @@ internal class VideoProcessingImpl(
     override val ytVideos: Flow<List<YtVideo>>
         get() = youtubeRepository.flowOfYtVideos()
 
-    override suspend fun fetchUploads(privacyStatus: PrivacyStatus) {
+    override fun fetchUploads() {
         logger.d("Fetching uploads")
-        youtubeRepository.fetchUploads(privacyStatus)
+        scope.launch {
+            youtubeRepository.fetchUploads()
+        }
     }
 
-    override suspend fun addVideos(files: List<*>) {
+    override fun addVideos(files: List<*>) {
         logger.d("Adding videos $files")
-        videoFileRepository.filterVideos(files)
+        scope.launch {
+            videoFileRepository.filterVideos(files)
+        }
     }
 
     override fun deleteVideo(videoId: String) {
@@ -58,27 +60,46 @@ internal class VideoProcessingImpl(
         videoFileRepository.deleteVideo(videoId)
     }
 
-    override suspend fun startProcessing(
+    override fun processAll(videos: List<Video>, onError: (String) -> Unit) {
+        scope.launch {
+            val jobs = videos.map { video ->
+                // Start each processVideo coroutine asynchronously
+                scope.async {
+                    startProcessing(video, 3) {
+                        onError(it)
+                    }
+                }
+            }
+
+            awaitAll(*jobs.toTypedArray())
+        }
+    }
+
+    private suspend fun startProcessing(
         video: Video,
         numberOfScreenshots: Int,
         onError: (String) -> Unit,
     ) {
         logger.d("Processing video ${video.id}")
+        try {
+            val ytVideo = youtubeRepository.flowOfYtVideos().first()
+                .firstOrNull { it.title == video.youtubeId }
+                ?: error("No yt video found for ${video.youtubeId}")
 
-        val ytVideo = youtubeRepository.flowOfYtVideos().first()
-            .firstOrNull { it.title == video.youtubeId }
-            ?: error("No yt video found for ${video.youtubeId}")
+            val videoWithScreenshots = processVideo(video, 3)
+            val videoWithDescriptions =
+                processScreenshotsToText(videoWithScreenshots, numberOfScreenshots)
+            val videoWithDescriptionContext = processDescriptions(videoWithDescriptions)
 
-        val videoWithScreenshots = processVideo(video, 3)
-        val videoWithDescriptions =
-            processScreenshotsToText(videoWithScreenshots, numberOfScreenshots)
-        val videoWithDescriptionContext = processDescriptions(videoWithDescriptions)
+            logger.d { "Context: $videoWithDescriptionContext" }
 
-        logger.d { "Context: $videoWithDescriptionContext" }
-
-        val videoWithMetadata = generateMetaData(videoWithDescriptionContext)
-        updateYouTubeVideo(ytVideo, videoWithMetadata)
-        logger.v { "Processing $video | Finished" }
+            val videoWithMetadata = generateMetaData(videoWithDescriptionContext)
+            updateYouTubeVideo(ytVideo, videoWithMetadata)
+            logger.v { "Processing $video | Finished" }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onError(e.message ?: "Error while processing ${video.id}")
+        }
     }
 
     override fun signOut() {

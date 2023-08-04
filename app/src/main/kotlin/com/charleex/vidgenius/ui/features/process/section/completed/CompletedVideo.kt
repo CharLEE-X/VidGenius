@@ -38,36 +38,24 @@ import com.charleex.vidgenius.ui.components.AppOutlinedButton
 import com.charleex.vidgenius.ui.components.LocalImage
 import com.charleex.vidgenius.ui.components.SectionContainer
 import com.charleex.vidgenius.ui.util.pretty
-import java.io.File
 import java.util.Locale
 
 @Composable
 internal fun CompletedVideo(
     modifier: Modifier = Modifier,
-    uiVideo: Video,
+    video: Video,
     isOnYt: Boolean = true,
     onDeleteClicked: () -> Unit,
 ) {
     val clipboardManager = LocalClipboardManager.current
-    val name = File(uiVideo.path).name
-    val descWithTag = "${
-        uiVideo.tags.joinToString(", ") {
-            "#${
-                it.replaceFirstChar {
-                    if (it.isLowerCase())
-                        it.titlecase(Locale.UK) else it.toString()
-                }
-            }"
-        }
-    }\n\n" +
-            "${uiVideo.description ?: "No description"}\n\n" +
+    val descWithTag = "${video.description ?: "No description"}\n\n" +
             "Youtube: @RoaringAnimals-FunnyAnimals\n" +
             "TikTok: @Roaring_Laughter"
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     SectionContainer(
-        name = name,
+        name = video.youtubeId,
         openInitially = false,
         modifier = modifier,
         extra = {
@@ -81,7 +69,7 @@ internal fun CompletedVideo(
             }
             SelectionContainer {
                 Text(
-                    text = uiVideo.modifiedAt.pretty(),
+                    text = video.modifiedAt.pretty(),
                     color = MaterialTheme.colors.onSurface,
                     modifier = Modifier
                 )
@@ -128,7 +116,7 @@ internal fun CompletedVideo(
         }
     ) {
         ContentText(
-            video = uiVideo,
+            video = video,
             modifier = Modifier.padding(32.dp),
         )
     }

@@ -140,7 +140,7 @@ fun ProcessVideosContent(
                                 videos = videos,
                                 onRefresh = {
                                     scope.launch {
-                                        videoProcessing.fetchUploads(PrivacyStatus.UNLISTED)
+                                        videoProcessing.fetchUploads()
                                     }
                                 },
                             )
@@ -155,20 +155,16 @@ fun ProcessVideosContent(
 
                                 onStartAll = {
                                     scope.launch {
-                                        videos
-                                            .filter { it.youtubeId in ytVideos.map { it.id } }
-                                            .forEach {
-                                                videoProcessing.startProcessing(it) {
-                                                    message = it
-                                                }
-                                            }
+                                        val items = videos.filter { it.youtubeId in ytVideos.map { it.title } }
+                                        videoProcessing.processAll(items) {
+                                            message = it
+                                        }
                                     }
                                 },
                                 onStartOne = {
-                                    scope.launch {
-                                        videoProcessing.startProcessing(it) {
-                                            message = it
-                                        }
+                                    val items = listOf(it)
+                                    videoProcessing.processAll(items) {
+                                        message = it
                                     }
                                 }
                             )

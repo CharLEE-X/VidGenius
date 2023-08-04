@@ -4,7 +4,7 @@ plugins {
     id("com.squareup.sqldelight")
 }
 
-group = "com.hackathon.cda.repository"
+group = "com.charleex.vidgenius.datasource"
 
 kotlin {
     jvm()

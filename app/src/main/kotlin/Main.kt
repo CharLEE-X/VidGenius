@@ -18,7 +18,7 @@ import org.koin.core.context.startKoin
 @ExperimentalComposeApi
 fun main() = application {
     val koinApplication = startKoin {
-        modules(datasourceModule)
+        modules(datasourceModule())
     }
     val videoProcessing by koinApplication.koin.inject<VideoProcessing>()
 

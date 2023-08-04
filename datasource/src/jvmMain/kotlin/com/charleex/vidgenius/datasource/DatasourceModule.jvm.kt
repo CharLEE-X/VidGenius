@@ -1,6 +1,6 @@
 package com.charleex.vidgenius.datasource
 
-import com.hackathon.cda.repository.db.VidGeniusDatabase
+import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.sqlite.driver.asJdbcDriver
 import com.zaxxer.hikari.HikariConfig

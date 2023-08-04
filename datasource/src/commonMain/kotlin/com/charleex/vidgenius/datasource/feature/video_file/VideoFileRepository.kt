@@ -2,9 +2,9 @@ package com.charleex.vidgenius.datasource.feature.video_file
 
 import co.touchlab.kermit.Logger
 import com.benasher44.uuid.uuid4
+import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.feature.video_file.model.FileProcessor
-import com.hackathon.cda.repository.db.VidGeniusDatabase
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -84,8 +84,9 @@ internal class VideoFileRepositoryImpl(
             it.path !in localVideos.map { video -> video.path }
         }
         filteredVideos.forEach { video ->
-            val youtubeVideoId = video.nameWithoutExtension
-            logger.d("Storing video ${video.absolutePath} | youtubeVideoId: $youtubeVideoId")
+            val videoName = video.nameWithoutExtension
+                .replace("_", " ")
+            logger.d("Storing video ${video.absolutePath} | youtubeVideoId: $videoName")
 
             withContext(Dispatchers.IO) {
                 database.videoQueries.upsert(
@@ -98,7 +99,7 @@ internal class VideoFileRepositoryImpl(
                         title = null,
                         description = null,
                         tags = emptyList(),
-                        youtubeId = youtubeVideoId,
+                        youtubeId = videoName,
                         isCompleted = false,
                         createdAt = Clock.System.now(),
                         modifiedAt = Clock.System.now(),

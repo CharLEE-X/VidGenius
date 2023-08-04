@@ -11,14 +11,3 @@ data class MyUploadsItem(
     val privacyStatus: String?,
     val publishedAt: Instant = Instant.DISTANT_PAST,
 )
-
-fun MyUploadsItem.toYtVideo(): YtVideo {
-    return YtVideo(
-        id = this.ytId,
-        title = this.title,
-        description = this.description,
-        tags = this.tags,
-        privacyStatus = this.privacyStatus,
-        publishedAt = this.publishedAt,
-    )
-}

@@ -51,7 +51,6 @@ internal fun LocalVideo(
     onDeleteClicked: () -> Unit,
     onStartClicked: (String) -> Unit,
 ) {
-    val name = File(video.path).nameWithoutExtension
     val descWithTag = "${
         video.tags.joinToString(", ") {
             "#${
@@ -86,7 +85,7 @@ internal fun LocalVideo(
     }
 
     SectionContainer(
-        name = name,
+        name = video.youtubeId,
         openInitially = false,
         modifier = modifier,
         progress = animatedProgress,

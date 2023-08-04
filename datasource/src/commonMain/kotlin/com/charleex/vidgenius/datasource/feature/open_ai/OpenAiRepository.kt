@@ -1,14 +1,15 @@
 package com.charleex.vidgenius.datasource.feature.open_ai
 
 import co.touchlab.kermit.Logger
+import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompletionChunk
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompletionFunction
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatMessage
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatRole
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.FunctionMode
-import com.hackathon.cda.repository.db.VidGeniusDatabase
 import kotlinx.coroutines.flow.Flow
+import java.util.*
 
 interface OpenAiRepository {
     suspend fun getDescriptionContext(video: Video): Video
@@ -69,23 +70,66 @@ internal class OpenAiRepositoryImpl(
                 ),
             )
         )
+
         val message = chatCompletion.choices.firstOrNull()?.message ?: error("No message found")
 
         val inputString = message.content
-        val lines = inputString.lines()
-        val title = lines.find { it.startsWith("TITLE:", true) }?.removePrefix("TITLE: ")
+        val lines = inputString.split("\n\n")
+
+        val title = lines
+            .find { it.startsWith("TITLE:", true) }
+            ?.removePrefix("TITLE: ")
+            ?.removePrefix("Title: ")
             ?: error("Title not found")
-        val description =
-            lines.find { it.startsWith("DESCRIPTION:", true) }?.removePrefix("DESCRIPTION: ")
-                ?: error("Description not found")
-        val tagsLine = lines.find { it.startsWith("TAGS:", true) }?.removePrefix("TAGS: ") ?: error(
-            "Tags not found"
+
+        val description = lines
+            .find { it.startsWith("DESCRIPTION:", true) }
+            ?.removePrefix("DESCRIPTION: ")
+            ?.removePrefix("Description: ")
+            ?: error("Description not found")
+
+        val tagsLine = lines
+            .find { it.startsWith("TAGS:", true) }
+            ?.removePrefix("TAGS: ")
+            ?.removePrefix("Tags: ")
+            ?: error("Tags not found")
+
+        val tags = tagsLine
+            .split(", ")
+            .map { it.trim() }
+            .map { tag ->
+                tag
+                    .split(" ")
+                    .map { tagList ->
+                        tagList.replaceFirstChar {
+                            if (it.isLowerCase())
+                                it.titlecase(Locale.getDefault()) else it.toString()
+                        }
+                    }
+            }
+            .map { it.joinToString("") }
+
+        val hashtags = tags.joinToString(" ") { "#$it" }
+
+        println(
+            """
+                
+            1. Title:
+               $title
+         
+            2. Description:
+               $hashtags
+               $description
+            
+            3. Tags:
+               $tags
+            
+        """.trimIndent()
         )
-        val tags = tagsLine.split(", ").map { it.trim() }
 
         val newVideo = video.copy(
             title = title,
-            description = description,
+            description = "$hashtags\n\n$description",
             tags = tags,
         )
         database.videoQueries.upsert(newVideo)

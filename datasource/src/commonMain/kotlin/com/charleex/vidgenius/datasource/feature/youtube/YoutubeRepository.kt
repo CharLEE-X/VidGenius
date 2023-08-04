@@ -1,14 +1,13 @@
 package com.charleex.vidgenius.datasource.feature.youtube
 
 import co.touchlab.kermit.Logger
+import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
 import com.charleex.vidgenius.datasource.feature.youtube.model.MyUploadsItem
-import com.charleex.vidgenius.datasource.feature.youtube.model.toYtVideo
 import com.charleex.vidgenius.datasource.feature.youtube.video.MyUploadsService
 import com.charleex.vidgenius.datasource.feature.youtube.video.UpdateVideoService
-import com.hackathon.cda.repository.db.VidGeniusDatabase
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -24,7 +23,7 @@ enum class PrivacyStatus(val value: String) {
 
 interface YoutubeRepository {
     fun flowOfYtVideos(): Flow<List<YtVideo>>
-    suspend fun fetchUploads(privacyStatus: PrivacyStatus = PrivacyStatus.UNLISTED)
+    suspend fun fetchUploads()
     suspend fun updateVideo(ytVideo: YtVideo, video: Video): Boolean
     fun signOut()
 }
@@ -39,13 +38,25 @@ internal class YoutubeRepositoryImpl(
     override fun flowOfYtVideos(): Flow<List<YtVideo>> =
         database.ytVideoQueries.getAll().asFlow().map { it.executeAsList() }
 
-    override suspend fun fetchUploads(privacyStatus: PrivacyStatus) {
+    override suspend fun fetchUploads() {
         logger.d { "Getting channel uploads" }
         val uploads: List<MyUploadsItem> = myUploadsService.getUploadList()
         logger.d("Uploads: ${uploads.size}")
-        val drafts = uploads.filter { it.privacyStatus == privacyStatus.value }
-        logger.d("Drafts: ${drafts.size}")
-        val ytVideos = drafts.map { it.toYtVideo() }
+        val ytVideos = uploads
+            .filter {
+                it.privacyStatus == PrivacyStatus.PRIVATE.value ||
+                        it.privacyStatus == PrivacyStatus.UNLISTED.value
+            }
+            .map {
+                YtVideo(
+                    id = it.ytId,
+                    title = it.title,
+                    description = it.description,
+                    tags = it.tags,
+                    privacyStatus = it.privacyStatus,
+                    publishedAt = it.publishedAt,
+                )
+            }
         logger.d("YtVideos: ${ytVideos.size}")
 
         withContext(Dispatchers.IO) {
@@ -63,8 +74,10 @@ internal class YoutubeRepositoryImpl(
         val description = video.description ?: error("Description cannot be null")
         val tags = video.tags.ifEmpty { error("Tags cannot be empty") }
 
-        logger.d("Updating video: ${video.youtubeId} with:\n${title}, \n" +
-                "$tags, \n${description}")
+        logger.d(
+            "Updating video: ${video.youtubeId} with:\n${title}, \n" +
+                    "$tags, \n${description}"
+        )
         val result = updateVideoService.update(
             ytId = ytVideo.id,
             title = title,
