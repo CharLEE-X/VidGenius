@@ -48,7 +48,7 @@ internal class YoutubeRepositoryDebug : YoutubeRepository {
         )
     }
 
-    override suspend fun fetchUploads(privacyStatus: PrivacyStatus) {
+    override suspend fun fetchUploads() {
         size = (1..4).random()
     }
 
