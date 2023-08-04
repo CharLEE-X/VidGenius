@@ -1,6 +1,7 @@
 package com.charleex.vidgenius.datasource.feature.youtube.auth
 
 import co.touchlab.kermit.Logger
+import com.charleex.vidgenius.datasource.feature.youtube.model.YtChannel
 import com.google.api.client.auth.oauth2.Credential
 import com.google.api.client.auth.oauth2.StoredCredential
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
@@ -26,23 +27,24 @@ interface GoogleAuth {
      * @param scopes              list of scopes needed to run youtube upload.
      * @param credentialDatastore name of the credential datastore to cache OAuth tokens
      */
-    fun authorize(scopes: List<String>, credentialDatastore: String): Credential
+    fun authorize(scopes: List<String>, ytChannel: YtChannel): Credential
 
-    fun signout(credentialDatastore: String)
+    fun signOut(channelId: String)
 }
 
 internal class GoogleAuthImpl(
     private val logger: Logger,
+    private val appDataDir: String,
     private val httpTransport: HttpTransport,
     private val jsonFactory: JsonFactory,
     private val credentialDirectory: String,
 ) : GoogleAuth {
     @Throws(IOException::class)
-    override fun authorize(scopes: List<String>, credentialDatastore: String): Credential {
+    override fun authorize(scopes: List<String>, ytChannel: YtChannel): Credential {
         logger.d { "Authorizing ${scopes}..." }
-        val clientSecrets = getGoogleClientSecrets()
+        val clientSecrets = getGoogleClientSecrets(ytChannel.secretsFile)
 
-        val datastore = getDataStore(credentialDatastore)
+        val datastore = getDataStore(ytChannel.id)
         val flow = GoogleAuthorizationCodeFlow
             .Builder(httpTransport, jsonFactory, clientSecrets, scopes)
             .setCredentialDataStore(datastore)
@@ -53,8 +55,8 @@ internal class GoogleAuthImpl(
             .authorize("user")
     }
 
-    override fun signout(credentialDatastore: String) {
-        val datastore = getDataStore(credentialDatastore)
+    override fun signOut(channelId: String) {
+        val datastore = getDataStore(channelId)
         datastore.clear()
     }
 
@@ -65,17 +67,17 @@ internal class GoogleAuthImpl(
 
     // This creates the credentials datastore at ~/.oauth-credentials/${credentialDatastore}
     private fun getDataStore(credentialDatastore: String): DataStore<StoredCredential> {
-        val dataStoreDir = File(System.getProperty("user.home") + "/" + credentialDirectory)
+        val dataStoreDir = File("$appDataDir/$credentialDirectory")
         val fileDataStoreFactory = FileDataStoreFactory(dataStoreDir)
-        return fileDataStoreFactory.getDataStore(credentialDatastore) ?: error("Datastore not found: $credentialDatastore")
+        return fileDataStoreFactory.getDataStore(credentialDatastore)
+            ?: error("Datastore not found: $credentialDatastore")
     }
 
-    private fun getGoogleClientSecrets(): GoogleClientSecrets {
-        val configName = "/youtube.json"
+    private fun getGoogleClientSecrets(secretsFile: String): GoogleClientSecrets {
         val inputStreamReader = this::class.java
-            .getResourceAsStream(configName)
+            .getResourceAsStream("/$secretsFile")
             ?.let { InputStreamReader(it) }
-            ?: error("Resource not found: $configName")
+            ?: error("Resource not found: $secretsFile")
         return GoogleClientSecrets.load(jsonFactory, inputStreamReader)
     }
 }

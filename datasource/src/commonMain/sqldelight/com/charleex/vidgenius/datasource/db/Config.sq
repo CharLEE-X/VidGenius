@@ -1,0 +1,21 @@
+import java.lang.String;
+import kotlin.Boolean;
+import kotlin.collections.List;
+import kotlinx.datetime.Instant;
+
+CREATE TABLE IF NOT EXISTS Config (
+  id TEXT PRIMARY KEY NOT NULL,
+  channelId TEXT
+);
+
+getById:
+SELECT * FROM Config WHERE id = ?;
+
+getAll:
+SELECT * FROM Config;
+
+upsert:
+INSERT OR REPLACE INTO Config VALUES ?;
+
+delete:
+DELETE FROM Config WHERE id = :id;

@@ -20,7 +20,6 @@ fun main() = application {
     val koinApplication = startKoin {
         modules(datasourceModule())
     }
-    val videoProcessing by koinApplication.koin.inject<VideoProcessing>()
 
     val windowState = rememberWindowState()
     windowState.apply {
@@ -36,7 +35,8 @@ fun main() = application {
         title = "Auto Yt Vid"
     ) {
         ProcessVideosContent(
-            videoProcessing = videoProcessing,
+            videoProcessing = koinApplication.koin.get(),
+            channelsManager = koinApplication.koin.get(),
             window = window,
         )
     }

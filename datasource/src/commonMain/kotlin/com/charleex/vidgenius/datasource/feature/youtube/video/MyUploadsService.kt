@@ -3,6 +3,7 @@ package com.charleex.vidgenius.datasource.feature.youtube.video
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
 import com.charleex.vidgenius.datasource.feature.youtube.model.MyUploadsItem
+import com.charleex.vidgenius.datasource.feature.youtube.model.YtChannel
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.json.JsonFactory
@@ -13,7 +14,7 @@ import kotlinx.datetime.Instant
 import java.io.IOException
 
 interface MyUploadsService {
-    suspend fun getUploadList(): List<MyUploadsItem>
+    suspend fun getUploadList(ytChannel: YtChannel): List<MyUploadsItem>
     suspend fun getVideoDetail(videoId: String): MyUploadsItem
 }
 
@@ -25,17 +26,16 @@ internal class MyUploadsServiceImpl(
 ) : MyUploadsService {
     companion object {
         const val QUOTA_COST = 50
-        private const val STORE = "channeluploads"
         private const val APP_NAME = "youtube-cmdline-channeluploads-sample"
+        val scopes = listOf("https://www.googleapis.com/auth/youtube.readonly")
     }
 
-    private val scopes = listOf("https://www.googleapis.com/auth/youtube.readonly")
     private var youtube: YouTube? = null
 
-    override suspend fun getUploadList(): List<MyUploadsItem> {
+    override suspend fun getUploadList(ytChannel: YtChannel): List<MyUploadsItem> {
         logger.d { "Getting upload list" }
         return try {
-            val credential = googleAuth.authorize(scopes, STORE)
+            val credential = googleAuth.authorize(scopes, ytChannel)
 
             val youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
                 .setApplicationName(APP_NAME)
@@ -48,6 +48,8 @@ internal class MyUploadsServiceImpl(
 
             val channelsList = channelResult.items
                 ?: error("No channels found.")
+
+            logger.d { "Channels: $channelsList" }
 
             val uploadPlaylistId = channelsList[0].contentDetails.relatedPlaylists.uploads
                 ?: error("Unable to find upload playlist for channel.")

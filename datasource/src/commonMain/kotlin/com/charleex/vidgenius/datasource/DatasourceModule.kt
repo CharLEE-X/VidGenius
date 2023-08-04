@@ -25,6 +25,8 @@ import com.charleex.vidgenius.datasource.feature.vision_ai.GoogleCloudRepository
 import com.charleex.vidgenius.datasource.feature.vision_ai.GoogleCloudRepositoryImpl
 import com.charleex.vidgenius.datasource.feature.vision_ai.VisionAiService
 import com.charleex.vidgenius.datasource.feature.vision_ai.VisionAiServiceImpl
+import com.charleex.vidgenius.datasource.feature.youtube.ChannelsManager
+import com.charleex.vidgenius.datasource.feature.youtube.ChannelsManagerImpl
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepositoryDebug
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepositoryImpl
@@ -127,6 +129,7 @@ fun datasourceModule() = module {
     single<GoogleAuth> {
         GoogleAuthImpl(
             logger = withTag(GoogleAuth::class.simpleName!!),
+            appDataDir = appDataDir.absolutePath,
             httpTransport = get(),
             jsonFactory = get(),
             credentialDirectory = CREDENTIALS_DIRECTORY,
@@ -187,6 +190,14 @@ fun datasourceModule() = module {
             myUploadsService = get(),
             updateVideoService = get(),
         ).also { println("YoutubeRepository in RELEASE mode") }
+    }
+    single<ChannelsManager> {
+        ChannelsManagerImpl(
+            logger = withTag(ChannelsManager::class.simpleName!!),
+            database = get(),
+            googleAuth = get(),
+            scope = CoroutineScope(Dispatchers.Default),
+        )
     }
 
     // Video file

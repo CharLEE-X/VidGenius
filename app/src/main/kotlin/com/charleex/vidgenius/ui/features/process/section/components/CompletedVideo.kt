@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.ui.features.process.section.completed
+package com.charleex.vidgenius.ui.features.process.section.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke

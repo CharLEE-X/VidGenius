@@ -15,9 +15,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Login
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,11 +32,12 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.VideoProcessing
-import com.charleex.vidgenius.datasource.feature.youtube.PrivacyStatus
-import com.charleex.vidgenius.ui.components.AppOutlinedButton
+import com.charleex.vidgenius.datasource.feature.youtube.ChannelsManager
+import com.charleex.vidgenius.datasource.feature.youtube.model.ytChannels
 import com.charleex.vidgenius.ui.components.AppScaffold
 import com.charleex.vidgenius.ui.components.KXSnackBarHost
-import com.charleex.vidgenius.ui.features.process.section.completed.CompletedSection
+import com.charleex.vidgenius.ui.features.process.section.components.HeaderWithChannelChooser
+import com.charleex.vidgenius.ui.features.process.section.components.CompletedSection
 import com.charleex.vidgenius.ui.features.process.section.local.LocalSection
 import com.charleex.vidgenius.ui.features.process.section.yt_video.YtSection
 import com.charleex.vidgenius.ui.theme.AutoYtVidTheme
@@ -52,6 +50,7 @@ import java.awt.dnd.DropTargetDropEvent
 @Composable
 fun ProcessVideosContent(
     videoProcessing: VideoProcessing,
+    channelsManager: ChannelsManager,
     window: ComposeWindow,
 ) {
     val scope = rememberCoroutineScope()
@@ -61,6 +60,7 @@ fun ProcessVideosContent(
     val ytVideos by videoProcessing.ytVideos.collectAsState(emptyList())
     val videos by videoProcessing.videos.collectAsState(emptyList())
     val isFetchingUploads by videoProcessing.isFetchingUploads.collectAsState()
+    val config by channelsManager.config.collectAsState()
 
     val darkLightImage = if (isSystemInDarkTheme())
         "bg/bg_dark.png" else "bg/bg_light.png"
@@ -127,13 +127,15 @@ fun ProcessVideosContent(
                             .fillMaxSize()
                     ) {
                         item {
-                            AppOutlinedButton(
-                                label = "Sign out",
-                                icon = Icons.Default.ExitToApp,
-                                onClick = {
-                                    videoProcessing.signOut()
-                                }
-                            )
+                                HeaderWithChannelChooser(
+                                    channels = ytChannels,
+                                    selectedChannelid = config.channelId,
+                                    onChannelSelected = {
+                                        scope.launch {
+                                            channelsManager.chooseChannel(it)
+                                        }
+                                    },
+                                )
                         }
                         item {
                             YtSection(

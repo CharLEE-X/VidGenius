@@ -6,9 +6,10 @@ import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
 import com.charleex.vidgenius.datasource.feature.youtube.model.MyUploadsItem
+import com.charleex.vidgenius.datasource.feature.youtube.model.YtChannel
+import com.charleex.vidgenius.datasource.feature.youtube.model.ytChannels
 import com.charleex.vidgenius.datasource.feature.youtube.video.MyUploadsService
 import com.charleex.vidgenius.datasource.feature.youtube.video.UpdateVideoService
-import com.charleex.vidgenius.datasource.model.ProgressState
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -50,7 +51,8 @@ internal class YoutubeRepositoryImpl(
     override suspend fun fetchUploads() {
         logger.d { "Getting channel uploads" }
         _isFetchingUploads.update { true }
-        val uploads: List<MyUploadsItem> = myUploadsService.getUploadList()
+        val ytChannel = getChannel() ?: error("Channel cannot be null")
+        val uploads: List<MyUploadsItem> = myUploadsService.getUploadList(ytChannel)
         logger.d("Uploads: ${uploads.size}")
         val ytVideos = uploads
             .filter {
@@ -81,6 +83,7 @@ internal class YoutubeRepositoryImpl(
     }
 
     override suspend fun updateVideo(ytVideo: YtVideo, video: Video): Boolean {
+        val ytChannel = getChannel() ?: error("Channel cannot be null")
         val title = video.title ?: error("Title cannot be null")
         val description = video.description ?: error("Description cannot be null")
         val tags = video.tags.ifEmpty { error("Tags cannot be empty") }
@@ -90,6 +93,7 @@ internal class YoutubeRepositoryImpl(
                     "$tags, \n${description}"
         )
         val result = updateVideoService.update(
+            ytChannel = ytChannel,
             ytId = ytVideo.id,
             title = title,
             description = description,
@@ -108,6 +112,11 @@ internal class YoutubeRepositoryImpl(
     }
 
     override fun signOut() {
-        googleAuth.signout("updatevideo")
+        googleAuth.signOut("updatevideo")
+    }
+
+    private fun getChannel(): YtChannel? {
+        val config = database.configQueries.getAll().executeAsList().firstOrNull() ?: return null
+        return ytChannels.firstOrNull { it.id == config.channelId }
     }
 }
