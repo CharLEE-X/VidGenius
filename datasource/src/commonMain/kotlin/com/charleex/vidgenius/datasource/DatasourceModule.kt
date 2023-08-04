@@ -4,8 +4,9 @@ import co.touchlab.kermit.Logger.Companion.withTag
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
-import com.charleex.vidgenius.datasource.feature.open_ai.*
+import com.charleex.vidgenius.datasource.feature.open_ai.ChatService
 import com.charleex.vidgenius.datasource.feature.open_ai.ChatServiceImpl
+import com.charleex.vidgenius.datasource.feature.open_ai.OpenAiRepository
 import com.charleex.vidgenius.datasource.feature.open_ai.OpenAiRepositoryDebug
 import com.charleex.vidgenius.datasource.feature.open_ai.OpenAiRepositoryImpl
 import com.charleex.vidgenius.datasource.feature.open_ai.api.OpenAiApi
@@ -13,23 +14,27 @@ import com.charleex.vidgenius.datasource.feature.open_ai.api.OpenAiApiImpl
 import com.charleex.vidgenius.datasource.feature.open_ai.api.OpenAiConfig
 import com.charleex.vidgenius.datasource.feature.open_ai.client.createHttpClient
 import com.charleex.vidgenius.datasource.feature.open_ai.model.ModelId
-import com.charleex.vidgenius.datasource.feature.video_file.*
+import com.charleex.vidgenius.datasource.feature.video_file.ScreenshotCapturing
 import com.charleex.vidgenius.datasource.feature.video_file.ScreenshotCapturingImpl
+import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepository
 import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepositoryImpl
 import com.charleex.vidgenius.datasource.feature.video_file.model.FileProcessor
 import com.charleex.vidgenius.datasource.feature.video_file.model.FileProcessorImpl
-import com.charleex.vidgenius.datasource.feature.vision_ai.*
+import com.charleex.vidgenius.datasource.feature.vision_ai.GoogleCloudRepository
 import com.charleex.vidgenius.datasource.feature.vision_ai.GoogleCloudRepositoryDebug
 import com.charleex.vidgenius.datasource.feature.vision_ai.GoogleCloudRepositoryImpl
+import com.charleex.vidgenius.datasource.feature.vision_ai.VisionAiService
+import com.charleex.vidgenius.datasource.feature.vision_ai.VisionAiServiceImpl
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepositoryDebug
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepositoryImpl
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuthImpl
-import com.charleex.vidgenius.datasource.feature.youtube.video.*
+import com.charleex.vidgenius.datasource.feature.youtube.video.MyUploadsService
 import com.charleex.vidgenius.datasource.feature.youtube.video.MyUploadsServiceImpl
 import com.charleex.vidgenius.datasource.feature.youtube.video.UpdateVideoService
 import com.charleex.vidgenius.datasource.feature.youtube.video.UpdateVideoServiceImpl
+import com.charleex.vidgenius.datasource.feature.youtube.video.UploadVideoService
 import com.charleex.vidgenius.datasource.feature.youtube.video.UploadVideoServiceImpl
 import com.charleex.vidgenius.datasource.utils.getIsDebugBuild
 import com.google.api.client.auth.oauth2.Credential
@@ -252,30 +257,30 @@ private val settingsModule
     }
 
 private val databaseModule
-    get()= module {
-    single {
-        VidGeniusDatabase(
-            driver = get(),
-            VideoAdapter = get(),
-            YtVideoAdapter = get(),
-        )
-    }
-    single {
-        Video.Adapter(
-            screenshotsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
-            descriptionsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
-            createdAtAdapter = InstantComponentSerializer.asColumnAdapter(),
-            modifiedAtAdapter = InstantComponentSerializer.asColumnAdapter(),
-            tagsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
-        )
-    }
+    get() = module {
+        single {
+            VidGeniusDatabase(
+                driver = get(),
+                VideoAdapter = get(),
+                YtVideoAdapter = get(),
+            )
+        }
+        single {
+            Video.Adapter(
+                screenshotsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
+                descriptionsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
+                createdAtAdapter = InstantComponentSerializer.asColumnAdapter(),
+                modifiedAtAdapter = InstantComponentSerializer.asColumnAdapter(),
+                tagsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
+            )
+        }
         single {
             YtVideo.Adapter(
                 tagsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
                 publishedAtAdapter = InstantComponentSerializer.asColumnAdapter(),
             )
         }
-}
+    }
 
 private fun <T : Any> KSerializer<T>.asColumnAdapter(json: Json = Json { ignoreUnknownKeys = true }) =
     JsonColumnAdapter(json, this)
