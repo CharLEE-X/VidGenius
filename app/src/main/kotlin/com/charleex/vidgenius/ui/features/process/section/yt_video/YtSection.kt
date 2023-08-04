@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ import com.charleex.vidgenius.ui.components.SectionContainer
 fun YtSection(
     ytVideos: List<YtVideo>,
     videos: List<Video>,
+    isFetchingUploads: Boolean,
     onRefresh: () -> Unit,
 ) {
     SectionContainer(
@@ -33,11 +35,20 @@ fun YtSection(
         headerBgColor = Color.LightGray,
         isMainHeader = true,
         extra = {
-            AppOutlinedButton(
-                label = "Refresh Drafts",
-                icon = Icons.Default.PlayArrow,
-                onClick = onRefresh,
-            )
+            if (isFetchingUploads) {
+                AppOutlinedButton(
+                    label = "Downloading...",
+                    icon = Icons.Default.CloudDownload,
+                    enabled = false,
+                    onClick = onRefresh,
+                )
+            } else {
+                AppOutlinedButton(
+                    label = "Refresh Drafts",
+                    icon = Icons.Default.PlayArrow,
+                    onClick = onRefresh,
+                )
+            }
         },
         modifier = Modifier
     ) {
@@ -47,7 +58,7 @@ fun YtSection(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "No YouTube 'Draft' videos",
+                    text = if (isFetchingUploads) "Loading..." else "No YouTube 'Draft' videos",
                     style = MaterialTheme.typography.h6,
                     color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f),
                     modifier = Modifier.padding(64.dp)

@@ -3,10 +3,12 @@ package com.charleex.vidgenius.datasource.feature.youtube
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.Instant
 
-internal class YoutubeRepositoryDebug : YoutubeRepository {
+internal class YoutubeRepositoryDebug() : YoutubeRepository {
+    override val isFetchingUploads: StateFlow<Boolean> = flowOf(false) as StateFlow<Boolean>
 
     private var size = 4
     override fun flowOfYtVideos(): Flow<List<YtVideo>> {

@@ -60,6 +60,7 @@ fun ProcessVideosContent(
 
     val ytVideos by videoProcessing.ytVideos.collectAsState(emptyList())
     val videos by videoProcessing.videos.collectAsState(emptyList())
+    val isFetchingUploads by videoProcessing.isFetchingUploads.collectAsState()
 
     val darkLightImage = if (isSystemInDarkTheme())
         "bg/bg_dark.png" else "bg/bg_light.png"
@@ -138,6 +139,7 @@ fun ProcessVideosContent(
                             YtSection(
                                 ytVideos = ytVideos,
                                 videos = videos,
+                                isFetchingUploads = isFetchingUploads,
                                 onRefresh = {
                                     scope.launch {
                                         videoProcessing.fetchUploads()

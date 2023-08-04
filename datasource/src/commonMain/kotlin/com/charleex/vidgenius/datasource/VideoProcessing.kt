@@ -11,12 +11,14 @@ import com.charleex.vidgenius.datasource.feature.youtube.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import java.io.File
 
 interface VideoProcessing {
     val videos: Flow<List<Video>>
     val ytVideos: Flow<List<YtVideo>>
+    val isFetchingUploads: StateFlow<Boolean>
 
     fun fetchUploads()
     fun addVideos(files: List<*>)
@@ -40,6 +42,9 @@ internal class VideoProcessingImpl(
 
     override val ytVideos: Flow<List<YtVideo>>
         get() = youtubeRepository.flowOfYtVideos()
+
+    override val isFetchingUploads: StateFlow<Boolean>
+        get() = youtubeRepository.isFetchingUploads
 
     override fun fetchUploads() {
         logger.d("Fetching uploads")
