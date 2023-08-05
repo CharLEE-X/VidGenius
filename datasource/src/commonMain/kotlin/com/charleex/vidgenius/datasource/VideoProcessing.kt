@@ -7,12 +7,15 @@ import com.charleex.vidgenius.datasource.db.YtVideo
 import com.charleex.vidgenius.datasource.feature.open_ai.OpenAiRepository
 import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepository
 import com.charleex.vidgenius.datasource.feature.vision_ai.GoogleCloudRepository
-import com.charleex.vidgenius.datasource.feature.youtube.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
-import kotlinx.coroutines.*
+import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.io.File
 
 interface VideoProcessing {
@@ -37,6 +40,10 @@ internal class VideoProcessingImpl(
     private val youtubeRepository: YoutubeRepository,
     private val scope: CoroutineScope,
 ) : VideoProcessing {
+    companion object {
+        private const val MAX_RETRIES = 3
+    }
+
     override val videos: Flow<List<Video>>
         get() = videoFileRepository.flowOfVideos()
 
@@ -83,27 +90,37 @@ internal class VideoProcessingImpl(
     private suspend fun startProcessing(
         video: Video,
         numberOfScreenshots: Int,
+        tryIndex: Int = 0,
         onError: (String) -> Unit,
     ) {
-        logger.d("Processing video ${video.id}")
+        logger.d("Processing video ${video.id} | Try $tryIndex")
         try {
             val ytVideo = youtubeRepository.flowOfYtVideos().first()
                 .firstOrNull { it.title == video.youtubeId }
                 ?: error("No yt video found for ${video.youtubeId}")
 
+            val config = database.configQueries.getAll().executeAsOne()
+            val channel = config.channelConfig ?: error("No channel found")
+
             val videoWithScreenshots = processVideo(video, 3)
             val videoWithDescriptions =
                 processScreenshotsToText(videoWithScreenshots, numberOfScreenshots)
-            val videoWithDescriptionContext = processDescriptions(videoWithDescriptions)
+            val videoWithDescriptionContext = processDescriptions(videoWithDescriptions, channel)
 
             logger.d { "Context: $videoWithDescriptionContext" }
 
-            val videoWithMetadata = generateMetaData(videoWithDescriptionContext)
+            val videoWithMetadata = generateMetaData(videoWithDescriptionContext, channel)
             updateYouTubeVideo(ytVideo, videoWithMetadata)
             logger.v { "Processing $video | Finished" }
         } catch (e: Exception) {
             e.printStackTrace()
-            onError(e.message ?: "Error while processing ${video.id}")
+            val nextTryIndex = tryIndex + 1
+            if (nextTryIndex < MAX_RETRIES) {
+                onError(e.message ?: "Error while processing ${video.id} | Retrying $nextTryIndex")
+                startProcessing(video, numberOfScreenshots, nextTryIndex, onError)
+            } else {
+                onError(e.message ?: "Error while processing ${video.id}")
+            }
         }
     }
 
@@ -153,7 +170,10 @@ internal class VideoProcessingImpl(
         val screenshotsHaveText = video.descriptions.all { it.isNotEmpty() }
 
         val allFilesExist = video.screenshots.all { File(it).exists() }
-        if (hasScreenshots && screenshotsHaveText && allFilesExist) return video
+        if (hasScreenshots && screenshotsHaveText && allFilesExist) {
+            logger.d("Screenshots already exist | ${video.id}")
+            return video
+        }
 
         logger.d("Video processing | ${video.id} | Start")
         val newVideo = try {
@@ -175,7 +195,10 @@ internal class VideoProcessingImpl(
         if (!allDescriptionsHaveText) {
             logger.d("Not all descriptions have text | ${video.id}")
         }
-        if (hasDescriptions && allDescriptionsHaveText) return video
+        if (hasDescriptions && allDescriptionsHaveText) {
+            logger.d("Already has descriptions | ${video.id}")
+            return video
+        }
 
         logger.d("Text processing | ${video.id} | Start")
         val newVideo = try {
@@ -188,13 +211,16 @@ internal class VideoProcessingImpl(
         return newVideo
     }
 
-    private suspend fun processDescriptions(video: Video): Video {
+    private suspend fun processDescriptions(video: Video, channelConfig: ChannelConfig): Video {
         val hasDescriptionContext = video.descriptionContext.isNullOrEmpty().not()
-        if (hasDescriptionContext) return video
+        if (hasDescriptionContext) {
+            logger.d("Already has description context | ${video.id}")
+            return video
+        }
 
         logger.d("Description processing | ${video.id} | Start")
         val newVideo = try {
-            openAiRepository.getDescriptionContext(video)
+            openAiRepository.getDescriptionContext(video, channelConfig)
         } catch (e: Exception) {
             logger.e(e) { "Error generating description context" }
             throw e
@@ -203,16 +229,19 @@ internal class VideoProcessingImpl(
         return newVideo
     }
 
-    private suspend fun generateMetaData(video: Video): Video {
+    private suspend fun generateMetaData(video: Video, channelConfig: ChannelConfig): Video {
         val hasTitle = video.title?.isNotEmpty() == true
         val hasDescription = video.description?.isNotEmpty() == true
         val hasTags = video.tags.isNotEmpty()
         val tagsHaveText = video.tags.all { it.isNotEmpty() }
-        if (hasTitle && hasDescription && hasTags && tagsHaveText) return video
+        if (hasTitle && hasDescription && hasTags && tagsHaveText) {
+            logger.d("Metadata generation | ${video.id} | Already has metadata")
+            return video
+        }
 
         logger.d("Metadata generation | ${video.id} | Start")
         val newVideo = try {
-            openAiRepository.getMetaData(video)
+            openAiRepository.getMetaData(video, channelConfig)
         } catch (e: Exception) {
             logger.e(e) { "Error generating metadata" }
             throw e

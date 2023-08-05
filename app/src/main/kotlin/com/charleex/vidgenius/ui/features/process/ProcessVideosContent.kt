@@ -36,8 +36,8 @@ import com.charleex.vidgenius.datasource.feature.youtube.ChannelsManager
 import com.charleex.vidgenius.datasource.feature.youtube.model.ytChannels
 import com.charleex.vidgenius.ui.components.AppScaffold
 import com.charleex.vidgenius.ui.components.KXSnackBarHost
-import com.charleex.vidgenius.ui.features.process.section.components.HeaderWithChannelChooser
 import com.charleex.vidgenius.ui.features.process.section.components.CompletedSection
+import com.charleex.vidgenius.ui.features.process.section.components.HeaderWithChannelChooser
 import com.charleex.vidgenius.ui.features.process.section.local.LocalSection
 import com.charleex.vidgenius.ui.features.process.section.yt_video.YtSection
 import com.charleex.vidgenius.ui.theme.AutoYtVidTheme
@@ -127,15 +127,15 @@ fun ProcessVideosContent(
                             .fillMaxSize()
                     ) {
                         item {
-                                HeaderWithChannelChooser(
-                                    channels = ytChannels,
-                                    selectedChannelid = config.channelId,
-                                    onChannelSelected = {
-                                        scope.launch {
-                                            channelsManager.chooseChannel(it)
-                                        }
-                                    },
-                                )
+                            HeaderWithChannelChooser(
+                                channelConfigs = ytChannels,
+                                selectedChannelConfig = config.channelConfig,
+                                onChannelSelected = {
+                                    scope.launch {
+                                        channelsManager.chooseChannel(it)
+                                    }
+                                },
+                            )
                         }
                         item {
                             YtSection(

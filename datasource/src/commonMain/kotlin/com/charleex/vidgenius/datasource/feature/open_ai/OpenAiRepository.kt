@@ -8,12 +8,13 @@ import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompleti
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatMessage
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatRole
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.FunctionMode
+import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
 import kotlinx.coroutines.flow.Flow
-import java.util.*
+import java.util.Locale
 
 interface OpenAiRepository {
-    suspend fun getDescriptionContext(video: Video): Video
-    suspend fun getMetaData(video: Video): Video
+    suspend fun getDescriptionContext(video: Video, channelConfig: ChannelConfig): Video
+    suspend fun getMetaData(video: Video, channelConfig: ChannelConfig): Video
 
     fun chats(
         messages: List<ChatMessage> = emptyList(),
@@ -37,13 +38,16 @@ internal class OpenAiRepositoryImpl(
     private val chatService: ChatService,
 ) : OpenAiRepository {
 
-    override suspend fun getDescriptionContext(video: Video): Video {
+    override suspend fun getDescriptionContext(video: Video, channelConfig: ChannelConfig): Video {
         val descriptionsString = video.descriptions.joinToString(" ")
+        val category = channelConfig.category
         val chatCompletion = chatService.chatCompletion(
             messages = listOf(
                 ChatMessage(
                     role = ChatRole.User.role,
-                    content = "Here is a list of screenshot descriptions. Pick those related to the animal, and return them: $descriptionsString. If you cannot find an animal return 'funny dog'"
+                    content =
+                    "Here is a list of screenshot descriptions. Pick those related to the funny $category videos, and return " +
+                            "them: $descriptionsString. If you cannot find an funny $category videos choose one the most popular one."
                 ),
             )
         )
@@ -57,12 +61,14 @@ internal class OpenAiRepositoryImpl(
         return newVideo
     }
 
-    override suspend fun getMetaData(video: Video): Video {
+    override suspend fun getMetaData(video: Video, channelConfig: ChannelConfig): Video {
+        val descriptions = video.descriptions.joinToString { ", " }
+        val category = channelConfig.category
         val chatCompletion = chatService.chatCompletion(
             messages = listOf(
                 ChatMessage(
                     role = ChatRole.User.role,
-                    content = "Here is a list of screenshot descriptions for animal funny videos:\n${video.descriptions.joinToString { ", " }}\n\n" +
+                    content = "Here is a list of screenshot descriptions for funny $category videos:\n${descriptions}\n\n" +
                             "Generate:\n" +
                             "- TITLE: for the YouTube video with related emojis at the front and back of the title.\n" +
                             "- DESCRIPTION: SEO friendly\n" +
@@ -130,9 +136,11 @@ internal class OpenAiRepositoryImpl(
         """.trimIndent()
         )
 
+        val fullDescription = "$hashtags\n\n$description"
+
         val newVideo = video.copy(
             title = title,
-            description = "$hashtags\n\n$description",
+            description = fullDescription,
             tags = tags,
         )
         database.videoQueries.upsert(newVideo)

@@ -1,7 +1,7 @@
 package com.charleex.vidgenius.datasource.feature.youtube.auth
 
 import co.touchlab.kermit.Logger
-import com.charleex.vidgenius.datasource.feature.youtube.model.YtChannel
+import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
 import com.google.api.client.auth.oauth2.Credential
 import com.google.api.client.auth.oauth2.StoredCredential
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
@@ -27,7 +27,7 @@ interface GoogleAuth {
      * @param scopes              list of scopes needed to run youtube upload.
      * @param credentialDatastore name of the credential datastore to cache OAuth tokens
      */
-    fun authorize(scopes: List<String>, ytChannel: YtChannel): Credential
+    fun authorize(scopes: List<String>, channelConfig: ChannelConfig): Credential
 
     fun signOut(channelId: String)
 }
@@ -40,11 +40,11 @@ internal class GoogleAuthImpl(
     private val credentialDirectory: String,
 ) : GoogleAuth {
     @Throws(IOException::class)
-    override fun authorize(scopes: List<String>, ytChannel: YtChannel): Credential {
+    override fun authorize(scopes: List<String>, channelConfig: ChannelConfig): Credential {
         logger.d { "Authorizing ${scopes}..." }
-        val clientSecrets = getGoogleClientSecrets(ytChannel.secretsFile)
+        val clientSecrets = getGoogleClientSecrets(channelConfig.secretsFile)
 
-        val datastore = getDataStore(ytChannel.id)
+        val datastore = getDataStore(channelConfig.id)
         val flow = GoogleAuthorizationCodeFlow
             .Builder(httpTransport, jsonFactory, clientSecrets, scopes)
             .setCredentialDataStore(datastore)
@@ -75,7 +75,7 @@ internal class GoogleAuthImpl(
 
     private fun getGoogleClientSecrets(secretsFile: String): GoogleClientSecrets {
         val inputStreamReader = this::class.java
-            .getResourceAsStream("/$secretsFile")
+            .getResourceAsStream(secretsFile)
             ?.let { InputStreamReader(it) }
             ?: error("Resource not found: $secretsFile")
         return GoogleClientSecrets.load(jsonFactory, inputStreamReader)

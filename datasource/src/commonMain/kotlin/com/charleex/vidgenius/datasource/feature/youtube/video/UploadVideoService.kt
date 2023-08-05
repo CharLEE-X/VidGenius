@@ -4,7 +4,7 @@ package com.charleex.vidgenius.datasource.feature.youtube.video
 
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
-import com.charleex.vidgenius.datasource.feature.youtube.model.YtChannel
+import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
 import com.google.api.client.auth.oauth2.TokenResponseException
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.googleapis.media.MediaHttpUploader
@@ -21,7 +21,7 @@ import java.io.File
 
 interface UploadVideoService {
     fun uploadVideo(
-        ytChannel: YtChannel,
+        channelConfig: ChannelConfig,
         videoFile: File,
         title: String,
         description: String,
@@ -51,7 +51,7 @@ internal class UploadVideoServiceImpl(
     private var youtube: YouTube? = null
 
     override fun uploadVideo(
-        ytChannel: YtChannel,
+        channelConfig: ChannelConfig,
         videoFile: File,
         title: String,
         description: String,
@@ -60,7 +60,7 @@ internal class UploadVideoServiceImpl(
     ): String {
         logger.d { "Uploading: ${videoFile.path}" }
 
-        val credential = googleAuth.authorize(scopes, ytChannel)
+        val credential = googleAuth.authorize(scopes, channelConfig)
 
         youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
             .setApplicationName(APP_NAME)

@@ -1,3 +1,4 @@
+import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig;
 import java.lang.String;
 import kotlin.Boolean;
 import kotlin.collections.List;
@@ -5,7 +6,7 @@ import kotlinx.datetime.Instant;
 
 CREATE TABLE IF NOT EXISTS Config (
   id TEXT PRIMARY KEY NOT NULL,
-  channelId TEXT
+  channelConfig TEXT AS ChannelConfig
 );
 
 getById:

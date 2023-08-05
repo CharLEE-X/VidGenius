@@ -38,7 +38,6 @@ import com.charleex.vidgenius.ui.components.AppOutlinedButton
 import com.charleex.vidgenius.ui.components.LocalImage
 import com.charleex.vidgenius.ui.components.SectionContainer
 import com.charleex.vidgenius.ui.util.pretty
-import java.util.Locale
 
 @Composable
 internal fun CompletedVideo(
@@ -129,17 +128,7 @@ private fun ContentText(
 ) {
     val clipboardManager = LocalClipboardManager.current
 
-    val descWithTag = "${
-        video.tags.joinToString(", ") {
-            "#${
-                it.replaceFirstChar {
-                    if (it.isLowerCase())
-                        it.titlecase(Locale.UK) else it.toString()
-                }
-            }"
-        }
-    }\n\n" +
-            "${video.description ?: "No description"}\n\n" +
+    val descWithTag = "${video.description ?: "No description"}\n\n" +
             "Youtube: @RoaringAnimals-FunnyAnimals\n" +
             "TikTok: @Roaring_Laughter"
 

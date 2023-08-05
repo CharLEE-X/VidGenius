@@ -2,7 +2,7 @@ package com.charleex.vidgenius.datasource.feature.youtube.video
 
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
-import com.charleex.vidgenius.datasource.feature.youtube.model.YtChannel
+import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.json.JsonFactory
@@ -13,7 +13,7 @@ import java.io.IOException
 
 internal interface UpdateVideoService {
     fun update(
-        ytChannel: YtChannel,
+        channelConfig: ChannelConfig,
         ytId: String,
         title: String?,
         description: String?,
@@ -29,7 +29,6 @@ internal class UpdateVideoServiceImpl(
 ) : UpdateVideoService {
     companion object {
         const val QUOTA_COST = 50
-        private const val STORE = "updatevideo"
         private const val APP_NAME = "youtube-cmdline-updatevideo-sample"
     }
 
@@ -37,7 +36,7 @@ internal class UpdateVideoServiceImpl(
     private var youtube: YouTube? = null
 
     override fun update(
-        ytChannel: YtChannel,
+        channelConfig: ChannelConfig,
         ytId: String,
         title: String?,
         description: String?,
@@ -45,7 +44,7 @@ internal class UpdateVideoServiceImpl(
     ): Video? {
         logger.d { "Updating video $ytId" }
         return try {
-            val credential = googleAuth.authorize(scopes, ytChannel)
+            val credential = googleAuth.authorize(scopes, channelConfig)
 
             youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
                 .setApplicationName(APP_NAME)

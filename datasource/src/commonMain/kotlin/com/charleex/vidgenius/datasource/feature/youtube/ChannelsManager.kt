@@ -5,9 +5,9 @@ import com.benasher44.uuid.uuid4
 import com.charleex.vidgenius.datasource.db.Config
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
-import com.charleex.vidgenius.datasource.feature.youtube.model.YtChannel
+import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
 import com.charleex.vidgenius.datasource.feature.youtube.model.ytChannels
-import com.charleex.vidgenius.datasource.feature.youtube.video.MyUploadsServiceImpl
+import com.google.common.collect.Lists
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,8 +19,8 @@ import kotlinx.coroutines.withContext
 
 interface ChannelsManager {
     val config: StateFlow<Config>
-    fun getMyChannels(): List<YtChannel>
-    suspend fun chooseChannel(ytChannel: YtChannel)
+    fun getMyChannels(): List<ChannelConfig>
+    suspend fun chooseChannel(newChannelConfig: ChannelConfig)
 }
 
 internal class ChannelsManagerImpl(
@@ -31,7 +31,7 @@ internal class ChannelsManagerImpl(
 ) : ChannelsManager {
     private val defaultConfig = Config(
         id = uuid4().toString(),
-        channelId = null,
+        channelConfig = null,
     )
 
     init {
@@ -45,19 +45,24 @@ internal class ChannelsManagerImpl(
             .map { it.executeAsOne() }
             .stateIn(scope, SharingStarted.WhileSubscribed(), defaultConfig)
 
-    override fun getMyChannels(): List<YtChannel> {
+    override fun getMyChannels(): List<ChannelConfig> {
         return ytChannels
     }
 
-    override suspend fun chooseChannel(ytChannel: YtChannel) {
-        logger.d("Choosing channel $ytChannel")
+    override suspend fun chooseChannel(newChannelConfig: ChannelConfig) {
+        logger.d("Choosing channel $newChannelConfig")
         withContext(Dispatchers.IO) {
             val config = database.configQueries.getAll().executeAsList().first()
-            val previousChannelId = config.channelId
 
-            if (config.channelId == ytChannel.id) {
+            if (config.channelConfig?.id == newChannelConfig.id) {
                 logger.d("Channel already chosen")
                 return@withContext
+            }
+
+
+            config.channelConfig?.id?.let { previousChannelId ->
+                logger.d("Signing out of channel $previousChannelId")
+                googleAuth.signOut(previousChannelId)
             }
 
             logger.d("Deleting all videos")
@@ -70,15 +75,11 @@ internal class ChannelsManagerImpl(
                 database.ytVideoQueries.delete(it.id)
             }
 
-            previousChannelId?.let {
-                logger.d("Signing out of channel $previousChannelId")
-                googleAuth.signOut(it)
-            }
-
-            logger.d("Signing in to channel ${ytChannel.title}")
+            logger.d("Signing in to channel ${newChannelConfig.title}")
+            val scopes = Lists.newArrayList("https://www.googleapis.com/auth/youtube")
             val credentials = googleAuth.authorize(
-                scopes = MyUploadsServiceImpl.scopes,
-                ytChannel = ytChannel,
+                scopes = scopes,
+                channelConfig = newChannelConfig,
             )
 
             logger.d("Credentials: $credentials")
@@ -88,10 +89,10 @@ internal class ChannelsManagerImpl(
                 return@withContext
             }
 
-            logger.d("Signed in to channel ${ytChannel.title}")
+            logger.d("Signed in to channel ${newChannelConfig.title}")
 
-            logger.d("Updating config with channel id ${ytChannel.id}")
-            val newConfig = config.copy(channelId = ytChannel.id)
+            logger.d("Updating config with channel id ${newChannelConfig.id}")
+            val newConfig = config.copy(channelConfig = newChannelConfig)
             database.configQueries.upsert(newConfig)
         }
     }

@@ -6,7 +6,7 @@ import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
 import com.charleex.vidgenius.datasource.feature.youtube.model.MyUploadsItem
-import com.charleex.vidgenius.datasource.feature.youtube.model.YtChannel
+import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
 import com.charleex.vidgenius.datasource.feature.youtube.model.ytChannels
 import com.charleex.vidgenius.datasource.feature.youtube.video.MyUploadsService
 import com.charleex.vidgenius.datasource.feature.youtube.video.UpdateVideoService
@@ -93,7 +93,7 @@ internal class YoutubeRepositoryImpl(
                     "$tags, \n${description}"
         )
         val result = updateVideoService.update(
-            ytChannel = ytChannel,
+            channelConfig = ytChannel,
             ytId = ytVideo.id,
             title = title,
             description = description,
@@ -115,8 +115,8 @@ internal class YoutubeRepositoryImpl(
         googleAuth.signOut("updatevideo")
     }
 
-    private fun getChannel(): YtChannel? {
+    private fun getChannel(): ChannelConfig? {
         val config = database.configQueries.getAll().executeAsList().firstOrNull() ?: return null
-        return ytChannels.firstOrNull { it.id == config.channelId }
+        return ytChannels.firstOrNull { it.id == config.channelConfig?.id }
     }
 }
