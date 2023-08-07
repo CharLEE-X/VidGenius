@@ -1,5 +1,7 @@
 package com.charleex.vidgenius.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,6 +18,8 @@ import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material3.Badge
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -27,11 +31,16 @@ import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.charleex.vidgenius.datasource.UploadsManager
+import com.charleex.vidgenius.datasource.VideoProcessing
+import com.charleex.vidgenius.datasource.feature.youtube.PrivacyStatus
 import com.charleex.vidgenius.datasource.model.ChannelConfig
 import com.charleex.vidgenius.ui.features.router.RouterScreen
 
@@ -39,6 +48,10 @@ import com.charleex.vidgenius.ui.features.router.RouterScreen
 @Composable
 fun NavigationSheet(
     routerScreen: RouterScreen,
+    animalsVideoProcessing: VideoProcessing,
+    failsVideoProcessing: VideoProcessing,
+    animalsUploadsManager: UploadsManager,
+    failsUploadsManager: UploadsManager,
     onGoToAnimalUploads: () -> Unit,
     onGoToAnimalGeneration: () -> Unit,
     onGoToAnimalSubtitles: () -> Unit,
@@ -49,19 +62,40 @@ fun NavigationSheet(
     onGoToDashboard: () -> Unit,
     block: @Composable () -> Unit,
 ) {
+    val animalYtItems by animalsUploadsManager.ytVideos.collectAsState(emptyList())
+    val failsYtItems by failsUploadsManager.ytVideos.collectAsState(emptyList())
+
+    val animalVideos by animalsVideoProcessing.videos.collectAsState(emptyList())
+    val failsVideos by failsVideoProcessing.videos.collectAsState(emptyList())
+
+
+    val animalsToGenerate =
+        animalYtItems.filter { it.title in animalVideos.map { it.youtubeName } }
+
+    val failsToGenerate =
+        failsYtItems.filter { it.title in failsVideos.map { it.youtubeName } }
+
+    val privateStatuses = listOf(PrivacyStatus.PRIVATE.value, PrivacyStatus.UNLISTED.value)
+    val privateAnimals = animalYtItems.filter { it.privacyStatus in privateStatuses }
+    val privateFails = failsYtItems.filter { it.privacyStatus in privateStatuses }
+
     Surface(
         tonalElevation = 2.dp,
         modifier = Modifier.fillMaxSize()
     ) {
         PermanentNavigationDrawer(
             drawerContent = {
-                PermanentDrawerSheet {
+                PermanentDrawerSheet(
+                    modifier = Modifier
+                        .padding(vertical = 32.dp)
+                        .padding(horizontal = 24.dp)
+
+                ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp)
                     ) {
-                        Spacer(modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.size(32.dp))
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -85,12 +119,17 @@ fun NavigationSheet(
                             )
                         }
 
+                        Spacer(modifier = Modifier.size(32.dp))
+
                         FilledTonalButton(
                             shape = MaterialTheme.shapes.medium,
-                            contentPadding = PaddingValues(8.dp),
+                            contentPadding = PaddingValues(16.dp),
                             onClick = onGoToDashboard,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                contentColor = MaterialTheme.colorScheme.onSecondary
+                            ),
                             modifier = Modifier
-                                .padding(top = 24.dp)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -100,26 +139,24 @@ fun NavigationSheet(
                                     imageVector = Icons.Default.Dashboard,
                                     contentDescription = null,
                                     modifier = Modifier
-                                        .size(32.dp)
+                                        .size(24.dp)
                                         .align(Alignment.CenterStart)
-                                        .padding(start = 12.dp)
                                 )
                                 Text(
                                     text = "Dashboard",
                                     modifier = Modifier
                                         .align(Alignment.Center)
-                                        .padding(12.dp)
                                 )
                             }
                         }
+
                         Spacer(modifier = Modifier.size(32.dp))
 
                         Text(
                             text = ChannelConfig.Animals().title,
                             style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(vertical = 16.dp)
                         )
-                        Spacer(modifier = Modifier.size(12.dp))
+                        Spacer(modifier = Modifier.size(24.dp))
                         NavigationDrawerItem(
                             icon = {
                                 Icon(
@@ -130,7 +167,18 @@ fun NavigationSheet(
                             label = { Text("Uploads") },
                             selected = routerScreen == RouterScreen.AnimalsUploads,
                             onClick = onGoToAnimalUploads,
-                            modifier = Modifier,
+                            badge = {
+                                AnimatedVisibility(animalYtItems.isNotEmpty()) {
+                                    Badge(
+                                        modifier = Modifier
+                                    ) {
+                                        Text(
+                                            text = animalYtItems.size.toString(),
+                                            modifier = Modifier
+                                        )
+                                    }
+                                }
+                            }
                         )
                         NavigationDrawerItem(
                             icon = {
@@ -142,7 +190,19 @@ fun NavigationSheet(
                             label = { Text("Generation") },
                             selected = routerScreen == RouterScreen.AnimalsGeneration,
                             onClick = onGoToAnimalGeneration,
-                            modifier = Modifier
+                            modifier = Modifier,
+                            badge = {
+                                AnimatedVisibility(privateAnimals.isNotEmpty()) {
+                                    Badge(
+                                        modifier = Modifier
+                                    ) {
+                                        Text(
+                                            text = privateAnimals.size.toString(),
+                                            modifier = Modifier
+                                        )
+                                    }
+                                }
+                            }
                         )
                         NavigationDrawerItem(
                             icon = {
@@ -158,7 +218,7 @@ fun NavigationSheet(
                         )
 
                         Divider(
-                            color = Color.White,
+                            color = if (isSystemInDarkTheme()) Color.White.copy(alpha = .3f) else Color.White,
                             thickness = 1.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -182,6 +242,18 @@ fun NavigationSheet(
                             selected = routerScreen == RouterScreen.FailsUploads,
                             onClick = onGoToFailsUploads,
                             modifier = Modifier,
+                            badge = {
+                                AnimatedVisibility(failsYtItems.isNotEmpty()) {
+                                    Badge(
+                                        modifier = Modifier
+                                    ) {
+                                        Text(
+                                            text = failsYtItems.size.toString(),
+                                            modifier = Modifier
+                                        )
+                                    }
+                                }
+                            }
                         )
                         NavigationDrawerItem(
                             icon = {
@@ -193,7 +265,19 @@ fun NavigationSheet(
                             label = { Text("Generation") },
                             selected = routerScreen == RouterScreen.FailsGeneration,
                             onClick = onGoToFailsGeneration,
-                            modifier = Modifier
+                            modifier = Modifier,
+                            badge = {
+                                AnimatedVisibility(privateFails.isNotEmpty()) {
+                                    Badge(
+                                        modifier = Modifier
+                                    ) {
+                                        Text(
+                                            text = privateFails.size.toString(),
+                                            modifier = Modifier
+                                        )
+                                    }
+                                }
+                            }
                         )
                         NavigationDrawerItem(
                             icon = {

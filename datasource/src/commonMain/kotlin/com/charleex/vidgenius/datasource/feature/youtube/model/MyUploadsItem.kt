@@ -1,6 +1,5 @@
 package com.charleex.vidgenius.datasource.feature.youtube.model
 
-import com.charleex.vidgenius.datasource.db.YtVideo
 import kotlinx.datetime.Instant
 
 data class MyUploadsItem(

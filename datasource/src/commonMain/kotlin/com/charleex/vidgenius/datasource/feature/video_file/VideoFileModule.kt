@@ -4,6 +4,8 @@ import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.feature.video_file.model.FileProcessor
 import com.charleex.vidgenius.datasource.feature.video_file.model.FileProcessorImpl
 import com.charleex.vidgenius.datasource.model.allChannels
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.io.File
@@ -24,13 +26,15 @@ internal fun videoFileModule(appDataDir: File) = module {
             )
         }
 
-    single<VideoFileRepository>(named(channel.id)) {
-        VideoFileRepositoryImpl(
-            logger = Logger.withTag(VideoFileRepository::class.simpleName!!),
-            database = get(),
-            fileProcessor = get(),
-            screenshotCapturing = get(named(channel.id)),
-        )
-    }
+        single<VideoFileRepository>(named(channel.id)) {
+            VideoFileRepositoryImpl(
+                logger = Logger.withTag(VideoFileRepository::class.simpleName!!),
+                channel = channel,
+                database = get(),
+                fileProcessor = get(),
+                screenshotCapturing = get(named(channel.id)),
+                scope = CoroutineScope(Dispatchers.Default),
+            )
+        }
     }
 }

@@ -1,7 +1,9 @@
 package com.charleex.vidgenius.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -20,6 +22,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,8 +57,11 @@ internal fun SectionContainer(
 ) {
     val indicationSource = remember { MutableInteractionSource() }
     var isOpen by remember { mutableStateOf(openInitially) }
-    var isHeaderHovered by remember { mutableStateOf(false) }
     val iconRotationState by animateFloatAsState(if (isOpen) 180f else 0f)
+
+    val headerElevation by animateDpAsState(
+        if (isOpen) 20.dp else 4.dp,
+    )
 
     Card(
         modifier = modifier,
@@ -65,20 +71,10 @@ internal fun SectionContainer(
             modifier = modifier.fillMaxWidth()
         ) {
             Surface(
-                tonalElevation = 0.dp,
+                tonalElevation = headerElevation,
                 modifier = Modifier
                     .fillMaxWidth()
                     .animateContentSize()
-                    .onPointerEvent(PointerEventType.Enter) {
-                        isHeaderHovered = true
-                    }
-                    .onPointerEvent(PointerEventType.Exit) {
-                        isHeaderHovered = false
-                    }
-                    .pointerHoverIcon(
-                        if (isHeaderHovered && enabled)
-                            PointerIcon.Hand else PointerIcon.Default
-                    )
                     .clickable(
                         indication = null,
                         interactionSource = indicationSource,
@@ -103,17 +99,19 @@ internal fun SectionContainer(
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     extra()
-                    Icon(
-                        imageVector = Icons.Outlined.ArrowDropDown,
-                        contentDescription = "",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .alpha(if (enabled) 1f else 0f)
-                            .graphicsLayer(
-                                rotationZ = iconRotationState,
-                            )
-                    )
+                    AnimatedVisibility(enabled) {
+                        Icon(
+                            imageVector = Icons.Outlined.ArrowDropDown,
+                            contentDescription = "",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .alpha(if (enabled) 1f else 0f)
+                                .graphicsLayer(
+                                    rotationZ = iconRotationState,
+                                )
+                        )
+                    }
                 }
             }
             progress?.let {
@@ -123,7 +121,11 @@ internal fun SectionContainer(
                 )
             }
             AnimatedVisibility(isOpen) {
+                Surface(
+                    tonalElevation = 2.dp
+                ) {
                 block()
+                }
             }
         }
     }

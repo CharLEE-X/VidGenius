@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.ui.components.LocalImage
@@ -259,13 +261,18 @@ internal fun ContentText(
                             modifier = Modifier.fillMaxWidth(.8f)
                         )
                     }
-//                    AppOutlinedButton(
-//                        label = "COPY",
-//                        icon = Icons.Default.CopyAll,
-//                        onClick = {
-//                            clipboardManager.setText(AnnotatedString(descWithTag))
-//                        },
-//                    )
+                    OutlinedButton(
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(descWithTag))
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                    ) {
+                        Text(
+                            text = "COPY",
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
                 }
             }
             Text(

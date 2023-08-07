@@ -5,18 +5,28 @@ import com.benasher44.uuid.uuid4
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.feature.video_file.model.FileProcessor
+import com.charleex.vidgenius.datasource.model.ChannelConfig
 import com.squareup.sqldelight.runtime.coroutines.asFlow
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import java.io.File
 
 interface VideoFileRepository {
+    val isWatching: StateFlow<Boolean>
     fun getVideoById(videoId: String): Video
     fun flowOfVideos(channelId: String): Flow<List<Video>>
     fun deleteVideo(videoId: String)
+    fun startWatchingDirectory(directory: String)
+    fun stopWatchingDirectory(directory: String)
 
     suspend fun captureScreenshots(
         video: Video,
@@ -24,21 +34,27 @@ interface VideoFileRepository {
         channelId: String,
     ): Video
 
-    suspend fun filterVideos(files: List<*>, channelId: String)
+    suspend fun filterVideos(paths: List<String>, channelId: String)
 }
 
 internal class VideoFileRepositoryImpl(
     private val logger: Logger,
+    private val channel: ChannelConfig,
     private val database: VidGeniusDatabase,
     private val fileProcessor: FileProcessor,
     private val screenshotCapturing: ScreenshotCapturing,
+    private val scope: CoroutineScope,
 ) : VideoFileRepository {
+    private var watchJob: Job? = null
+
+    private val _isWatching = MutableStateFlow(false)
+    override val isWatching: StateFlow<Boolean> = _isWatching.asStateFlow()
+
     override fun getVideoById(videoId: String): Video {
         return database.videoQueries.getById(videoId).executeAsOne()
     }
 
     override fun flowOfVideos(channelId: String): Flow<List<Video>> {
-        logger.d("Getting flow of all videos")
         return database.videoQueries.getAllForChannel(channelId).asFlow()
             .map { it.executeAsList() }
 //            .onEach { logger.d("Videos: $it") }
@@ -56,6 +72,19 @@ internal class VideoFileRepositoryImpl(
             logger.d("Video ${video.path} has no screenshots")
         }
         database.videoQueries.delete(video.id)
+    }
+
+    override fun startWatchingDirectory(directory: String) {
+        logger.d("Watching directory $directory")
+        watchJob = scope.launch {
+            _isWatching.value = true
+            fileProcessor.watchDirectory(directory)
+        }
+    }
+
+    override fun stopWatchingDirectory(directory: String) {
+        watchJob?.cancel()
+        _isWatching.value = false
     }
 
     override suspend fun captureScreenshots(
@@ -78,8 +107,9 @@ internal class VideoFileRepositoryImpl(
         return newVideo
     }
 
-    override suspend fun filterVideos(files: List<*>, channelId: String) {
-        logger.d("Getting videos from files")
+    override suspend fun filterVideos(paths: List<String>, channelId: String) {
+        logger.d("Getting videos from ${paths.size} files")
+        val files = paths.map { File(it) }
         val videos = fileProcessor.filterVideoFiles(files)
         val localVideos = database.videoQueries.getAll().executeAsList()
         val filteredVideos = videos.filter {

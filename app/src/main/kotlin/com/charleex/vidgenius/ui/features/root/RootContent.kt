@@ -16,9 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
-import com.adrianwitaszak.shoppe.composeui.feature.router.RouterContent
-import com.charleex.vidgenius.datasource.VideoProcessing
+import com.charleex.vidgenius.ui.features.router.RouterContent
 import com.charleex.vidgenius.datasource.ConfigManager
+import com.charleex.vidgenius.datasource.UploadsManager
+import com.charleex.vidgenius.datasource.VideoProcessing
+import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepository
 import com.charleex.vidgenius.ui.AppState
 import com.charleex.vidgenius.ui.theme.AutoYtVidTheme
 import kotlinx.coroutines.launch
@@ -26,8 +28,12 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RootContent(
+    animalsFileRepository: VideoFileRepository,
+    failsFileRepository: VideoFileRepository,
     animalVideoProcessing: VideoProcessing,
     failsVideoProcessing: VideoProcessing,
+    animalsUploadsManager: UploadsManager,
+    failsUploadsManager: UploadsManager,
     configManager: ConfigManager,
     window: ComposeWindow,
 ) {
@@ -57,8 +63,12 @@ fun RootContent(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     RouterContent(
+                        animalsFileRepository = animalsFileRepository,
+                        failsFileRepository = failsFileRepository,
                         animalsVideoProcessing = animalVideoProcessing,
-                        failsVideoProcessing = animalVideoProcessing,
+                        failsVideoProcessing = failsVideoProcessing,
+                        animalsUploadsManager = animalsUploadsManager,
+                        failsUploadsManager = failsUploadsManager,
                         configManager = configManager,
                         window = window,
                         displayMessage = { message ->

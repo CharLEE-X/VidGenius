@@ -54,6 +54,14 @@ fun datasourceModule() = module {
                 scope = CoroutineScope(Dispatchers.Default)
             )
         }
+
+        single<UploadsManager>(named(channel.id)) {
+            UploadsManagerImpl(
+                logger = Logger.withTag(UploadsManager::class.simpleName!!),
+                youtubeRepository = get(named(channel.id)),
+                scope = CoroutineScope(Dispatchers.Default)
+            )
+        }
     }
 
     single<ConfigManager> {

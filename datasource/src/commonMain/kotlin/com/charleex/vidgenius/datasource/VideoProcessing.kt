@@ -12,18 +12,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 
 interface VideoProcessing {
     val videos: Flow<List<Video>>
-    val animalYtVideos: Flow<List<YtVideo>>
-    val isFetchingUploads: StateFlow<Boolean>
 
-    fun fetchUploads()
-    fun addVideos(files: List<*>)
+    fun addVideos(paths: List<String>)
     fun deleteVideo(videoId: String)
     fun processAll(videos: List<Video>, onError: (String) -> Unit)
 
@@ -47,23 +43,10 @@ internal class VideoProcessingImpl(
     override val videos: Flow<List<Video>>
         get() = videoFileRepository.flowOfVideos(channelId)
 
-    override val animalYtVideos: Flow<List<YtVideo>>
-        get() = youtubeRepository.flowOfYtVideos()
-
-    override val isFetchingUploads: StateFlow<Boolean>
-        get() = youtubeRepository.isFetchingUploads
-
-    override fun fetchUploads() {
-        logger.d("Fetching uploads")
+    override fun addVideos(paths: List<String>) {
+        logger.d("Adding ${paths.size} videos")
         scope.launch {
-            youtubeRepository.fetchUploads()
-        }
-    }
-
-    override fun addVideos(files: List<*>) {
-        logger.d("Adding videos $files")
-        scope.launch {
-            videoFileRepository.filterVideos(files, channelId)
+            videoFileRepository.filterVideos(paths, channelId)
         }
     }
 
@@ -99,8 +82,8 @@ internal class VideoProcessingImpl(
                 .firstOrNull { it.title == video.youtubeName }
                 ?: error("No yt video found for ${video.youtubeName}")
 
-            val config = database.configQueries.getAll().executeAsOne()
-            val channel = config.channelConfig ?: error("No channel found")
+//            val config = database.configQueries.getAll().executeAsOne()
+//            val channel = config.channelConfig ?: error("No channel found")
 
             val videoWithScreenshots = processVideo(video, 3)
             val videoWithDescriptions =

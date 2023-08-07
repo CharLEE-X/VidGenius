@@ -37,8 +37,12 @@ fun main() = application {
         title = "Auto Yt Vid"
     ) {
         RootContent(
-            animalVideoProcessing = koinApplication.koin.get(named(ChannelConfig.Fails().id)),
+            animalsFileRepository = koinApplication.koin.get(named(ChannelConfig.Animals().id)),
+            failsFileRepository = koinApplication.koin.get(named(ChannelConfig.Fails().id)),
+            animalVideoProcessing = koinApplication.koin.get(named(ChannelConfig.Animals().id)),
             failsVideoProcessing = koinApplication.koin.get(named(ChannelConfig.Fails().id)),
+            animalsUploadsManager = koinApplication.koin.get(named(ChannelConfig.Animals().id)),
+            failsUploadsManager = koinApplication.koin.get(named(ChannelConfig.Fails().id)),
             configManager = koinApplication.koin.get(),
             window = window,
         )

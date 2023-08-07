@@ -2,7 +2,6 @@ package com.charleex.vidgenius.ui.features.generation.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,6 +36,8 @@ fun CompletedSection(
     SectionContainer(
         name = "Completed videos: ${videos.size}",
         isMainHeader = true,
+        enabled = videos.isNotEmpty(),
+        openInitially = videos.isNotEmpty(),
         extra = {
             AnimatedVisibility(completed.isNotEmpty()) {
                 if (showDeleteConfirm) {
@@ -92,18 +92,6 @@ fun CompletedSection(
             }
         },
     ) {
-        AnimatedVisibility(videos.none { it.isCompleted }) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "No videos completed.",
-                    style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.padding(64.dp)
-                )
-            }
-        }
         Column(
             verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
