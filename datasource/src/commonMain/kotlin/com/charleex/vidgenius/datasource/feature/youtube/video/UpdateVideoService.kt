@@ -1,13 +1,17 @@
 package com.charleex.vidgenius.datasource.feature.youtube.video
 
 import co.touchlab.kermit.Logger
+import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo
+import com.charleex.vidgenius.datasource.feature.youtube.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
 import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
+import com.charleex.vidgenius.datasource.feature.youtube.model.Localization
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.services.youtube.YouTube
 import com.google.api.services.youtube.model.Video
+import com.google.api.services.youtube.model.VideoLocalization
 import com.google.common.collect.Lists
 import java.io.IOException
 
@@ -15,9 +19,7 @@ internal interface UpdateVideoService {
     fun update(
         channelConfig: ChannelConfig,
         ytId: String,
-        title: String?,
-        description: String?,
-        tags: List<String>?,
+        contentInfo: ContentInfo,
     ): Video?
 }
 
@@ -38,9 +40,7 @@ internal class UpdateVideoServiceImpl(
     override fun update(
         channelConfig: ChannelConfig,
         ytId: String,
-        title: String?,
-        description: String?,
-        tags: List<String>?,
+        contentInfo: ContentInfo,
     ): Video? {
         logger.d { "Updating video $ytId" }
         return try {
@@ -51,7 +51,7 @@ internal class UpdateVideoServiceImpl(
                 .build()
 
             val listResponse = youtube!!.videos()
-                .list(listOf("snippet"))
+                .list(listOf("snippet", "status","localizations"))
                 .setId(listOf(ytId))
                 .execute()
 
@@ -59,15 +59,47 @@ internal class UpdateVideoServiceImpl(
                 .ifEmpty { error("Can't find a video with ID: $ytId") }
 
             val video = videoList[0]
+
+            val enUsLocalization = VideoLocalization().apply {
+                title = contentInfo.enUS.title
+                description = contentInfo.enUS.description
+            }
+            val esLocalization = VideoLocalization().apply {
+                title = contentInfo.es.title
+                description = contentInfo.es.description
+            }
+            val zhLocalization = VideoLocalization().apply {
+                title = contentInfo.zh.title
+                description = contentInfo.zh.description
+            }
+            val ptLocalization = VideoLocalization().apply {
+                title = contentInfo.pt.title
+                description = contentInfo.pt.description
+            }
+            val hiLocalization = VideoLocalization().apply {
+                title = contentInfo.hi.title
+                description = contentInfo.hi.description
+            }
+
+            val multipleLocalizations = mutableMapOf<String, VideoLocalization>().apply {
+                put("en-US", enUsLocalization)
+                put("es", esLocalization)
+                put("zh", zhLocalization)
+                put("pt", ptLocalization)
+                put("hi", hiLocalization)
+            }
+
             val snippet = video.snippet
-            snippet.title = title
-            snippet.description = description
-            snippet.tags = tags
+            snippet.title = contentInfo.enUS.title
+            snippet.description = contentInfo.enUS.description
+            snippet.tags = contentInfo.tags
 
             video.snippet = snippet
+            video.localizations = multipleLocalizations
+            video.status.privacyStatus = PrivacyStatus.PUBLIC.value
 
             val videoResponse = youtube!!.videos()
-                .update(listOf("snippet"), video)
+                .update(listOf("snippet", "status", "localizations"), video)
                 .execute()
                 ?: error("Can't update video with ID: $ytId")
 

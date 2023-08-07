@@ -19,11 +19,7 @@ internal class OpenAiRepositoryDebug : OpenAiRepository {
 
     override suspend fun getMetaData(video: Video, channelConfig: ChannelConfig): Video {
         delay(300)
-        return video.copy(
-            title = "title",
-            description = "description",
-            tags = listOf("tag1", "tag2"),
-        )
+        return video
     }
 
     override fun chats(

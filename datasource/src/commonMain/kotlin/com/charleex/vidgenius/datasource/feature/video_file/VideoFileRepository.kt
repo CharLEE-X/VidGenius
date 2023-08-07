@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import com.benasher44.uuid.uuid4
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
+import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo
 import com.charleex.vidgenius.datasource.feature.video_file.model.FileProcessor
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import kotlinx.coroutines.Dispatchers
@@ -96,9 +97,7 @@ internal class VideoFileRepositoryImpl(
                         screenshots = emptyList(),
                         descriptions = emptyList(),
                         descriptionContext = null,
-                        title = null,
-                        description = null,
-                        tags = emptyList(),
+                        contentInfo = ContentInfo(),
                         youtubeId = videoName,
                         isCompleted = false,
                         createdAt = Clock.System.now(),

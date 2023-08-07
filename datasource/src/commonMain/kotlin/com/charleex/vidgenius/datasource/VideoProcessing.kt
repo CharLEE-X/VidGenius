@@ -42,6 +42,7 @@ internal class VideoProcessingImpl(
 ) : VideoProcessing {
     companion object {
         private const val MAX_RETRIES = 3
+        val languageCodes = listOf("en-US", "es", "zh", "pt", "hi")
     }
 
     override val videos: Flow<List<Video>>
@@ -230,11 +231,28 @@ internal class VideoProcessingImpl(
     }
 
     private suspend fun generateMetaData(video: Video, channelConfig: ChannelConfig): Video {
-        val hasTitle = video.title?.isNotEmpty() == true
-        val hasDescription = video.description?.isNotEmpty() == true
-        val hasTags = video.tags.isNotEmpty()
-        val tagsHaveText = video.tags.all { it.isNotEmpty() }
-        if (hasTitle && hasDescription && hasTags && tagsHaveText) {
+        val hasContentInfoEnUS = video.contentInfo.enUS.title.isNotEmpty() &&
+                video.contentInfo.enUS.description.isNotEmpty()
+        val hasContentInfoPt = video.contentInfo.pt.title.isNotEmpty() &&
+                video.contentInfo.pt.description.isNotEmpty()
+        val hasContentInfoEs = video.contentInfo.es.title.isNotEmpty() &&
+                video.contentInfo.es.description.isNotEmpty()
+        val hasContentInfoZh = video.contentInfo.zh.title.isNotEmpty() &&
+                video.contentInfo.es.description.isNotEmpty()
+        val hasContentInfoHi = video.contentInfo.hi.title.isNotEmpty() &&
+                video.contentInfo.es.description.isNotEmpty()
+        val hasTags = video.contentInfo.tags.isNotEmpty()
+        val tagsHaveText = video.contentInfo.tags.all { it.isNotEmpty() }
+
+        if (
+            hasContentInfoEnUS &&
+            hasContentInfoPt &&
+            hasContentInfoEs &&
+            hasContentInfoZh &&
+            hasContentInfoHi &&
+            hasTags &&
+            tagsHaveText
+        ) {
             logger.d("Metadata generation | ${video.id} | Already has metadata")
             return video
         }
@@ -246,7 +264,7 @@ internal class VideoProcessingImpl(
             logger.e(e) { "Error generating metadata" }
             throw e
         }
-        logger.d("Metadata generation | ${video.id} | Done | ${newVideo.title}")
+        logger.d("Metadata generation | ${video.id} | Done")
         return newVideo
     }
 

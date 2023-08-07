@@ -2,6 +2,7 @@ import java.lang.String;
 import kotlin.Boolean;
 import kotlin.collections.List;
 import kotlinx.datetime.Instant;
+import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo;
 
 CREATE TABLE IF NOT EXISTS Video (
   id TEXT PRIMARY KEY NOT NULL,
@@ -10,9 +11,7 @@ CREATE TABLE IF NOT EXISTS Video (
   screenshots TEXT AS List<String> NOT NULL,
   descriptions TEXT AS List<String> NOT NULL,
   descriptionContext TEXT,
-  title TEXT,
-  description TEXT,
-  tags TEXT AS List<String> NOT NULL,
+  contentInfo TEXT AS ContentInfo NOT NULL,
   isCompleted INTEGER AS Boolean DEFAULT 0 NOT NULL,
   createdAt TEXT AS Instant NOT NULL,
   modifiedAt TEXT AS Instant NOT NULL

@@ -41,7 +41,8 @@ internal class MyUploadsServiceImpl(
                 .setApplicationName(APP_NAME)
                 .build()
 
-            val channelRequest = youtube!!.channels().list(listOf("contentDetails"))
+            val channelRequest = youtube!!.channels()
+                .list(listOf("contentDetails"))
             channelRequest.mine = true
             channelRequest.fields = "items/contentDetails,nextPageToken,pageInfo"
             val channelResult = channelRequest.execute()

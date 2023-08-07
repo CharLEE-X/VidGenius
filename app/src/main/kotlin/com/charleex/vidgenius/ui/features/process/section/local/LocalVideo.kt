@@ -2,9 +2,7 @@ package com.charleex.vidgenius.ui.features.process.section.local
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,11 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -33,15 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.ui.components.AppOutlinedButton
 import com.charleex.vidgenius.ui.components.LocalImage
 import com.charleex.vidgenius.ui.components.SectionContainer
 import com.charleex.vidgenius.ui.util.pretty
-import java.io.File
-import java.util.Locale
 
 @Composable
 internal fun LocalVideo(
@@ -51,20 +44,6 @@ internal fun LocalVideo(
     onDeleteClicked: () -> Unit,
     onStartClicked: (String) -> Unit,
 ) {
-    val descWithTag = "${
-        video.tags.joinToString(", ") {
-            "#${
-                it.replaceFirstChar {
-                    if (it.isLowerCase())
-                        it.titlecase(Locale.UK) else it.toString()
-                }
-            }"
-        }
-    }\n\n" +
-            "${video.description ?: "No description"}\n\n" +
-            "Youtube: @RoaringAnimals-FunnyAnimals\n" +
-            "TikTok: @Roaring_Laughter"
-
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     var progress by remember { mutableStateOf(0) }
@@ -150,7 +129,6 @@ internal fun LocalVideo(
     ) {
         ContentText(
             video = video,
-            descWithTag = descWithTag,
             modifier = Modifier.padding(32.dp),
         )
     }
@@ -159,11 +137,8 @@ internal fun LocalVideo(
 @Composable
 internal fun ContentText(
     video: Video,
-    descWithTag: String,
     modifier: Modifier = Modifier,
 ) {
-    val clipboardManager = LocalClipboardManager.current
-
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier,
@@ -223,66 +198,113 @@ internal fun ContentText(
             Spacer(modifier = Modifier.height(24.dp))
             Divider(modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(24.dp))
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                video.title?.let {
-                    SelectionContainer {
-                        Text(
-                            text = it,
-                            color = MaterialTheme.colors.onSurface,
-                        )
-                    }
 
-                    AppOutlinedButton(
-                        label = "COPY",
-                        icon = Icons.Default.CopyAll,
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString(it))
-                        },
-                        modifier = Modifier
-                            .padding(end = 48.dp)
-                            .align(Alignment.CenterEnd)
-                    )
-                } ?: Text(
-                    text = "No title",
-                    color = MaterialTheme.colors.onSurface,
-                )
-            }
-            Surface(
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colors.primary
-                ),
-                shape = RoundedCornerShape(20.dp),
+            Text(
+                text = "TAGS: ${video.contentInfo.tags.joinToString(", ")}",
+                color = MaterialTheme.colors.onSurface,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-                    .padding(24.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp)
-                ) {
-                    SelectionContainer {
-                        Text(
-                            text = descWithTag,
-                            color = MaterialTheme.colors.onSurface,
-                            modifier = Modifier.fillMaxWidth(.8f)
-                        )
-                    }
-                    AppOutlinedButton(
-                        label = "COPY",
-                        icon = Icons.Default.CopyAll,
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString(descWithTag))
-                        },
-                    )
-                }
-            }
+                    .padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = "enUS:",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+            )
+            Text(
+                text = "title: ${video.contentInfo.enUS.title}",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+            )
+            Text(
+                text = "description: ${video.contentInfo.enUS.description}",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = "es:",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+            )
+            Text(
+                text = "title: ${video.contentInfo.es.title}",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+            )
+            Text(
+                text = "description: ${video.contentInfo.es.description}",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = "pt:",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+            )
+            Text(
+                text = "title: ${video.contentInfo.pt.title}",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+            )
+            Text(
+                text = "description: ${video.contentInfo.pt.description}",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = "zh:",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+            )
+            Text(
+                text = "title: ${video.contentInfo.zh.title}",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+            )
+            Text(
+                text = "description: ${video.contentInfo.zh.description}",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = "hi:",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+            )
+            Text(
+                text = "title: ${video.contentInfo.hi.title}",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+            )
+            Text(
+                text = "description: ${video.contentInfo.hi.description}",
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .padding(bottom = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Divider(modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.height(24.dp))
+
             Text(
                 text = "Youtube Video Id: ${video.youtubeId}",
                 color = MaterialTheme.colors.onSurface,
@@ -309,8 +331,15 @@ fun Video.hasContext(): Boolean {
 }
 
 fun Video.hasMetadata(): Boolean {
-    return !title.isNullOrEmpty() &&
-            !description.isNullOrEmpty() &&
-            tags.isNotEmpty() &&
-            tags.all { it.isNotEmpty() }
+    return contentInfo.enUS.title.isNotEmpty() &&
+            contentInfo.enUS.description.isNotEmpty() &&
+            contentInfo.es.title.isNotEmpty() &&
+            contentInfo.es.description.isNotEmpty() &&
+            contentInfo.pt.title.isNotEmpty() &&
+            contentInfo.pt.description.isNotEmpty() &&
+            contentInfo.zh.title.isNotEmpty() &&
+            contentInfo.zh.description.isNotEmpty() &&
+            contentInfo.hi.title.isNotEmpty() &&
+            contentInfo.hi.description.isNotEmpty() &&
+            contentInfo.tags.isNotEmpty()
 }

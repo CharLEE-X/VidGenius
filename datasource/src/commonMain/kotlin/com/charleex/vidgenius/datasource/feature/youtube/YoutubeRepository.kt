@@ -84,20 +84,32 @@ internal class YoutubeRepositoryImpl(
 
     override suspend fun updateVideo(ytVideo: YtVideo, video: Video): Boolean {
         val ytChannel = getChannel() ?: error("Channel cannot be null")
-        val title = video.title ?: error("Title cannot be null")
-        val description = video.description ?: error("Description cannot be null")
-        val tags = video.tags.ifEmpty { error("Tags cannot be empty") }
+        val hasContentInfoEnUS = video.contentInfo.enUS.title.isNotEmpty() &&
+                video.contentInfo.enUS.description.isNotEmpty()
+        if (!hasContentInfoEnUS) error("enUS content info cannot be empty")
+        val hasContentInfoPt = video.contentInfo.pt.title.isNotEmpty() &&
+                video.contentInfo.pt.description.isNotEmpty()
+        if (!hasContentInfoPt) error("pt content info cannot be empty")
+        val hasContentInfoEs = video.contentInfo.es.title.isNotEmpty() &&
+                video.contentInfo.es.description.isNotEmpty()
+        if (!hasContentInfoEs) error("es content info cannot be empty")
+        val hasContentInfoZh = video.contentInfo.zh.title.isNotEmpty() &&
+                video.contentInfo.es.description.isNotEmpty()
+        if (!hasContentInfoZh) error("zh content info cannot be empty")
+        val hasContentInfoHi = video.contentInfo.hi.title.isNotEmpty() &&
+                video.contentInfo.es.description.isNotEmpty()
+        if (!hasContentInfoHi) error("hi content info cannot be empty")
+        val hasTags = video.contentInfo.tags.isNotEmpty()
+        if (!hasTags) error("Tags cannot be empty")
+        val tagsHaveText = video.contentInfo.tags.all { it.isNotEmpty() }
+        if (!tagsHaveText) error("Tags cannot be empty")
 
-        logger.d(
-            "Updating video: ${video.youtubeId} with:\n${title}, \n" +
-                    "$tags, \n${description}"
-        )
+        logger.d("Updating video: ${video.youtubeId} with:\n${video.contentInfo.enUS.title}")
+
         val result = updateVideoService.update(
             channelConfig = ytChannel,
             ytId = ytVideo.id,
-            title = title,
-            description = description,
-            tags = tags,
+            contentInfo = video.contentInfo,
         )
         return if (result != null) {
             logger.d("Video updated successfully")

@@ -5,6 +5,7 @@ import com.charleex.vidgenius.datasource.db.Config
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
+import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo
 import com.charleex.vidgenius.datasource.feature.open_ai.openAiModule
 import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepository
 import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepositoryImpl
@@ -85,7 +86,7 @@ private val databaseModule
                 descriptionsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
                 createdAtAdapter = InstantComponentSerializer.asColumnAdapter(),
                 modifiedAtAdapter = InstantComponentSerializer.asColumnAdapter(),
-                tagsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
+                contentInfoAdapter = ContentInfo.serializer().asColumnAdapter(),
             )
         }
         single {

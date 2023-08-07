@@ -1,8 +1,10 @@
 package com.charleex.vidgenius.datasource.feature.open_ai
 
 import co.touchlab.kermit.Logger
+import com.charleex.vidgenius.datasource.VideoProcessingImpl
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
+import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompletionChunk
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompletionFunction
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatMessage
@@ -10,7 +12,7 @@ import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatRole
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.FunctionMode
 import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
 import kotlinx.coroutines.flow.Flow
-import java.util.Locale
+import kotlinx.serialization.json.Json
 
 interface OpenAiRepository {
     suspend fun getDescriptionContext(video: Video, channelConfig: ChannelConfig): Video
@@ -39,7 +41,7 @@ internal class OpenAiRepositoryImpl(
 ) : OpenAiRepository {
 
     override suspend fun getDescriptionContext(video: Video, channelConfig: ChannelConfig): Video {
-        val descriptionsString = video.descriptions.joinToString(" ")
+        val descriptionsString = video.descriptions
         val category = channelConfig.category
         val chatCompletion = chatService.chatCompletion(
             messages = listOf(
@@ -62,87 +64,69 @@ internal class OpenAiRepositoryImpl(
     }
 
     override suspend fun getMetaData(video: Video, channelConfig: ChannelConfig): Video {
-        val descriptions = video.descriptions.joinToString { ", " }
+        val languages = VideoProcessingImpl.languageCodes
+        val descriptions = video.descriptions
         val category = channelConfig.category
         val chatCompletion = chatService.chatCompletion(
             messages = listOf(
                 ChatMessage(
                     role = ChatRole.User.role,
-                    content = "Here is a list of screenshot descriptions for funny $category videos:\n${descriptions}\n\n" +
-                            "Generate:\n" +
-                            "- TITLE: for the YouTube video with related emojis at the front and back of the title.\n" +
-                            "- DESCRIPTION: SEO friendly\n" +
-                            "- TAGS: 5 best ranking SEO tags."
+                    content = """
+                        Here is a list of screenshot descriptions for $category videos for YouTube: $descriptions. 
+                        If no descriptions then use the category $category.
+                        Generate it in languages ${languages} and return it as json, don't add any extra text. 
+                        Make title to be catchy phrase and to have related emojis at the front and back of the title. 
+                        Make description SEO friendly, 100 words long and include best hashtags at the front of description.  
+                        Create 5 best ranking SEO tags.
+                        
+                        {
+                          "en-US": {
+                            "title": "generated title here",
+                            "description": "generated description here"
+                          },
+                          "es": {
+                            "title": "generated title here",
+                            "description": "generated description here"
+                          },
+                          "zh": {
+                            "title": "generated title here",
+                            "description": "generated description here"
+                          },
+                          "pt": {
+                            "title": "generated title here",
+                            "description": "generated description here"
+                          },
+                          "hi": {
+                            "title": "generated title here",
+                            "description": "generated description here"
+                          },
+                          "tags": [
+                            "generated tag with no hashtag",
+                            "generated tag with no hashtag",
+                            "generated tag with no hashtag",
+                            "generated tag with no hashtag",
+                            "generated tag with no hashtag",
+                          ]
+                        }
+
+                        RETURN JSON OBJECT ONLY!!!
+                    """.trimIndent()
                 ),
             )
         )
 
         val message = chatCompletion.choices.firstOrNull()?.message ?: error("No message found")
 
-        val inputString = message.content
-        val lines = inputString.split("\n\n")
+        val contentInfoAsString = message.content
+        val json = Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
+        val contentInfo = json.decodeFromString(ContentInfo.serializer(), contentInfoAsString)
 
-        val title = lines
-            .find { it.startsWith("TITLE:", true) }
-            ?.removePrefix("TITLE: ")
-            ?.removePrefix("Title: ")
-            ?.removePrefix("title: ")
-            ?: error("Title not found")
+        logger.i("ANSWER: $contentInfoAsString")
 
-        val description = lines
-            .find { it.startsWith("DESCRIPTION:", true) }
-            ?.removePrefix("DESCRIPTION: ")
-            ?.removePrefix("Description: ")
-            ?.removePrefix("description: ")
-            ?: error("Description not found")
-
-        val tagsLine = lines
-            .find { it.startsWith("TAGS:", true) }
-            ?.removePrefix("TAGS: ")
-            ?.removePrefix("Tags: ")
-            ?.removePrefix("tags: ")
-            ?: error("Tags not found")
-
-        val tags = tagsLine
-            .split(", ")
-            .map { it.trim() }
-            .map { tag ->
-                tag
-                    .split(" ")
-                    .map { tagList ->
-                        tagList.replaceFirstChar {
-                            if (it.isLowerCase())
-                                it.titlecase(Locale.getDefault()) else it.toString()
-                        }
-                    }
-            }
-            .map { it.joinToString("") }
-
-        val hashtags = tags.joinToString(" ") { "#$it" }
-
-        println(
-            """
-                
-            1. Title:
-               $title
-         
-            2. Description:
-               $hashtags
-               $description
-            
-            3. Tags:
-               $tags
-            
-        """.trimIndent()
-        )
-
-        val fullDescription = "$hashtags\n\n$description"
-
-        val newVideo = video.copy(
-            title = title,
-            description = fullDescription,
-            tags = tags,
-        )
+        val newVideo = video.copy(contentInfo = contentInfo)
         database.videoQueries.upsert(newVideo)
 
         return newVideo
