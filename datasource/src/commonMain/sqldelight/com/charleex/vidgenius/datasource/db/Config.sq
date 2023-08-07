@@ -1,4 +1,4 @@
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig;
+import com.charleex.vidgenius.datasource.model.ChannelConfig;
 import java.lang.String;
 import kotlin.Boolean;
 import kotlin.collections.List;

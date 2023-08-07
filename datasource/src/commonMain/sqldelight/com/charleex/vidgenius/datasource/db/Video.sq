@@ -5,7 +5,8 @@ import kotlinx.datetime.Instant;
 
 CREATE TABLE IF NOT EXISTS Video (
   id TEXT PRIMARY KEY NOT NULL,
-  youtubeId TEXT NOT NULL,
+  channelId TEXT NOT NULL,
+  youtubeName TEXT NOT NULL,
   path TEXT NOT NULL,
   screenshots TEXT AS List<String> NOT NULL,
   descriptions TEXT AS List<String> NOT NULL,
@@ -20,6 +21,9 @@ CREATE TABLE IF NOT EXISTS Video (
 
 getById:
 SELECT * FROM Video WHERE id = ?;
+
+getAllForChannel:
+SELECT * FROM Video WHERE channelId = :channelId;
 
 getAll:
 SELECT * FROM Video ORDER BY modifiedAt DESC, id ASC;

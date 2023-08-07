@@ -15,15 +15,16 @@ import java.io.File
 
 interface VideoFileRepository {
     fun getVideoById(videoId: String): Video
-    fun flowOfVideos(): Flow<List<Video>>
+    fun flowOfVideos(channelId: String): Flow<List<Video>>
     fun deleteVideo(videoId: String)
 
     suspend fun captureScreenshots(
         video: Video,
         numberOfScreenshots: Int,
+        channelId: String,
     ): Video
 
-    suspend fun filterVideos(files: List<*>)
+    suspend fun filterVideos(files: List<*>, channelId: String)
 }
 
 internal class VideoFileRepositoryImpl(
@@ -36,9 +37,9 @@ internal class VideoFileRepositoryImpl(
         return database.videoQueries.getById(videoId).executeAsOne()
     }
 
-    override fun flowOfVideos(): Flow<List<Video>> {
+    override fun flowOfVideos(channelId: String): Flow<List<Video>> {
         logger.d("Getting flow of all videos")
-        return database.videoQueries.getAll().asFlow()
+        return database.videoQueries.getAllForChannel(channelId).asFlow()
             .map { it.executeAsList() }
 //            .onEach { logger.d("Videos: $it") }
     }
@@ -60,6 +61,7 @@ internal class VideoFileRepositoryImpl(
     override suspend fun captureScreenshots(
         video: Video,
         numberOfScreenshots: Int,
+        channelId: String,
     ): Video {
         logger.d("Getting screenshots for videoId $video")
         val file = File(video.path)
@@ -76,7 +78,7 @@ internal class VideoFileRepositoryImpl(
         return newVideo
     }
 
-    override suspend fun filterVideos(files: List<*>) {
+    override suspend fun filterVideos(files: List<*>, channelId: String) {
         logger.d("Getting videos from files")
         val videos = fileProcessor.filterVideoFiles(files)
         val localVideos = database.videoQueries.getAll().executeAsList()
@@ -92,6 +94,7 @@ internal class VideoFileRepositoryImpl(
                 database.videoQueries.upsert(
                     Video(
                         id = uuid4().toString(),
+                        channelId = channelId,
                         path = video.absolutePath,
                         screenshots = emptyList(),
                         descriptions = emptyList(),
@@ -99,7 +102,7 @@ internal class VideoFileRepositoryImpl(
                         title = null,
                         description = null,
                         tags = emptyList(),
-                        youtubeId = videoName,
+                        youtubeName = videoName,
                         isCompleted = false,
                         createdAt = Clock.System.now(),
                         modifiedAt = Clock.System.now(),

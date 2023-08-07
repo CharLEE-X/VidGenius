@@ -2,8 +2,8 @@ package com.charleex.vidgenius.datasource.feature.youtube.video
 
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
+import com.charleex.vidgenius.datasource.model.ChannelConfig
 import com.charleex.vidgenius.datasource.feature.youtube.model.MyUploadsItem
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.json.JsonFactory
@@ -14,7 +14,7 @@ import kotlinx.datetime.Instant
 import java.io.IOException
 
 interface MyUploadsService {
-    suspend fun getUploadList(channelConfig: ChannelConfig): List<MyUploadsItem>
+    suspend fun getUploadList(): List<MyUploadsItem>
     suspend fun getVideoDetail(videoId: String): MyUploadsItem
 }
 
@@ -32,10 +32,10 @@ internal class MyUploadsServiceImpl(
 
     private var youtube: YouTube? = null
 
-    override suspend fun getUploadList(channelConfig: ChannelConfig): List<MyUploadsItem> {
+    override suspend fun getUploadList(): List<MyUploadsItem> {
         logger.d { "Getting upload list" }
         return try {
-            val credential = googleAuth.authorize(scopes, channelConfig)
+            val credential = googleAuth.authorize(scopes)
 
             val youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
                 .setApplicationName(APP_NAME)

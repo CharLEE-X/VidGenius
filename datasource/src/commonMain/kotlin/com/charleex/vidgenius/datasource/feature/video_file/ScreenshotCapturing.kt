@@ -21,9 +21,10 @@ interface ScreenshotCapturing {
 internal class ScreenshotCapturingImpl(
     private val logger: Logger,
     private val appDataDir: File,
+    private val channelId: String,
 ) : ScreenshotCapturing {
     private val outputFolder: File by lazy {
-        appDataDir.resolve("screenshots")
+        appDataDir.resolve("screenshots/${channelId}")
     }
 
     init {

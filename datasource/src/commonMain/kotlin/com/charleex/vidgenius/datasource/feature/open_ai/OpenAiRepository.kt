@@ -8,13 +8,13 @@ import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompleti
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatMessage
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatRole
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.FunctionMode
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
+import com.charleex.vidgenius.datasource.model.ChannelConfig
 import kotlinx.coroutines.flow.Flow
 import java.util.Locale
 
 interface OpenAiRepository {
-    suspend fun getDescriptionContext(video: Video, channelConfig: ChannelConfig): Video
-    suspend fun getMetaData(video: Video, channelConfig: ChannelConfig): Video
+    suspend fun getDescriptionContext(video: Video): Video
+    suspend fun getMetaData(video: Video): Video
 
     fun chats(
         messages: List<ChatMessage> = emptyList(),
@@ -35,12 +35,13 @@ interface OpenAiRepository {
 internal class OpenAiRepositoryImpl(
     private val logger: Logger,
     private val database: VidGeniusDatabase,
+    private val channel: ChannelConfig,
     private val chatService: ChatService,
 ) : OpenAiRepository {
 
-    override suspend fun getDescriptionContext(video: Video, channelConfig: ChannelConfig): Video {
+    override suspend fun getDescriptionContext(video: Video): Video {
         val descriptionsString = video.descriptions.joinToString(" ")
-        val category = channelConfig.category
+        val category = channel.category
         val chatCompletion = chatService.chatCompletion(
             messages = listOf(
                 ChatMessage(
@@ -61,9 +62,9 @@ internal class OpenAiRepositoryImpl(
         return newVideo
     }
 
-    override suspend fun getMetaData(video: Video, channelConfig: ChannelConfig): Video {
+    override suspend fun getMetaData(video: Video): Video {
         val descriptions = video.descriptions.joinToString { ", " }
-        val category = channelConfig.category
+        val category = channel.category
         val chatCompletion = chatService.chatCompletion(
             messages = listOf(
                 ChatMessage(

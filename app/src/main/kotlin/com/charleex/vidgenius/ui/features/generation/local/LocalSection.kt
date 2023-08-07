@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.ui.features.process.section.local
+package com.charleex.vidgenius.ui.features.generation.local
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -8,18 +8,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
-import com.charleex.vidgenius.ui.components.AppOutlinedButton
 import com.charleex.vidgenius.ui.components.SectionContainer
 
 @Composable
@@ -32,7 +28,6 @@ fun LocalSection(
 ) {
     SectionContainer(
         name = "Local videos: ${videos.size}",
-        headerBgColor = Color.Green,
         isMainHeader = true,
         extra = {
             AnimatedVisibility(
@@ -40,11 +35,11 @@ fun LocalSection(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                AppOutlinedButton(
-                    label = "Start All",
-                    icon = Icons.Default.PlayArrow,
-                    onClick = onStartAll,
-                )
+//                AppOutlinedButton(
+//                    label = "Start All",
+//                    icon = Icons.Default.PlayArrow,
+//                    onClick = onStartAll,
+//                )
             }
         },
     ) {
@@ -55,8 +50,7 @@ fun LocalSection(
             ) {
                 Text(
                     text = "No local videos.",
-                    style = MaterialTheme.typography.h6,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f),
+                    style = MaterialTheme.typography.displaySmall,
                     modifier = Modifier.padding(64.dp)
                 )
             }
@@ -72,7 +66,7 @@ fun LocalSection(
                 .filter { !it.isCompleted }
                 .forEach { video ->
                     val isOnYT =
-                        video.youtubeId in ytVideos.map { it.title }
+                        video.youtubeName in ytVideos.map { it.title }
 
                     LocalVideo(
                         video = video,

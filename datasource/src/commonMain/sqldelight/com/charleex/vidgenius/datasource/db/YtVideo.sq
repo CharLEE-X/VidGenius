@@ -3,6 +3,7 @@ import kotlin.collections.List;
 
 CREATE TABLE IF NOT EXISTS YtVideo (
   id TEXT PRIMARY KEY NOT NULL,
+  channelId TEXT NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
   privacyStatus TEXT,
@@ -12,6 +13,9 @@ CREATE TABLE IF NOT EXISTS YtVideo (
 
 getAll:
 SELECT * FROM YtVideo ORDER BY publishedAt DESC, id ASC;
+
+getAllForChannel:
+SELECT * FROM YtVideo WHERE channelId = :channelId;
 
 upsert:
 INSERT OR REPLACE INTO YtVideo VALUES ?;

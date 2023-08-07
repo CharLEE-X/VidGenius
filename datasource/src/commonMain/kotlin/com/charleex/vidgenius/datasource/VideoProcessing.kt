@@ -8,7 +8,6 @@ import com.charleex.vidgenius.datasource.feature.open_ai.OpenAiRepository
 import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepository
 import com.charleex.vidgenius.datasource.feature.vision_ai.GoogleCloudRepository
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -20,7 +19,7 @@ import java.io.File
 
 interface VideoProcessing {
     val videos: Flow<List<Video>>
-    val ytVideos: Flow<List<YtVideo>>
+    val animalYtVideos: Flow<List<YtVideo>>
     val isFetchingUploads: StateFlow<Boolean>
 
     fun fetchUploads()
@@ -34,6 +33,7 @@ interface VideoProcessing {
 internal class VideoProcessingImpl(
     private val logger: Logger,
     private val database: VidGeniusDatabase,
+    private val channelId: String,
     private val videoFileRepository: VideoFileRepository,
     private val googleCloudRepository: GoogleCloudRepository,
     private val openAiRepository: OpenAiRepository,
@@ -45,9 +45,9 @@ internal class VideoProcessingImpl(
     }
 
     override val videos: Flow<List<Video>>
-        get() = videoFileRepository.flowOfVideos()
+        get() = videoFileRepository.flowOfVideos(channelId)
 
-    override val ytVideos: Flow<List<YtVideo>>
+    override val animalYtVideos: Flow<List<YtVideo>>
         get() = youtubeRepository.flowOfYtVideos()
 
     override val isFetchingUploads: StateFlow<Boolean>
@@ -63,7 +63,7 @@ internal class VideoProcessingImpl(
     override fun addVideos(files: List<*>) {
         logger.d("Adding videos $files")
         scope.launch {
-            videoFileRepository.filterVideos(files)
+            videoFileRepository.filterVideos(files, channelId)
         }
     }
 
@@ -96,8 +96,8 @@ internal class VideoProcessingImpl(
         logger.d("Processing video ${video.id} | Try $tryIndex")
         try {
             val ytVideo = youtubeRepository.flowOfYtVideos().first()
-                .firstOrNull { it.title == video.youtubeId }
-                ?: error("No yt video found for ${video.youtubeId}")
+                .firstOrNull { it.title == video.youtubeName }
+                ?: error("No yt video found for ${video.youtubeName}")
 
             val config = database.configQueries.getAll().executeAsOne()
             val channel = config.channelConfig ?: error("No channel found")
@@ -105,11 +105,11 @@ internal class VideoProcessingImpl(
             val videoWithScreenshots = processVideo(video, 3)
             val videoWithDescriptions =
                 processScreenshotsToText(videoWithScreenshots, numberOfScreenshots)
-            val videoWithDescriptionContext = processDescriptions(videoWithDescriptions, channel)
+            val videoWithDescriptionContext = processDescriptions(videoWithDescriptions)
 
             logger.d { "Context: $videoWithDescriptionContext" }
 
-            val videoWithMetadata = generateMetaData(videoWithDescriptionContext, channel)
+            val videoWithMetadata = generateMetaData(videoWithDescriptionContext)
             updateYouTubeVideo(ytVideo, videoWithMetadata)
             logger.v { "Processing $video | Finished" }
         } catch (e: Exception) {
@@ -177,7 +177,7 @@ internal class VideoProcessingImpl(
 
         logger.d("Video processing | ${video.id} | Start")
         val newVideo = try {
-            videoFileRepository.captureScreenshots(video, numberOfScreenshots)
+            videoFileRepository.captureScreenshots(video, numberOfScreenshots, channelId)
         } catch (e: Exception) {
             logger.e(e) { "Error generating screenshots" }
             throw e
@@ -211,7 +211,7 @@ internal class VideoProcessingImpl(
         return newVideo
     }
 
-    private suspend fun processDescriptions(video: Video, channelConfig: ChannelConfig): Video {
+    private suspend fun processDescriptions(video: Video): Video {
         val hasDescriptionContext = video.descriptionContext.isNullOrEmpty().not()
         if (hasDescriptionContext) {
             logger.d("Already has description context | ${video.id}")
@@ -220,7 +220,7 @@ internal class VideoProcessingImpl(
 
         logger.d("Description processing | ${video.id} | Start")
         val newVideo = try {
-            openAiRepository.getDescriptionContext(video, channelConfig)
+            openAiRepository.getDescriptionContext(video)
         } catch (e: Exception) {
             logger.e(e) { "Error generating description context" }
             throw e
@@ -229,7 +229,7 @@ internal class VideoProcessingImpl(
         return newVideo
     }
 
-    private suspend fun generateMetaData(video: Video, channelConfig: ChannelConfig): Video {
+    private suspend fun generateMetaData(video: Video): Video {
         val hasTitle = video.title?.isNotEmpty() == true
         val hasDescription = video.description?.isNotEmpty() == true
         val hasTags = video.tags.isNotEmpty()
@@ -241,7 +241,7 @@ internal class VideoProcessingImpl(
 
         logger.d("Metadata generation | ${video.id} | Start")
         val newVideo = try {
-            openAiRepository.getMetaData(video, channelConfig)
+            openAiRepository.getMetaData(video)
         } catch (e: Exception) {
             logger.e(e) { "Error generating metadata" }
             throw e
@@ -254,15 +254,15 @@ internal class VideoProcessingImpl(
         ytVideo: YtVideo,
         video: Video,
     ) {
-        logger.d("Updating YouTube video | ${video.youtubeId} | Start")
+        logger.d("Updating YouTube video | ${video.youtubeName} | Start")
         val result = youtubeRepository.updateVideo(ytVideo, video)
         if (result) {
             val newVideo = video.copy(isCompleted = true)
             database.videoQueries.upsert(newVideo)
-            database.ytVideoQueries.delete(video.youtubeId)
+            database.ytVideoQueries.delete(video.youtubeName)
             logger.d("Upload YouTube video | ${video.id} | Done | $result")
         } else {
-            logger.e { "Error updating YouTube video | ${video.youtubeId}" }
+            logger.e { "Error updating YouTube video | ${video.youtubeName}" }
         }
     }
 }

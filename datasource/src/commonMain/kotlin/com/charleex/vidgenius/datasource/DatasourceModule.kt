@@ -1,27 +1,29 @@
 package com.charleex.vidgenius.datasource
 
-import co.touchlab.kermit.Logger.Companion.withTag
+import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.db.Config
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
 import com.charleex.vidgenius.datasource.feature.open_ai.openAiModule
-import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepository
-import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepositoryImpl
 import com.charleex.vidgenius.datasource.feature.video_file.videoFileModule
 import com.charleex.vidgenius.datasource.feature.vision_ai.visionAiModule
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
+import com.charleex.vidgenius.datasource.model.ChannelConfig
+import com.charleex.vidgenius.datasource.model.allChannels
 import com.charleex.vidgenius.datasource.feature.youtube.youtubeModule
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.PreferencesSettings
 import com.russhwolf.settings.Settings
 import com.squareup.sqldelight.ColumnAdapter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.datetime.serializers.InstantComponentSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.io.File
 import java.util.prefs.Preferences
@@ -39,13 +41,26 @@ fun datasourceModule() = module {
         videoFileModule(appDataDir),
     )
 
+    allChannels.forEach { channel ->
+        single<VideoProcessing>(named(channel.id)) {
+            VideoProcessingImpl(
+                logger = Logger.withTag(VideoProcessing::class.simpleName!!),
+                database = get(),
+                channelId = channel.id,
+                googleCloudRepository = get(),
+                videoFileRepository = get(named(channel.id)),
+                openAiRepository = get(named(channel.id)),
+                youtubeRepository = get(named(channel.id)),
+                scope = CoroutineScope(Dispatchers.Default)
+            )
+        }
+    }
 
-    single<VideoFileRepository> {
-        VideoFileRepositoryImpl(
-            logger = withTag(VideoFileRepository::class.simpleName!!),
-            fileProcessor = get(),
-            screenshotCapturing = get(),
+    single<ConfigManager> {
+        ConfigManagerImpl(
+            logger = Logger.withTag(ConfigManager::class.simpleName!!),
             database = get(),
+            scope = CoroutineScope(Dispatchers.Default),
         )
     }
 }

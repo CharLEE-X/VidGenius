@@ -5,9 +5,8 @@ import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
+import com.charleex.vidgenius.datasource.model.ChannelConfig
 import com.charleex.vidgenius.datasource.feature.youtube.model.MyUploadsItem
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
-import com.charleex.vidgenius.datasource.feature.youtube.model.ytChannels
 import com.charleex.vidgenius.datasource.feature.youtube.video.MyUploadsService
 import com.charleex.vidgenius.datasource.feature.youtube.video.UpdateVideoService
 import com.squareup.sqldelight.runtime.coroutines.asFlow
@@ -38,6 +37,7 @@ interface YoutubeRepository {
 internal class YoutubeRepositoryImpl(
     private val logger: Logger,
     private val database: VidGeniusDatabase,
+    private val channelId: String,
     private val googleAuth: GoogleAuth,
     private val myUploadsService: MyUploadsService,
     private val updateVideoService: UpdateVideoService,
@@ -46,13 +46,12 @@ internal class YoutubeRepositoryImpl(
     override val isFetchingUploads: StateFlow<Boolean> = _isFetchingUploads.asStateFlow()
 
     override fun flowOfYtVideos(): Flow<List<YtVideo>> =
-        database.ytVideoQueries.getAll().asFlow().map { it.executeAsList() }
+        database.ytVideoQueries.getAllForChannel(channelId).asFlow().map { it.executeAsList() }
 
     override suspend fun fetchUploads() {
         logger.d { "Getting channel uploads" }
         _isFetchingUploads.update { true }
-        val ytChannel = getChannel() ?: error("Channel cannot be null")
-        val uploads: List<MyUploadsItem> = myUploadsService.getUploadList(ytChannel)
+        val uploads: List<MyUploadsItem> = myUploadsService.getUploadList()
         logger.d("Uploads: ${uploads.size}")
         val ytVideos = uploads
             .filter {
@@ -62,6 +61,7 @@ internal class YoutubeRepositoryImpl(
             .map {
                 YtVideo(
                     id = it.ytId,
+                    channelId = channelId,
                     title = it.title,
                     description = it.description,
                     tags = it.tags,
@@ -83,17 +83,15 @@ internal class YoutubeRepositoryImpl(
     }
 
     override suspend fun updateVideo(ytVideo: YtVideo, video: Video): Boolean {
-        val ytChannel = getChannel() ?: error("Channel cannot be null")
         val title = video.title ?: error("Title cannot be null")
         val description = video.description ?: error("Description cannot be null")
         val tags = video.tags.ifEmpty { error("Tags cannot be empty") }
 
         logger.d(
-            "Updating video: ${video.youtubeId} with:\n${title}, \n" +
+            "Updating video: ${video.youtubeName} with:\n${title}, \n" +
                     "$tags, \n${description}"
         )
         val result = updateVideoService.update(
-            channelConfig = ytChannel,
             ytId = ytVideo.id,
             title = title,
             description = description,
@@ -117,6 +115,6 @@ internal class YoutubeRepositoryImpl(
 
     private fun getChannel(): ChannelConfig? {
         val config = database.configQueries.getAll().executeAsList().firstOrNull() ?: return null
-        return ytChannels.firstOrNull { it.id == config.channelConfig?.id }
+        return config.channelConfig
     }
 }

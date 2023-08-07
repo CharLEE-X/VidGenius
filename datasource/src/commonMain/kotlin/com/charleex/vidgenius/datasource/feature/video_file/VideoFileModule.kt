@@ -1,12 +1,10 @@
 package com.charleex.vidgenius.datasource.feature.video_file
 
 import co.touchlab.kermit.Logger
-import com.charleex.vidgenius.datasource.VideoProcessing
-import com.charleex.vidgenius.datasource.VideoProcessingImpl
 import com.charleex.vidgenius.datasource.feature.video_file.model.FileProcessor
 import com.charleex.vidgenius.datasource.feature.video_file.model.FileProcessorImpl
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.charleex.vidgenius.datasource.model.allChannels
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.io.File
 
@@ -16,21 +14,23 @@ internal fun videoFileModule(appDataDir: File) = module {
             logger = Logger.withTag(FileProcessor::class.simpleName!!),
         )
     }
-    single<ScreenshotCapturing> {
-        ScreenshotCapturingImpl(
-            logger = Logger.withTag(ScreenshotCapturing::class.simpleName!!),
-            appDataDir = appDataDir,
+
+    allChannels.forEach { channel ->
+        single<ScreenshotCapturing>(named(channel.id)) {
+            ScreenshotCapturingImpl(
+                logger = Logger.withTag(ScreenshotCapturing::class.simpleName!!),
+                appDataDir = appDataDir,
+                channelId = channel.id
+            )
+        }
+
+    single<VideoFileRepository>(named(channel.id)) {
+        VideoFileRepositoryImpl(
+            logger = Logger.withTag(VideoFileRepository::class.simpleName!!),
+            database = get(),
+            fileProcessor = get(),
+            screenshotCapturing = get(named(channel.id)),
         )
     }
-    single<VideoProcessing> {
-        VideoProcessingImpl(
-            logger = Logger.withTag(VideoProcessing::class.simpleName!!),
-            database = get(),
-            videoFileRepository = get(),
-            openAiRepository = get(),
-            googleCloudRepository = get(),
-            youtubeRepository = get(),
-            scope = CoroutineScope(Dispatchers.Default)
-        )
     }
 }

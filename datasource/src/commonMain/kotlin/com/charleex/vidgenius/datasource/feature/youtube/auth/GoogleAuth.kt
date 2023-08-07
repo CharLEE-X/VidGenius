@@ -1,7 +1,7 @@
 package com.charleex.vidgenius.datasource.feature.youtube.auth
 
 import co.touchlab.kermit.Logger
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
+import com.charleex.vidgenius.datasource.model.ChannelConfig
 import com.google.api.client.auth.oauth2.Credential
 import com.google.api.client.auth.oauth2.StoredCredential
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
@@ -27,7 +27,7 @@ interface GoogleAuth {
      * @param scopes              list of scopes needed to run youtube upload.
      * @param credentialDatastore name of the credential datastore to cache OAuth tokens
      */
-    fun authorize(scopes: List<String>, channelConfig: ChannelConfig): Credential
+    fun authorize(scopes: List<String>): Credential
 
     fun signOut(channelId: String)
 }
@@ -35,16 +35,17 @@ interface GoogleAuth {
 internal class GoogleAuthImpl(
     private val logger: Logger,
     private val appDataDir: String,
+    private val channel: ChannelConfig,
     private val httpTransport: HttpTransport,
     private val jsonFactory: JsonFactory,
     private val credentialDirectory: String,
 ) : GoogleAuth {
     @Throws(IOException::class)
-    override fun authorize(scopes: List<String>, channelConfig: ChannelConfig): Credential {
+    override fun authorize(scopes: List<String>): Credential {
         logger.d { "Authorizing ${scopes}..." }
-        val clientSecrets = getGoogleClientSecrets(channelConfig.secretsFile)
+        val clientSecrets = getGoogleClientSecrets(channel.secretsFile)
 
-        val datastore = getDataStore(channelConfig.id)
+        val datastore = getDataStore(channel.id)
         val flow = GoogleAuthorizationCodeFlow
             .Builder(httpTransport, jsonFactory, clientSecrets, scopes)
             .setCredentialDataStore(datastore)

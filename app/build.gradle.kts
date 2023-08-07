@@ -14,13 +14,15 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.ui)
     implementation(compose.runtime)
-    implementation(compose.material)
+    implementation(compose.material3)
     implementation(compose.materialIconsExtended)
     implementation(compose.animationGraphics)
     implementation(compose.animation)
+    implementation(compose.preview)
     implementation(libs.jetbrains.compose.ui.util)
 
     implementation(libs.ballast.core)
+    implementation(libs.ballast.navigation)
 
     implementation(libs.koin.core)
     implementation(libs.kotlin.dateTime)
@@ -36,7 +38,7 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg)
-//            packageName = "VidGenius"
+            packageName = "VidGenius"
             packageVersion = "1.0.0"
             copyright = "©2023 VidGenius by Adrian Witaszak. All rights reserved."
 

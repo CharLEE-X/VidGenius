@@ -14,6 +14,7 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
     override fun flowOfYtVideos(): Flow<List<YtVideo>> {
         val yt1 = YtVideo(
             id = "Sequence 02_1",
+            channelId = "UCXgGY0wkgOzynnHvSEVmE3A",
             title = "Video 1",
             description = "Description 1",
             tags = listOf("tag1", "tag2"),
@@ -22,6 +23,7 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
         )
         val yt2 = YtVideo(
             id = "Sequence 02_2",
+            channelId = "UCXgGY0wkgOzynnHvSEVmE3A",
             title = "Video 1",
             description = "Description 1",
             tags = listOf("tag1", "tag2"),
@@ -30,6 +32,7 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
         )
         val yt3 = YtVideo(
             id = "Sequence 02_3",
+            channelId = "UCXgGY0wkgOzynnHvSEVmE3A",
             title = "Video 1",
             description = "Description 1",
             tags = listOf("tag1", "tag2"),
@@ -38,6 +41,7 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
         )
         val yt4 = YtVideo(
             id = "Sequence 02_4",
+            channelId = "UCXgGY0wkgOzynnHvSEVmE3A",
             title = "Video 1",
             description = "Description 1",
             tags = listOf("tag1", "tag2"),
