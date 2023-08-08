@@ -1,16 +1,13 @@
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.ExperimentalComposeApi
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import com.charleex.vidgenius.datasource.VideoProcessing
 import com.charleex.vidgenius.datasource.datasourceModule
-import com.charleex.vidgenius.ui.features.process.ProcessVideosContent
+import com.charleex.vidgenius.ui.features.root.RootContent
 import org.koin.core.context.startKoin
 
 @ExperimentalComposeUiApi
@@ -23,10 +20,13 @@ fun main() = application {
 
     val windowState = rememberWindowState()
     windowState.apply {
-        size = DpSize(1200.dp, 1400.dp)
-        position = WindowPosition(
-            alignment = Alignment.Center,
+        size = DpSize(
+            width = 1600.dp,
+            height = 1400.dp
         )
+//        position = WindowPosition(
+//            alignment = Alignment.Center,
+//        )
     }
 
     Window(
@@ -34,9 +34,9 @@ fun main() = application {
         state = windowState,
         title = "Auto Yt Vid"
     ) {
-        ProcessVideosContent(
-            videoProcessing = koinApplication.koin.get(),
-            channelsManager = koinApplication.koin.get(),
+        RootContent(
+            animalVideoProcessing = koinApplication.koin.get(),
+            configManager = koinApplication.koin.get(),
             window = window,
         )
     }

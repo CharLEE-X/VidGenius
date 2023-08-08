@@ -1,4 +1,4 @@
-package com.hackathon.cda.ui.theme
+package com.charleex.vidgenius.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable

@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.ui.features.process.section.components
+package com.charleex.vidgenius.ui.features.generation.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -7,14 +7,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,8 +42,7 @@ fun HeaderWithChannelChooser(
         Spacer(modifier = Modifier.weight(1f))
         Text(
             text = selectedChannelConfig?.title ?: "No channel selected",
-            style = MaterialTheme.typography.h4,
-            color = MaterialTheme.colors.onSurface,
+            style = MaterialTheme.typography.displaySmall,
             modifier = Modifier.padding(16.dp)
         )
         Box(
@@ -68,13 +67,11 @@ fun HeaderWithChannelChooser(
                     val title = if (isCurrent)
                         "${it.title} (current)" else it.title
                     DropdownMenuItem(
+                        text = { Text(title) },
                         enabled = !isCurrent,
                         onClick = {
                             onChannelSelected(it)
                             expanded = false
-                        },
-                        content = {
-                            Text(title)
                         },
                     )
                 }

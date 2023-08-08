@@ -2,7 +2,6 @@ package com.charleex.vidgenius.datasource.feature.youtube
 
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
-import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -60,10 +59,6 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
     }
 
     override suspend fun updateVideo(ytVideo: YtVideo, video: Video): Boolean {
-        return true
-    }
-
-    override suspend fun updateVideoMultiLanguage(ytVideo: YtVideo, contentInfo: ContentInfo): Boolean {
         return true
     }
 

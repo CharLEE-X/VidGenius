@@ -17,18 +17,18 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 
-interface ChannelsManager {
+interface ConfigManager {
     val config: StateFlow<Config>
     fun getMyChannels(): List<ChannelConfig>
     suspend fun chooseChannel(newChannelConfig: ChannelConfig)
 }
 
-internal class ChannelsManagerImpl(
+internal class ConfigManagerImpl(
     private val logger: Logger,
     private val database: VidGeniusDatabase,
     private val googleAuth: GoogleAuth,
     private val scope: CoroutineScope,
-) : ChannelsManager {
+) : ConfigManager {
     private val defaultConfig = Config(
         id = uuid4().toString(),
         channelConfig = null,

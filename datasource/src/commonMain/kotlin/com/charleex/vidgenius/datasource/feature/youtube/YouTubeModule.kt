@@ -1,8 +1,8 @@
 package com.charleex.vidgenius.datasource.feature.youtube
 
 import co.touchlab.kermit.Logger
-import com.charleex.vidgenius.datasource.feature.ChannelsManager
-import com.charleex.vidgenius.datasource.feature.ChannelsManagerImpl
+import com.charleex.vidgenius.datasource.feature.ConfigManager
+import com.charleex.vidgenius.datasource.feature.ConfigManagerImpl
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuthImpl
 import com.charleex.vidgenius.datasource.feature.youtube.video.MyUploadsService
@@ -119,9 +119,9 @@ internal fun youtubeModule(appDataDir: File) = module {
             updateVideoService = get(),
         ).also { println("YoutubeRepository in RELEASE mode") }
     }
-    single<ChannelsManager> {
-        ChannelsManagerImpl(
-            logger = Logger.withTag(ChannelsManager::class.simpleName!!),
+    single<ConfigManager> {
+        ConfigManagerImpl(
+            logger = Logger.withTag(ConfigManager::class.simpleName!!),
             database = get(),
             googleAuth = get(),
             scope = CoroutineScope(Dispatchers.Default),
