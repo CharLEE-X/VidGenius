@@ -28,8 +28,6 @@ interface VideoProcessing {
     fun deleteVideo(videoId: String)
     fun processAll(videos: List<Video>, onError: (String) -> Unit)
 
-    fun addMultiLanguage(ytVideo: YtVideo)
-
     fun signOut()
 }
 
@@ -87,23 +85,6 @@ internal class VideoProcessingImpl(
             }
 
             awaitAll(*jobs.toTypedArray())
-        }
-    }
-
-    override fun addMultiLanguage(ytVideo: YtVideo) {
-        scope.launch {
-            val title = ytVideo.title
-            val description = ytVideo.description
-            val tags = ytVideo.tags
-            val contentInfo = openAiRepository.getContentInfo(title, description, tags)
-            logger.d { "Content info: $contentInfo" }
-
-            val hasMultiLanguage = youtubeRepository.updateVideoMultiLanguage(
-                ytVideo,
-                contentInfo = contentInfo,
-            )
-            val newYtVideo = ytVideo.copy(hasMultiLanguage = hasMultiLanguage)
-            database.ytVideoQueries.upsert(newYtVideo)
         }
     }
 

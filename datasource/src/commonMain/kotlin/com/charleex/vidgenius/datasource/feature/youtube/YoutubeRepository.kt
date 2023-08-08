@@ -4,7 +4,6 @@ import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
-import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
 import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
 import com.charleex.vidgenius.datasource.feature.youtube.model.MyUploadsItem
@@ -33,7 +32,6 @@ interface YoutubeRepository {
     fun flowOfYtVideos(): Flow<List<YtVideo>>
     suspend fun fetchUploads()
     suspend fun updateVideo(ytVideo: YtVideo, video: Video): Boolean
-    suspend fun updateVideoMultiLanguage(ytVideo: YtVideo, contentInfo: ContentInfo): Boolean
     fun signOut()
 }
 
@@ -124,16 +122,6 @@ internal class YoutubeRepositoryImpl(
             logger.d("Video failed to update")
             false
         }
-    }
-
-    override suspend fun updateVideoMultiLanguage(ytVideo: YtVideo, contentInfo: ContentInfo): Boolean {
-        val ytChannel = getChannel() ?: error("Channel cannot be null")
-        val result = updateVideoService.update(
-            channelConfig = ytChannel,
-            ytId = ytVideo.id,
-            contentInfo = contentInfo,
-        )
-        return result != null
     }
 
     override fun signOut() {
