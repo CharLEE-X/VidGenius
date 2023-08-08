@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CarCrash
+import androidx.compose.material.icons.filled.Pets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -48,6 +51,12 @@ fun GenerationContent(
     val isFetchingUploads by videoProcessing.isFetchingUploads.collectAsState()
     val config by configManager.config.collectAsState()
 
+    val categories = mapOf(
+        "Animals" to Icons.Default.Pets,
+        "Fails" to Icons.Default.CarCrash,
+    )
+    var selectedCategory by remember { mutableStateOf("Animals") }
+
     var message by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(message) {
         message?.let {
@@ -80,14 +89,11 @@ fun GenerationContent(
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier.fillMaxSize()
     ) {
-        TopBar(
-            modifier = Modifier.align(Alignment.TopCenter),
-        )
         LazyColumn(
             state = layColumnState,
             verticalArrangement = Arrangement.spacedBy(24.dp),
             contentPadding = PaddingValues(
-                top = 48.dp + 24.dp,
+                top = 64.dp + 24.dp,
                 start = 24.dp,
                 end = 24.dp,
                 bottom = 24.dp
@@ -141,6 +147,12 @@ fun GenerationContent(
                 )
             }
         }
+        TopBar(
+            categories = categories,
+            selectedCategory = selectedCategory,
+            onCategorySelected = { selectedCategory = it },
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
 
         VerticalScrollbar(
             modifier = Modifier
