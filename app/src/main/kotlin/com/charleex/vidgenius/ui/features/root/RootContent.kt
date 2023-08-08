@@ -20,7 +20,7 @@ import com.charleex.vidgenius.datasource.VideoProcessing
 import com.charleex.vidgenius.datasource.feature.ConfigManager
 import com.charleex.vidgenius.ui.AppState
 import com.charleex.vidgenius.ui.features.router.RouterContent
-import com.charleex.vidgenius.ui.theme.AutoYtVidTheme
+import com.example.compose.AppTheme
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,7 +33,7 @@ fun RootContent(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    AutoYtVidTheme {
+    AppTheme {
         BoxWithConstraints(
             modifier =
             Modifier

@@ -1,13 +1,11 @@
 package com.charleex.vidgenius.ui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -18,31 +16,24 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun TopBar(
-    onMenuClicked: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
-        tonalElevation = 2.dp,
-        modifier = Modifier
+        tonalElevation = 0.dp,
+        modifier = modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(84.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(32.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
+                .padding(horizontal = 64.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = null,
-                modifier = Modifier
-                    .clickable {
-                        onMenuClicked()
-                    }
-            )
             Text(
-                text = "VidGenius",
-                style = MaterialTheme.typography.displayLarge,
+                text = "VIDGENIUS",
+                style = MaterialTheme.typography.headlineSmall,
             )
         }
     }

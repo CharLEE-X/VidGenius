@@ -23,6 +23,7 @@ import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.VideoProcessing
 import com.charleex.vidgenius.datasource.feature.ConfigManager
+import com.charleex.vidgenius.ui.components.TopBar
 import com.charleex.vidgenius.ui.features.generation.components.CompletedSection
 import com.charleex.vidgenius.ui.features.generation.local.LocalSection
 import com.charleex.vidgenius.ui.features.generation.yt_video.YtSection
@@ -31,36 +32,6 @@ import java.awt.datatransfer.DataFlavor
 import java.awt.dnd.DnDConstants
 import java.awt.dnd.DropTarget
 import java.awt.dnd.DropTargetDropEvent
-
-@Composable
-fun AnimalsGenerationContent(
-    videoProcessing: VideoProcessing,
-    configManager: ConfigManager,
-    window: ComposeWindow,
-    displayMessage: (String) -> Unit,
-) {
-    GenerationContent(
-        videoProcessing = videoProcessing,
-        configManager = configManager,
-        window = window,
-        displayMessage = displayMessage,
-    )
-}
-
-@Composable
-fun FailsGenerationContent(
-    videoProcessing: VideoProcessing,
-    configManager: ConfigManager,
-    window: ComposeWindow,
-    displayMessage: (String) -> Unit,
-) {
-    GenerationContent(
-        videoProcessing = videoProcessing,
-        configManager = configManager,
-        window = window,
-        displayMessage = displayMessage,
-    )
-}
 
 @Composable
 fun GenerationContent(
@@ -109,6 +80,9 @@ fun GenerationContent(
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier.fillMaxSize()
     ) {
+        TopBar(
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
         LazyColumn(
             state = layColumnState,
             verticalArrangement = Arrangement.spacedBy(24.dp),

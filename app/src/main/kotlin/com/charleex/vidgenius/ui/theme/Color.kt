@@ -1,91 +1,67 @@
-package com.charleex.vidgenius.ui.theme
-
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.Composable
+package com.example.compose
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+val md_theme_light_primary = Color(0xFF006492)
+val md_theme_light_onPrimary = Color(0xFFFFFFFF)
+val md_theme_light_primaryContainer = Color(0xFFC9E6FF)
+val md_theme_light_onPrimaryContainer = Color(0xFF001E2F)
+val md_theme_light_secondary = Color(0xFF50606E)
+val md_theme_light_onSecondary = Color(0xFFFFFFFF)
+val md_theme_light_secondaryContainer = Color(0xFFD3E5F5)
+val md_theme_light_onSecondaryContainer = Color(0xFF0C1D29)
+val md_theme_light_tertiary = Color(0xFF64597B)
+val md_theme_light_onTertiary = Color(0xFFFFFFFF)
+val md_theme_light_tertiaryContainer = Color(0xFFEADDFF)
+val md_theme_light_onTertiaryContainer = Color(0xFF201634)
+val md_theme_light_error = Color(0xFFBA1A1A)
+val md_theme_light_errorContainer = Color(0xFFFFDAD6)
+val md_theme_light_onError = Color(0xFFFFFFFF)
+val md_theme_light_onErrorContainer = Color(0xFF410002)
+val md_theme_light_background = Color(0xFFFCFCFF)
+val md_theme_light_onBackground = Color(0xFF1A1C1E)
+val md_theme_light_surface = Color(0xFFFCFCFF)
+val md_theme_light_onSurface = Color(0xFF1A1C1E)
+val md_theme_light_surfaceVariant = Color(0xFFDDE3EA)
+val md_theme_light_onSurfaceVariant = Color(0xFF41474D)
+val md_theme_light_outline = Color(0xFF72787E)
+val md_theme_light_inverseOnSurface = Color(0xFFF0F0F3)
+val md_theme_light_inverseSurface = Color(0xFF2E3133)
+val md_theme_light_inversePrimary = Color(0xFF8BCEFF)
+val md_theme_light_shadow = Color(0xFF000000)
+val md_theme_light_surfaceTint = Color(0xFF006492)
+val md_theme_light_outlineVariant = Color(0xFFC1C7CE)
+val md_theme_light_scrim = Color(0xFF000000)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val md_theme_dark_primary = Color(0xFF8BCEFF)
+val md_theme_dark_onPrimary = Color(0xFF00344E)
+val md_theme_dark_primaryContainer = Color(0xFF004B6F)
+val md_theme_dark_onPrimaryContainer = Color(0xFFC9E6FF)
+val md_theme_dark_secondary = Color(0xFFB7C9D9)
+val md_theme_dark_onSecondary = Color(0xFF22323F)
+val md_theme_dark_secondaryContainer = Color(0xFF384956)
+val md_theme_dark_onSecondaryContainer = Color(0xFFD3E5F5)
+val md_theme_dark_tertiary = Color(0xFFCFC0E8)
+val md_theme_dark_onTertiary = Color(0xFF352B4B)
+val md_theme_dark_tertiaryContainer = Color(0xFF4C4162)
+val md_theme_dark_onTertiaryContainer = Color(0xFFEADDFF)
+val md_theme_dark_error = Color(0xFFFFB4AB)
+val md_theme_dark_errorContainer = Color(0xFF93000A)
+val md_theme_dark_onError = Color(0xFF690005)
+val md_theme_dark_onErrorContainer = Color(0xFFFFDAD6)
+val md_theme_dark_background = Color(0xFF1A1C1E)
+val md_theme_dark_onBackground = Color(0xFFE2E2E5)
+val md_theme_dark_surface = Color(0xFF1A1C1E)
+val md_theme_dark_onSurface = Color(0xFFE2E2E5)
+val md_theme_dark_surfaceVariant = Color(0xFF41474D)
+val md_theme_dark_onSurfaceVariant = Color(0xFFC1C7CE)
+val md_theme_dark_outline = Color(0xFF8B9198)
+val md_theme_dark_inverseOnSurface = Color(0xFF1A1C1E)
+val md_theme_dark_inverseSurface = Color(0xFFE2E2E5)
+val md_theme_dark_inversePrimary = Color(0xFF006492)
+val md_theme_dark_shadow = Color(0xFF000000)
+val md_theme_dark_surfaceTint = Color(0xFF8BCEFF)
+val md_theme_dark_outlineVariant = Color(0xFF41474D)
+val md_theme_dark_scrim = Color(0xFF000000)
 
-val green = Color(0xff03c955)
-val userMessageBackground = green
-val userMessageText = Color.Black
-val assistantMessageBackground = Color(0xffd8d8d8)
-val assistantMessageText = Color(0xff000000)
 
-
-val Purple200 = Color(0xFFBB86FC)
-val Purple500 = Color(0xFF6200EE)
-val Purple700 = Color(0xFF3700B3)
-val Teal200 = Color(0xFF03DAC5)
-
-val Neutral8 = Color(0xff121212)
-val Neutral7 = Color(0xde000000)
-val Neutral6 = Color(0x99000000)
-val Neutral5 = Color(0x61000000)
-val Neutral4 = Color(0x1f000000)
-val Neutral3 = Color(0x2D888888)
-val Neutral2 = Color(0xffededed)
-val Neutral1 = Color(0xbdffffff)
-val Neutral0 = Color(0xffffffff)
-val NeutralTransparent = Color(0x0)
-val Orange1 = Color(0xFFEF5350)
-
-val primary = Color(0xFFEC407A)
-val secondary = Purple500
-
-object AppColors {
-    val Purple200 = Color(0xFFBB86FC)
-    val Purple500 = Color(0xFF6200EE)
-
-    object Light {
-        val BackgroundTop = Color(0XFFEEF0F5)
-        val BackgroundBottom = Color(0xFFFFFFFF)
-        val LightShadow = Color(0xFFFFFFFF)
-        val DarkShadow = Color(0xFFA8B5C7)
-        val TextColor = Neutral7
-    }
-
-    object Dark {
-        val BackgroundTop = Color(0XFF394253)
-        val BackgroundBottom = Color(0XFF181C27)
-        val LightShadow = Color(0x66494949)
-        val DarkShadow = Color(0x66000000)
-        val TextColor = Neutral1
-    }
-
-    @Composable
-    fun lightShadow() = if (!isSystemInDarkTheme()) Light.LightShadow else Dark.LightShadow
-
-    @Composable
-    fun darkShadow() = if (!isSystemInDarkTheme()) Light.DarkShadow else Dark.DarkShadow
-}
-
-val pickerColors = listOf(
-    null,
-    Color(0xFF000000),
-    Color(0xFFFFFFFF),
-    Color(0xFFFAFAFA),
-    Color(0x80FF4444),
-    Color(0xFFEF5350),
-    Color(0xFFEC407A),
-    Color(0xFFAB47BC),
-    Color(0xFF7E57C2),
-    Color(0xFF5C6BC0),
-    Color(0xFF42A5F5),
-    Color(0xFF29B6F6),
-    Color(0xFF26C6DA),
-    Color(0xFF26A69A),
-    Color(0xFF66BB6A),
-    Color(0xFF9CCC65),
-    Color(0xFFD4E157),
-    Color(0xFFFFEE58),
-    Color(0xFFFFCA28),
-    Color(0xFFFFA726),
-    Color(0xFFFF7043)
-)
+val seed = Color(0xFF0084BE)
