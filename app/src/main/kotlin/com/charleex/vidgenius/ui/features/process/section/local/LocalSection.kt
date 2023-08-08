@@ -41,6 +41,21 @@ fun LocalSection(
                 exit = fadeOut()
             ) {
                 AppOutlinedButton(
+                    label = "Delete All",
+                    icon = Icons.Default.PlayArrow,
+                    onClick = {
+                        videos.forEach {
+                            onDelete(it.id)
+                        }
+                    },
+                )
+            }
+            AnimatedVisibility(
+                visible = videos.isNotEmpty(),
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                AppOutlinedButton(
                     label = "Start All",
                     icon = Icons.Default.PlayArrow,
                     onClick = onStartAll,

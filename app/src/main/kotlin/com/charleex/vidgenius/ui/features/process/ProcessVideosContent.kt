@@ -147,9 +147,6 @@ fun ProcessVideosContent(
                                         videoProcessing.fetchUploads()
                                     }
                                 },
-                                onAddMultiLanguage = {
-                                    videoProcessing.addMultiLanguage(it)
-                                },
                             )
                         }
                         item {

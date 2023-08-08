@@ -33,7 +33,8 @@ internal class UpdateVideoServiceImpl(
         private const val APP_NAME = "youtube-cmdline-updatevideo-sample"
     }
 
-    private val scopes: ArrayList<String> = Lists.newArrayList("https://www.googleapis.com/auth/youtube")
+    private val scopes: ArrayList<String> =
+        Lists.newArrayList("https://www.googleapis.com/auth/youtube")
     private var youtube: YouTube? = null
 
     override fun update(
@@ -50,7 +51,7 @@ internal class UpdateVideoServiceImpl(
                 .build()
 
             val listResponse = youtube!!.videos()
-                .list(listOf("snippet", "status","localizations"))
+                .list(listOf("snippet", "status", "localizations"))
                 .setId(listOf(ytId))
                 .execute()
 
@@ -108,6 +109,11 @@ internal class UpdateVideoServiceImpl(
             println("  - Title: " + videoResponse.snippet.title)
             println("  - Description: " + videoResponse.snippet.description)
             println("  - Tags: " + videoResponse.snippet.tags)
+            println("  - PrivacyStatus: " + videoResponse.status.privacyStatus)
+            println("  - Localizations: " + videoResponse.localizations)
+            videoResponse.localizations.forEach {
+                println("  - ${it.key} ${it.value}")
+            }
 
             videoResponse
         } catch (e: GoogleJsonResponseException) {

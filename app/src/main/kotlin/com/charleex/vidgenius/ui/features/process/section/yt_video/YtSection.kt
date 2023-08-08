@@ -29,7 +29,6 @@ fun YtSection(
     videos: List<Video>,
     isFetchingUploads: Boolean,
     onRefresh: () -> Unit,
-    onAddMultiLanguage: (YtVideo) -> Unit,
 ) {
     SectionContainer(
         name = "Youtube 'Draft' videos: ${ytVideos.size}",
@@ -77,7 +76,6 @@ fun YtSection(
                 YtVideoItem(
                     ytVideo = ytVideo,
                     isFoundLocally = videos.any { it.youtubeId == ytVideo.title },
-                    onAddMultiLanguage = onAddMultiLanguage,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

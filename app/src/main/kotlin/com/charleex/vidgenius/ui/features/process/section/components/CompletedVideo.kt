@@ -41,11 +41,10 @@ internal fun CompletedVideo(
     isOnYt: Boolean = true,
     onDeleteClicked: () -> Unit,
 ) {
-    val clipboardManager = LocalClipboardManager.current
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     SectionContainer(
-        name = video.youtubeId,
+        name = "${video.youtubeId} | ${video.contentInfo.enUS.title}",
         openInitially = false,
         modifier = modifier,
         extra = {
