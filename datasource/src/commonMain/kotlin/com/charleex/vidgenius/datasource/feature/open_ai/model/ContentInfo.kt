@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data class ContentInfo(
     @SerialName("en-US") val enUS: Content = Content(),
     @SerialName("es") val es: Content = Content(),
-    @SerialName("fr") val fr: Content = Content(),
+    @SerialName("zh") val zh: Content = Content(),
     @SerialName("pt") val pt: Content = Content(),
     @SerialName("hi") val hi: Content = Content(),
     @SerialName("tags") val tags: List<String> = emptyList(),

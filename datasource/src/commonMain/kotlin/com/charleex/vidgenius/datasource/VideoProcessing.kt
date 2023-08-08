@@ -44,7 +44,7 @@ internal class VideoProcessingImpl(
 ) : VideoProcessing {
     companion object {
         private const val MAX_RETRIES = 3
-        val languageCodes = listOf("en-US", "es", "fr", "pt", "hi")
+        val languageCodes = listOf("en-US", "es", "zh", "pt", "hi")
     }
 
     override val videos: Flow<List<Video>>
@@ -256,7 +256,7 @@ internal class VideoProcessingImpl(
                 video.contentInfo.pt.description.isNotEmpty()
         val hasContentInfoEs = video.contentInfo.es.title.isNotEmpty() &&
                 video.contentInfo.es.description.isNotEmpty()
-        val hasContentInfoFr = video.contentInfo.fr.title.isNotEmpty() &&
+        val hasContentInfoFr = video.contentInfo.zh.title.isNotEmpty() &&
                 video.contentInfo.es.description.isNotEmpty()
         val hasContentInfoHi = video.contentInfo.hi.title.isNotEmpty() &&
                 video.contentInfo.es.description.isNotEmpty()

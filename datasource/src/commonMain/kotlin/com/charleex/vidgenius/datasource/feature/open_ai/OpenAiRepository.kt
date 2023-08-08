@@ -81,7 +81,7 @@ internal class OpenAiRepositoryImpl(
                         and tags:
                         $tags
 
-                        translate them to languages: $languages and return them as Json.
+                        translate them to languages: $languages and return them as Json. Remove emojis from non english titles.
                         
                         {
                           "en-US": {
@@ -92,7 +92,7 @@ internal class OpenAiRepositoryImpl(
                             "title": "generated title here",
                             "description": "generated description here"
                           },
-                          "fr": {
+                          "zh": {
                             "title": "generated title here",
                             "description": "generated description here"
                           },

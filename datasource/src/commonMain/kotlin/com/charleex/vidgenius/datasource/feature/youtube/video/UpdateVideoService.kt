@@ -41,7 +41,7 @@ internal class UpdateVideoServiceImpl(
         ytId: String,
         contentInfo: ContentInfo,
     ): Video? {
-        logger.d { "Updating video $ytId" }
+        logger.d { "Updating video $ytId\nContentInfo: $contentInfo" }
         return try {
             val credential = googleAuth.authorize(scopes, channelConfig)
 
@@ -68,8 +68,8 @@ internal class UpdateVideoServiceImpl(
                 description = contentInfo.es.description
             }
             val frLocalization = VideoLocalization().apply {
-                title = contentInfo.fr.title
-                description = contentInfo.fr.description
+                title = contentInfo.zh.title
+                description = contentInfo.zh.description
             }
             val ptLocalization = VideoLocalization().apply {
                 title = contentInfo.pt.title
@@ -83,15 +83,16 @@ internal class UpdateVideoServiceImpl(
             val multipleLocalizations = mutableMapOf<String, VideoLocalization>().apply {
                 put("en-US", enUsLocalization)
                 put("es", esLocalization)
-                put("fr", frLocalization)
-                put("pt", ptLocalization)
+//                put("fr", frLocalization)
+//                put("pt", ptLocalization)
                 put("hi", hiLocalization)
             }
 
             val snippet = video.snippet
             snippet.title = contentInfo.enUS.title
             snippet.description = contentInfo.enUS.description
-//            snippet.tags = contentInfo.tags
+            snippet.tags = contentInfo.tags
+            snippet.defaultLanguage = "en-US"
 
             video.snippet = snippet
             video.localizations = multipleLocalizations

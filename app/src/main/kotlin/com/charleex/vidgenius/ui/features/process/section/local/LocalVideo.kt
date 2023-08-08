@@ -268,13 +268,13 @@ internal fun ContentText(
                 modifier = Modifier
             )
             Text(
-                text = "title: ${video.contentInfo.fr.title}",
+                text = "title: ${video.contentInfo.zh.title}",
                 color = MaterialTheme.colors.onSurface,
                 modifier = Modifier
                     .padding(start = 16.dp)
             )
             Text(
-                text = "description: ${video.contentInfo.fr.description}",
+                text = "description: ${video.contentInfo.zh.description}",
                 color = MaterialTheme.colors.onSurface,
                 modifier = Modifier
                     .padding(start = 16.dp)
@@ -336,8 +336,8 @@ fun Video.hasMetadata(): Boolean {
             contentInfo.es.description.isNotEmpty() &&
             contentInfo.pt.title.isNotEmpty() &&
             contentInfo.pt.description.isNotEmpty() &&
-            contentInfo.fr.title.isNotEmpty() &&
-            contentInfo.fr.description.isNotEmpty() &&
+            contentInfo.zh.title.isNotEmpty() &&
+            contentInfo.zh.description.isNotEmpty() &&
             contentInfo.hi.title.isNotEmpty() &&
             contentInfo.hi.description.isNotEmpty() &&
             contentInfo.tags.isNotEmpty()

@@ -96,7 +96,7 @@ internal class YoutubeRepositoryImpl(
         val hasContentInfoEs = video.contentInfo.es.title.isNotEmpty() &&
                 video.contentInfo.es.description.isNotEmpty()
         if (!hasContentInfoEs) error("es content info cannot be empty")
-        val hasContentInfoZh = video.contentInfo.fr.title.isNotEmpty() &&
+        val hasContentInfoZh = video.contentInfo.zh.title.isNotEmpty() &&
                 video.contentInfo.es.description.isNotEmpty()
         if (!hasContentInfoZh) error("zh content info cannot be empty")
         val hasContentInfoHi = video.contentInfo.hi.title.isNotEmpty() &&

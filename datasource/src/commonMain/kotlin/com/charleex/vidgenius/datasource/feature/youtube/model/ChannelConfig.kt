@@ -8,30 +8,37 @@ data class ChannelConfig(
     val title: String,
     val secretsFile: String,
     val category: String,
-    val links: Map<String, String>
 )
 
-private val roaringLaughterChannelConfig = ChannelConfig(
-    id = "UCmWNmg5PyF1VKUCttVcVzuw",
-    title = "Roaring Laughter",
+val ytChannels = listOf(
+    ChannelConfig(
+        id = "config_1",
+        title = "Roaring Laughter 1",
+        secretsFile = "/vid_genius_4.json",
+        category = "funny animals",
+    ),
+    ChannelConfig(
+        id = "config_2",
+        title = "Roaring Laughter 2",
     secretsFile = "/vid_genius3.json",
-//    secretsFile = "/aw_portfolio.json",
-//    secretsFile = "/youtube-animals.json",
-    category = "funny animals",
-    links = mapOf(
-        "YouTube:" to "@RoaringLaughter-FunnyAnimals",
-        "TikTok:" to "@Roaring_Laughter",
-    )
+        category = "funny animals",
+    ),
+    ChannelConfig(
+        id = "config_3",
+        title = "Roaring Laughter 3",
+    secretsFile = "/youtube-animals.json",
+        category = "funny animals",
+    ),
+    ChannelConfig(
+        id = "config_4",
+        title = "Laugh Factory Fails 1",
+    secretsFile = "/aw_portfolio.json",
+        category = "funny animals",
+    ),
+    ChannelConfig(
+        id = "config_5",
+        title = "Laugh Factory Fails 2",
+        secretsFile = "/youtube-fails.json",
+        category = "epic fails",
+    ),
 )
-
-private val failsChannelConfig = ChannelConfig(
-    id = "UCQq2M775lmNxxp_4rnlI4Vg",
-    title = "Laugh Factory Fails",
-    secretsFile = "/youtube-fails.json",
-    category = "epic fails",
-    links = mapOf(
-        "YouTube:" to "@Laugh-Factory-Fails",
-    )
-)
-
-val ytChannels = listOf(roaringLaughterChannelConfig, failsChannelConfig)
