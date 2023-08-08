@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CarCrash
+import androidx.compose.material.icons.filled.LaptopMac
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,6 +55,7 @@ fun GenerationContent(
     val categories = mapOf(
         "Animals" to Icons.Default.Pets,
         "Fails" to Icons.Default.CarCrash,
+//        "Hacks" to Icons.Default.LaptopMac,
     )
     var selectedCategory by remember { mutableStateOf("Animals") }
 

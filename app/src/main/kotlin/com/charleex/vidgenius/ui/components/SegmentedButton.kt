@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -98,8 +99,8 @@ object SegmentDefaults {
 data class SegmentSpec(
     val label: String,
     val icon: ImageVector? = null,
-    val borderWidth: Dp = 1.dp,
-    val tonalElevation: Dp = 0.dp,
+    val borderWidth: Dp = 1.5.dp,
+    val tonalElevation: Dp = 1.dp,
     val shadowElevation: Dp = 0.dp,
     val iconPadding: Dp = 8.dp,
     val colors: SegmentColors,
@@ -470,33 +471,35 @@ private fun Segment(
                         scaleY = contentScale,
                     )
             ) {
-                if (segmentType == SegmentType.START || segmentType == SegmentType.INNER) {
+//                if (segmentType == SegmentType.START || segmentType == SegmentType.INNER) {
                     icon?.let {
                         Icon(
                             imageVector = icon,
                             tint = contentColor,
                             contentDescription = null,
                             modifier = Modifier
+                                .size(24.dp)
                                 .padding(end = iconPadding),
                         )
                     }
-                }
+//                }
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium,
                     color = contentColor,
                 )
-                if (segmentType == SegmentType.END) {
-                    icon?.let {
-                        Icon(
-                            imageVector = icon,
-                            tint = contentColor,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .padding(start = iconPadding),
-                        )
-                    }
-                }
+//                if (segmentType == SegmentType.END) {
+//                    icon?.let {
+//                        Icon(
+//                            imageVector = icon,
+//                            tint = contentColor,
+//                            contentDescription = null,
+//                            modifier = Modifier
+//                                .size(24.dp)
+//                                .padding(start = iconPadding),
+//                        )
+//                    }
+//                }
             }
         }
     }
