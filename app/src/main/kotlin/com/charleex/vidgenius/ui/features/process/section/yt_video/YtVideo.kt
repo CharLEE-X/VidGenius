@@ -44,6 +44,7 @@ internal fun YtVideoItem(
     modifier: Modifier = Modifier,
     ytVideo: YtVideo,
     isFoundLocally: Boolean,
+    onAddMultiLanguage: (YtVideo) -> Unit,
 ) {
     AppCard(
         modifier = modifier,
@@ -78,6 +79,26 @@ internal fun YtVideoItem(
                             .fillMaxWidth(.5f)
                     )
                     AppFlexSpacer()
+                    AnimatedVisibility (!ytVideo.hasMultiLanguage) {
+                        AppOutlinedButton(
+                            label = "Add multi language",
+                            icon = Icons.Default.Close,
+                            iconTint = Color.Red,
+                            enabled = true,
+                            onClick = { onAddMultiLanguage(ytVideo) },
+                            modifier = Modifier
+                        )
+                    }
+                    AnimatedVisibility (ytVideo.hasMultiLanguage) {
+                        AppOutlinedButton(
+                            label = "Language OK",
+                            icon = Icons.Default.Check,
+                            iconTint = Color.Green,
+                            enabled = true,
+                            onClick = {},
+                            modifier = Modifier
+                        )
+                    }
                     AnimatedVisibility (isFoundLocally) {
                         AppOutlinedButton(
                             label = "Found locally",

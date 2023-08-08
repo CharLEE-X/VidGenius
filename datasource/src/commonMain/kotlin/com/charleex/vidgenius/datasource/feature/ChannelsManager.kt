@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.datasource.feature.youtube
+package com.charleex.vidgenius.datasource.feature
 
 import co.touchlab.kermit.Logger
 import com.benasher44.uuid.uuid4

@@ -13,8 +13,10 @@ data class ChannelConfig(
 
 private val roaringLaughterChannelConfig = ChannelConfig(
     id = "UCmWNmg5PyF1VKUCttVcVzuw",
-    title = "Roaring Laughter - Funny Animals",
-    secretsFile = "/youtube-animals.json",
+    title = "Roaring Laughter",
+    secretsFile = "/vid_genius3.json",
+//    secretsFile = "/aw_portfolio.json",
+//    secretsFile = "/youtube-animals.json",
     category = "funny animals",
     links = mapOf(
         "YouTube:" to "@RoaringLaughter-FunnyAnimals",
@@ -24,7 +26,7 @@ private val roaringLaughterChannelConfig = ChannelConfig(
 
 private val failsChannelConfig = ChannelConfig(
     id = "UCQq2M775lmNxxp_4rnlI4Vg",
-    title = "Laugh Factory Fails: Guaranteed Smiles Every Time",
+    title = "Laugh Factory Fails",
     secretsFile = "/youtube-fails.json",
     category = "epic fails",
     links = mapOf(

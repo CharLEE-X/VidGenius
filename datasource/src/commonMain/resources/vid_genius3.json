@@ -1,0 +1,13 @@
+{
+  "installed": {
+    "client_id": "427732417367-4ajt0oqu2n310d67qqs638tse1d6nnfv.apps.googleusercontent.com",
+    "project_id": "vidgenius3",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_secret": "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",
+    "redirect_uris": [
+      "http://localhost"
+    ]
+  }
+}

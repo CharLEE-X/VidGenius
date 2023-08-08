@@ -1,14 +1,12 @@
 package com.charleex.vidgenius.datasource
 
-import co.touchlab.kermit.Logger.Companion.withTag
+import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.db.Config
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
 import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo
 import com.charleex.vidgenius.datasource.feature.open_ai.openAiModule
-import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepository
-import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepositoryImpl
 import com.charleex.vidgenius.datasource.feature.video_file.videoFileModule
 import com.charleex.vidgenius.datasource.feature.vision_ai.visionAiModule
 import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
@@ -17,6 +15,9 @@ import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.PreferencesSettings
 import com.russhwolf.settings.Settings
 import com.squareup.sqldelight.ColumnAdapter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.datetime.serializers.InstantComponentSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
@@ -40,13 +41,15 @@ fun datasourceModule() = module {
         videoFileModule(appDataDir),
     )
 
-
-    single<VideoFileRepository> {
-        VideoFileRepositoryImpl(
-            logger = withTag(VideoFileRepository::class.simpleName!!),
-            fileProcessor = get(),
-            screenshotCapturing = get(),
+    single<VideoProcessing> {
+        VideoProcessingImpl(
+            logger = Logger.withTag(VideoProcessing::class.simpleName!!),
             database = get(),
+            videoFileRepository = get(),
+            openAiRepository = get(),
+            googleCloudRepository = get(),
+            youtubeRepository = get(),
+            scope = CoroutineScope(Dispatchers.Default)
         )
     }
 }

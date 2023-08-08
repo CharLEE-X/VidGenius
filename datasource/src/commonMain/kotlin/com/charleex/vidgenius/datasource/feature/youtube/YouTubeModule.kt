@@ -1,6 +1,8 @@
 package com.charleex.vidgenius.datasource.feature.youtube
 
 import co.touchlab.kermit.Logger
+import com.charleex.vidgenius.datasource.feature.ChannelsManager
+import com.charleex.vidgenius.datasource.feature.ChannelsManagerImpl
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuthImpl
 import com.charleex.vidgenius.datasource.feature.youtube.video.MyUploadsService

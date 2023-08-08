@@ -5,7 +5,6 @@ import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo
 import com.charleex.vidgenius.datasource.feature.youtube.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
 import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
-import com.charleex.vidgenius.datasource.feature.youtube.model.Localization
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.json.JsonFactory
@@ -68,9 +67,9 @@ internal class UpdateVideoServiceImpl(
                 title = contentInfo.es.title
                 description = contentInfo.es.description
             }
-            val zhLocalization = VideoLocalization().apply {
-                title = contentInfo.zh.title
-                description = contentInfo.zh.description
+            val frLocalization = VideoLocalization().apply {
+                title = contentInfo.fr.title
+                description = contentInfo.fr.description
             }
             val ptLocalization = VideoLocalization().apply {
                 title = contentInfo.pt.title
@@ -84,7 +83,7 @@ internal class UpdateVideoServiceImpl(
             val multipleLocalizations = mutableMapOf<String, VideoLocalization>().apply {
                 put("en-US", enUsLocalization)
                 put("es", esLocalization)
-                put("zh", zhLocalization)
+                put("fr", frLocalization)
                 put("pt", ptLocalization)
                 put("hi", hiLocalization)
             }
@@ -92,7 +91,7 @@ internal class UpdateVideoServiceImpl(
             val snippet = video.snippet
             snippet.title = contentInfo.enUS.title
             snippet.description = contentInfo.enUS.description
-            snippet.tags = contentInfo.tags
+//            snippet.tags = contentInfo.tags
 
             video.snippet = snippet
             video.localizations = multipleLocalizations

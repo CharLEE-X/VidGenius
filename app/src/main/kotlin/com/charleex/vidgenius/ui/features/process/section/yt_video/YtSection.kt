@@ -29,6 +29,7 @@ fun YtSection(
     videos: List<Video>,
     isFetchingUploads: Boolean,
     onRefresh: () -> Unit,
+    onAddMultiLanguage: (YtVideo) -> Unit,
 ) {
     SectionContainer(
         name = "Youtube 'Draft' videos: ${ytVideos.size}",
@@ -73,13 +74,11 @@ fun YtSection(
                 .padding(24.dp)
         ) {
             ytVideos.forEach { ytVideo ->
-                val videoYtIds = videos.map { it.youtubeId }
-                val isFoundLocally = ytVideo.title in videoYtIds
-                println("isFoundLocally: $isFoundLocally, ytVideo: ${ytVideo.title}, videos: $videoYtIds")
                 YtVideoItem(
                     ytVideo = ytVideo,
                     isFoundLocally = videos.any { it.youtubeId == ytVideo.title },
-                    modifier = Modifier.fillMaxWidth()
+                    onAddMultiLanguage = onAddMultiLanguage,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }

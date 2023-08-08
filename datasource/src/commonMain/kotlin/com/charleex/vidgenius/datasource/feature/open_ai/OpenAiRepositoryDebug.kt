@@ -1,6 +1,7 @@
 package com.charleex.vidgenius.datasource.feature.open_ai
 
 import com.charleex.vidgenius.datasource.db.Video
+import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo
 import com.charleex.vidgenius.datasource.feature.open_ai.model.ModelId
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompletionChunk
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompletionFunction
@@ -44,5 +45,9 @@ internal class OpenAiRepositoryDebug : OpenAiRepository {
                 choices = listOf()
             )
         )
+    }
+
+    override suspend fun getContentInfo(title: String, description: String?, tags: List<String>): ContentInfo {
+        TODO("Not yet implemented")
     }
 }

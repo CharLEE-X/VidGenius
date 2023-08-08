@@ -1,4 +1,5 @@
 import java.lang.String;
+import kotlin.Boolean;
 import kotlin.collections.List;
 
 CREATE TABLE IF NOT EXISTS YtVideo (
@@ -7,6 +8,7 @@ CREATE TABLE IF NOT EXISTS YtVideo (
   description TEXT,
   privacyStatus TEXT,
   tags TEXT AS List<String> NOT NULL,
+  hasMultiLanguage INTEGER AS Boolean NOT NULL,
   publishedAt TEXT AS kotlinx.datetime.Instant NOT NULL
 );
 

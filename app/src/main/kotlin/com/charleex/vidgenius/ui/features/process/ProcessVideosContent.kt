@@ -32,7 +32,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.VideoProcessing
-import com.charleex.vidgenius.datasource.feature.youtube.ChannelsManager
+import com.charleex.vidgenius.datasource.feature.ChannelsManager
 import com.charleex.vidgenius.datasource.feature.youtube.model.ytChannels
 import com.charleex.vidgenius.ui.components.AppScaffold
 import com.charleex.vidgenius.ui.components.KXSnackBarHost
@@ -146,6 +146,9 @@ fun ProcessVideosContent(
                                     scope.launch {
                                         videoProcessing.fetchUploads()
                                     }
+                                },
+                                onAddMultiLanguage = {
+                                    videoProcessing.addMultiLanguage(it)
                                 },
                             )
                         }

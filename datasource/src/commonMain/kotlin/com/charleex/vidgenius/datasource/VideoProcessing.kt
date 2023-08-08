@@ -28,6 +28,8 @@ interface VideoProcessing {
     fun deleteVideo(videoId: String)
     fun processAll(videos: List<Video>, onError: (String) -> Unit)
 
+    fun addMultiLanguage(ytVideo: YtVideo)
+
     fun signOut()
 }
 
@@ -42,7 +44,7 @@ internal class VideoProcessingImpl(
 ) : VideoProcessing {
     companion object {
         private const val MAX_RETRIES = 3
-        val languageCodes = listOf("en-US", "es", "zh", "pt", "hi")
+        val languageCodes = listOf("en-US", "es", "fr", "pt", "hi")
     }
 
     override val videos: Flow<List<Video>>
@@ -85,6 +87,23 @@ internal class VideoProcessingImpl(
             }
 
             awaitAll(*jobs.toTypedArray())
+        }
+    }
+
+    override fun addMultiLanguage(ytVideo: YtVideo) {
+        scope.launch {
+            val title = ytVideo.title
+            val description = ytVideo.description
+            val tags = ytVideo.tags
+            val contentInfo = openAiRepository.getContentInfo(title, description, tags)
+            logger.d { "Content info: $contentInfo" }
+
+            val hasMultiLanguage = youtubeRepository.updateVideoMultiLanguage(
+                ytVideo,
+                contentInfo = contentInfo,
+            )
+            val newYtVideo = ytVideo.copy(hasMultiLanguage = hasMultiLanguage)
+            database.ytVideoQueries.upsert(newYtVideo)
         }
     }
 
@@ -237,7 +256,7 @@ internal class VideoProcessingImpl(
                 video.contentInfo.pt.description.isNotEmpty()
         val hasContentInfoEs = video.contentInfo.es.title.isNotEmpty() &&
                 video.contentInfo.es.description.isNotEmpty()
-        val hasContentInfoZh = video.contentInfo.zh.title.isNotEmpty() &&
+        val hasContentInfoFr = video.contentInfo.fr.title.isNotEmpty() &&
                 video.contentInfo.es.description.isNotEmpty()
         val hasContentInfoHi = video.contentInfo.hi.title.isNotEmpty() &&
                 video.contentInfo.es.description.isNotEmpty()
@@ -248,7 +267,7 @@ internal class VideoProcessingImpl(
             hasContentInfoEnUS &&
             hasContentInfoPt &&
             hasContentInfoEs &&
-            hasContentInfoZh &&
+            hasContentInfoFr &&
             hasContentInfoHi &&
             hasTags &&
             tagsHaveText

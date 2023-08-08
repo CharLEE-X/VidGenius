@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.ui.components.AppOutlinedButton
@@ -269,13 +268,13 @@ internal fun ContentText(
                 modifier = Modifier
             )
             Text(
-                text = "title: ${video.contentInfo.zh.title}",
+                text = "title: ${video.contentInfo.fr.title}",
                 color = MaterialTheme.colors.onSurface,
                 modifier = Modifier
                     .padding(start = 16.dp)
             )
             Text(
-                text = "description: ${video.contentInfo.zh.description}",
+                text = "description: ${video.contentInfo.fr.description}",
                 color = MaterialTheme.colors.onSurface,
                 modifier = Modifier
                     .padding(start = 16.dp)
@@ -337,8 +336,8 @@ fun Video.hasMetadata(): Boolean {
             contentInfo.es.description.isNotEmpty() &&
             contentInfo.pt.title.isNotEmpty() &&
             contentInfo.pt.description.isNotEmpty() &&
-            contentInfo.zh.title.isNotEmpty() &&
-            contentInfo.zh.description.isNotEmpty() &&
+            contentInfo.fr.title.isNotEmpty() &&
+            contentInfo.fr.description.isNotEmpty() &&
             contentInfo.hi.title.isNotEmpty() &&
             contentInfo.hi.description.isNotEmpty() &&
             contentInfo.tags.isNotEmpty()
