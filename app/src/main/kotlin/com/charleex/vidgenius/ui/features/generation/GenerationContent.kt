@@ -144,7 +144,7 @@ fun GenerationContent(
                     onStartAll = {
                         scope.launch {
                             val items =
-                                videos.filter { it.youtubeId in ytVideos.map { it.title } }
+                                videos.filter { it.youtubeTitle in ytVideos.map { it.title } }
                             videoProcessing.processAll(items) {
                                 message = it
                             }

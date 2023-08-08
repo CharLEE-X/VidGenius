@@ -66,7 +66,6 @@ internal class YoutubeRepositoryImpl(
                     description = it.description,
                     tags = it.tags,
                     privacyStatus = it.privacyStatus,
-                    hasMultiLanguage = false,
                     publishedAt = it.publishedAt,
                 )
             }
@@ -105,7 +104,7 @@ internal class YoutubeRepositoryImpl(
         val tagsHaveText = video.contentInfo.tags.all { it.isNotEmpty() }
         if (!tagsHaveText) error("Tags cannot be empty")
 
-        logger.d("Updating video: ${video.youtubeId} with:\n${video.contentInfo.enUS.title}")
+        logger.d("Updating video: ${video.youtubeTitle} with:\n${video.contentInfo.enUS.title}")
 
         val result = updateVideoService.update(
             channelConfig = ytChannel,

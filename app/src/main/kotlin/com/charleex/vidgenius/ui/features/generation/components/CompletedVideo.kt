@@ -48,7 +48,7 @@ internal fun CompletedVideo(
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     SectionContainer(
-        name = video.youtubeId,
+        name = video.youtubeTitle,
         openInitially = false,
         modifier = modifier,
         extra = {
@@ -230,7 +230,7 @@ fun ContentText(
                 }
             }
             Text(
-                text = "Youtube Video Id: ${video.youtubeId}",
+                text = "Youtube Video Id: ${video.youtubeTitle}",
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }

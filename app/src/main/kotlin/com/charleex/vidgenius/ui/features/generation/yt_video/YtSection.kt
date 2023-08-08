@@ -64,12 +64,12 @@ fun YtSection(
                 .padding(24.dp)
         ) {
             ytVideos.forEach { ytVideo ->
-                val videoYtIds = videos.map { it.youtubeId }
+                val videoYtIds = videos.map { it.youtubeTitle }
                 val isFoundLocally = ytVideo.title in videoYtIds
                 println("isFoundLocally: $isFoundLocally, ytVideo: ${ytVideo.title}, videos: $videoYtIds")
                 YtVideoItem(
                     ytVideo = ytVideo,
-                    isFoundLocally = videos.any { it.youtubeId == ytVideo.title },
+                    isFoundLocally = videos.any { it.youtubeTitle == ytVideo.title },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

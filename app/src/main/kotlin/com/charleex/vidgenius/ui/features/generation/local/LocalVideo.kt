@@ -47,7 +47,7 @@ internal fun LocalVideo(
     }
 
     SectionContainer(
-        name = video.youtubeId,
+        name = video.youtubeTitle,
         openInitially = false,
         modifier = modifier,
         progress = animatedProgress,

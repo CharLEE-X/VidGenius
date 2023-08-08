@@ -97,8 +97,8 @@ internal class VideoProcessingImpl(
         logger.d("Processing video ${video.id} | Try $tryIndex")
         try {
             val ytVideo = youtubeRepository.flowOfYtVideos().first()
-                .firstOrNull { it.title == video.youtubeId }
-                ?: error("No yt video found for ${video.youtubeId}")
+                .firstOrNull { it.title == video.youtubeTitle }
+                ?: error("No yt video found for ${video.youtubeTitle}")
 
             val config = database.configQueries.getAll().executeAsOne()
             val channel = config.channelConfig ?: error("No channel found")
@@ -272,15 +272,15 @@ internal class VideoProcessingImpl(
         ytVideo: YtVideo,
         video: Video,
     ) {
-        logger.d("Updating YouTube video | ${video.youtubeId} | Start")
+        logger.d("Updating YouTube video | ${video.youtubeTitle} | Start")
         val result = youtubeRepository.updateVideo(ytVideo, video)
         if (result) {
             val newVideo = video.copy(isCompleted = true)
             database.videoQueries.upsert(newVideo)
-            database.ytVideoQueries.delete(video.youtubeId)
+            database.ytVideoQueries.delete(video.youtubeTitle)
             logger.d("Upload YouTube video | ${video.id} | Done | $result")
         } else {
-            logger.e { "Error updating YouTube video | ${video.youtubeId}" }
+            logger.e { "Error updating YouTube video | ${video.youtubeTitle}" }
         }
     }
 }

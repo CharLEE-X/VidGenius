@@ -18,7 +18,6 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
             description = "Description 1",
             tags = listOf("tag1", "tag2"),
             privacyStatus = "public",
-            hasMultiLanguage = true,
             publishedAt = Instant.DISTANT_FUTURE
         )
         val yt2 = YtVideo(
@@ -27,7 +26,6 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
             description = "Description 1",
             tags = listOf("tag1", "tag2"),
             privacyStatus = "draft",
-            hasMultiLanguage = false,
             publishedAt = Instant.DISTANT_FUTURE
         )
         val yt3 = YtVideo(
@@ -36,7 +34,6 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
             description = "Description 1",
             tags = listOf("tag1", "tag2"),
             privacyStatus = "public",
-            hasMultiLanguage = true,
             publishedAt = Instant.DISTANT_FUTURE
         )
         val yt4 = YtVideo(
@@ -45,7 +42,6 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
             description = "Description 1",
             tags = listOf("tag1", "tag2"),
             privacyStatus = "draft",
-            hasMultiLanguage = true,
             publishedAt = Instant.DISTANT_FUTURE
         )
         val all = listOf(yt1, yt2, yt3, yt4)

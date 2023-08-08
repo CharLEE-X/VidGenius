@@ -81,7 +81,7 @@ fun LocalSection(
                 .filter { !it.isCompleted }
                 .forEach { video ->
                     val isOnYT =
-                        video.youtubeId in ytVideos.map { it.title }
+                        video.youtubeTitle in ytVideos.map { it.title }
 
                     LocalVideo(
                         video = video,

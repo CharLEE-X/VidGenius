@@ -98,7 +98,7 @@ internal class VideoFileRepositoryImpl(
                         descriptions = emptyList(),
                         descriptionContext = null,
                         contentInfo = ContentInfo(),
-                        youtubeId = videoName,
+                        youtubeTitle = videoName,
                         isCompleted = false,
                         createdAt = Clock.System.now(),
                         modifiedAt = Clock.System.now(),

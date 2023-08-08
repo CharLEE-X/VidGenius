@@ -6,7 +6,7 @@ import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo;
 
 CREATE TABLE IF NOT EXISTS Video (
   id TEXT PRIMARY KEY NOT NULL,
-  youtubeId TEXT NOT NULL,
+  youtubeTitle TEXT NOT NULL,
   path TEXT NOT NULL,
   screenshots TEXT AS List<String> NOT NULL,
   descriptions TEXT AS List<String> NOT NULL,

@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS YtVideo (
   description TEXT,
   privacyStatus TEXT,
   tags TEXT AS List<String> NOT NULL,
-  hasMultiLanguage INTEGER AS Boolean NOT NULL,
   publishedAt TEXT AS kotlinx.datetime.Instant NOT NULL
 );
 
