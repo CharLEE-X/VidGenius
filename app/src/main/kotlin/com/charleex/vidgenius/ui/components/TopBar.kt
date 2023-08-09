@@ -4,6 +4,7 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.compose.AppTheme
 
@@ -33,6 +35,9 @@ fun TopBar(
     categories: Map<String, ImageVector>,
     selectedCategory: String,
     onCategorySelected: (String) -> Unit,
+    tonalElevation: Dp = 0.dp,
+    height: Dp = 84.dp,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 0.dp),
 ) {
     val categorySegments = categories.map { (name, icon) ->
         SegmentSpec(
@@ -48,17 +53,17 @@ fun TopBar(
     }
 
     Surface(
-        tonalElevation = 0.dp,
+        tonalElevation = tonalElevation,
         modifier = modifier
             .fillMaxWidth()
-            .height(84.dp)
+            .height(height)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 64.dp)
+                .padding(contentPadding)
         ) {
             Text(
                 text = "VIDGENIUS",
@@ -71,7 +76,7 @@ fun TopBar(
                 selectedIndex = selectedIndex,
                 onSegmentSelected = onSelected,
                 modifier = Modifier
-                    .width(500.dp)
+                    .width(400.dp)
                     .padding(horizontal = 32.dp),
             )
         }

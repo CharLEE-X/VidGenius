@@ -471,35 +471,21 @@ private fun Segment(
                         scaleY = contentScale,
                     )
             ) {
-//                if (segmentType == SegmentType.START || segmentType == SegmentType.INNER) {
-                    icon?.let {
-                        Icon(
-                            imageVector = icon,
-                            tint = contentColor,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .padding(end = iconPadding),
-                        )
-                    }
-//                }
+                icon?.let {
+                    Icon(
+                        imageVector = icon,
+                        tint = contentColor,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .padding(end = iconPadding),
+                    )
+                }
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium,
                     color = contentColor,
                 )
-//                if (segmentType == SegmentType.END) {
-//                    icon?.let {
-//                        Icon(
-//                            imageVector = icon,
-//                            tint = contentColor,
-//                            contentDescription = null,
-//                            modifier = Modifier
-//                                .size(24.dp)
-//                                .padding(start = iconPadding),
-//                        )
-//                    }
-//                }
             }
         }
     }

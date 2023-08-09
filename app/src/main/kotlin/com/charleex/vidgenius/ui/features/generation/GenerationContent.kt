@@ -1,6 +1,8 @@
 package com.charleex.vidgenius.ui.features.generation
 
+import androidx.compose.foundation.ScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,10 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CarCrash
-import androidx.compose.material.icons.filled.LaptopMac
 import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -157,6 +160,14 @@ fun GenerationContent(
         )
 
         VerticalScrollbar(
+            style = ScrollbarStyle(
+                shape = CutCornerShape(8.dp),
+                minimalHeight = 48.dp,
+                thickness = 10.dp,
+                hoverDurationMillis = 300,
+                unhoverColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f),
+                hoverColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 1f),
+            ),
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight(),
