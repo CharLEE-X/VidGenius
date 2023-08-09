@@ -5,8 +5,10 @@ import com.benasher44.uuid.uuid4
 import com.charleex.vidgenius.datasource.db.Config
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
-import com.charleex.vidgenius.datasource.feature.youtube.model.ytChannels
+import com.charleex.vidgenius.datasource.feature.youtube.model.Category
+import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
+import com.charleex.vidgenius.datasource.feature.youtube.model.allCategories
+import com.charleex.vidgenius.datasource.feature.youtube.model.ytConfigs
 import com.google.common.collect.Lists
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import kotlinx.coroutines.CoroutineScope
@@ -19,8 +21,9 @@ import kotlinx.coroutines.withContext
 
 interface ConfigManager {
     val config: StateFlow<Config>
-    fun getMyChannels(): List<ChannelConfig>
-    suspend fun chooseChannel(newChannelConfig: ChannelConfig)
+    fun getMyChannels(): List<YtConfig>
+    suspend fun setYtConfig(newYtConfig: YtConfig)
+    suspend fun setCategory(category: Category)
 }
 
 internal class ConfigManagerImpl(
@@ -31,7 +34,8 @@ internal class ConfigManagerImpl(
 ) : ConfigManager {
     private val defaultConfig = Config(
         id = uuid4().toString(),
-        channelConfig = null,
+        ytConfig = null,
+        category = allCategories.first(),
     )
 
     init {
@@ -43,24 +47,24 @@ internal class ConfigManagerImpl(
     override val config: StateFlow<Config>
         get() = database.configQueries.getAll().asFlow()
             .map { it.executeAsOne() }
-            .stateIn(scope, SharingStarted.WhileSubscribed(), defaultConfig)
+            .stateIn(scope, SharingStarted.WhileSubscribed(), getConfig())
 
-    override fun getMyChannels(): List<ChannelConfig> {
-        return ytChannels
+    override fun getMyChannels(): List<YtConfig> {
+        return ytConfigs
     }
 
-    override suspend fun chooseChannel(newChannelConfig: ChannelConfig) {
-        logger.d("Choosing channel $newChannelConfig")
+    override suspend fun setYtConfig(newYtConfig: YtConfig) {
+        logger.d("Choosing channel $newYtConfig")
         withContext(Dispatchers.IO) {
-            val config = database.configQueries.getAll().executeAsList().first()
+            val config = getConfig()
 
-            if (config.channelConfig?.id == newChannelConfig.id) {
+            if (config.ytConfig?.id == newYtConfig.id) {
                 logger.d("Channel already chosen")
                 return@withContext
             }
 
 
-            config.channelConfig?.id?.let { previousChannelId ->
+            config.ytConfig?.id?.let { previousChannelId ->
                 logger.d("Signing out of channel $previousChannelId")
                 googleAuth.signOut(previousChannelId)
             }
@@ -75,11 +79,11 @@ internal class ConfigManagerImpl(
                 database.ytVideoQueries.delete(it.id)
             }
 
-            logger.d("Signing in to channel ${newChannelConfig.title}")
+            logger.d("Signing in to channel ${newYtConfig.title}")
             val scopes = Lists.newArrayList("https://www.googleapis.com/auth/youtube")
             val credentials = googleAuth.authorize(
                 scopes = scopes,
-                channelConfig = newChannelConfig,
+                ytConfig = newYtConfig,
             )
 
             logger.d("Credentials: $credentials")
@@ -89,12 +93,27 @@ internal class ConfigManagerImpl(
                 return@withContext
             }
 
-            logger.d("Signed in to channel ${newChannelConfig.title}")
+            logger.d("Signed in to channel ${newYtConfig.title}")
 
-            logger.d("Updating config with channel id ${newChannelConfig.id}")
-            val newConfig = config.copy(channelConfig = newChannelConfig)
-            database.configQueries.upsert(newConfig)
+            logger.d("Updating config with channel id ${newYtConfig.id}")
+            val newConfig = config.copy(ytConfig = newYtConfig)
+            updateConfig(newConfig)
         }
+    }
+
+    override suspend fun setCategory(category: Category) {
+        logger.d("Choosing category $category")
+        val currentConfig = getConfig()
+        val updatedConfig = currentConfig.copy(category = category)
+        updateConfig(updatedConfig)
+    }
+
+    private fun getConfig(): Config {
+        return database.configQueries.getAll().executeAsOne()
+    }
+
+    private fun updateConfig(config: Config) {
+        database.configQueries.upsert(config)
     }
 }
 

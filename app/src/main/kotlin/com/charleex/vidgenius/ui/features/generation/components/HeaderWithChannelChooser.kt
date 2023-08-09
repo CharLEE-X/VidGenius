@@ -24,13 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
+import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
 
 @Composable
 fun HeaderWithChannelChooser(
-    channelConfigs: List<ChannelConfig>,
-    selectedChannelConfig: ChannelConfig?,
-    onChannelSelected: (ChannelConfig) -> Unit,
+    ytConfigs: List<YtConfig>,
+    selectedYtConfig: YtConfig?,
+    onChannelSelected: (YtConfig) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -41,7 +41,7 @@ fun HeaderWithChannelChooser(
     ) {
         Spacer(modifier = Modifier.weight(1f))
         Text(
-            text = selectedChannelConfig?.title ?: "No channel selected",
+            text = selectedYtConfig?.title ?: "No channel selected",
             style = MaterialTheme.typography.displaySmall,
             modifier = Modifier.padding(16.dp)
         )
@@ -62,8 +62,8 @@ fun HeaderWithChannelChooser(
                 onDismissRequest = { expanded = false },
                 offset = DpOffset(0.dp, (10).dp)
             ) {
-                channelConfigs.forEach {
-                    val isCurrent = it.id == selectedChannelConfig?.id
+                ytConfigs.forEach {
+                    val isCurrent = it.id == selectedYtConfig?.id
                     val title = if (isCurrent)
                         "${it.title} (current)" else it.title
                     DropdownMenuItem(

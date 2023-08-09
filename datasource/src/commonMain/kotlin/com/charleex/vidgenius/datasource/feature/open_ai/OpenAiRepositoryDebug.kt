@@ -7,18 +7,18 @@ import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompleti
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompletionFunction
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatMessage
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.FunctionMode
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
+import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 internal class OpenAiRepositoryDebug : OpenAiRepository {
-    override suspend fun getDescriptionContext(video: Video, channelConfig: ChannelConfig): Video {
+    override suspend fun getDescriptionContext(video: Video, ytConfig: YtConfig): Video {
         delay(100)
         return video.copy(descriptionContext = "description context")
     }
 
-    override suspend fun getMetaData(video: Video, channelConfig: ChannelConfig): Video {
+    override suspend fun getMetaData(video: Video, ytConfig: YtConfig): Video {
         delay(300)
         return video
     }

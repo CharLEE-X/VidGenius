@@ -3,41 +3,41 @@ package com.charleex.vidgenius.datasource.feature.youtube.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ChannelConfig(
+data class YtConfig(
     val id: String,
     val title: String,
     val secretsFile: String,
     val category: String,
 )
 
-val ytChannels = listOf(
-    ChannelConfig(
-        id = "config_1",
-        title = "Roaring Laughter 1",
+val ytConfigs = listOf(
+    YtConfig(
+        id = "1",
+        title = "One",
         secretsFile = "/vid_genius_4.json",
         category = "funny animals",
     ),
-    ChannelConfig(
+    YtConfig(
         id = "config_2",
-        title = "Roaring Laughter 2",
+        title = "Two",
     secretsFile = "/vid_genius3.json",
         category = "funny animals",
     ),
-    ChannelConfig(
+    YtConfig(
         id = "config_3",
-        title = "Roaring Laughter 3",
+        title = "Three",
     secretsFile = "/youtube-animals.json",
         category = "funny animals",
     ),
-    ChannelConfig(
+    YtConfig(
         id = "config_4",
-        title = "Laugh Factory Fails 1",
+        title = "Four",
     secretsFile = "/aw_portfolio.json",
-        category = "funny animals",
+        category = "epic fails",
     ),
-    ChannelConfig(
+    YtConfig(
         id = "config_5",
-        title = "Laugh Factory Fails 2",
+        title = "Five",
         secretsFile = "/youtube-fails.json",
         category = "epic fails",
     ),

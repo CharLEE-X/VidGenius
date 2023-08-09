@@ -10,13 +10,13 @@ import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompleti
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatMessage
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatRole
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.FunctionMode
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
+import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 
 interface OpenAiRepository {
-    suspend fun getDescriptionContext(video: Video, channelConfig: ChannelConfig): Video
-    suspend fun getMetaData(video: Video, channelConfig: ChannelConfig): Video
+    suspend fun getDescriptionContext(video: Video, ytConfig: YtConfig): Video
+    suspend fun getMetaData(video: Video, ytConfig: YtConfig): Video
 
     fun chats(
         messages: List<ChatMessage> = emptyList(),
@@ -42,9 +42,9 @@ internal class OpenAiRepositoryImpl(
     private val chatService: ChatService,
 ) : OpenAiRepository {
 
-    override suspend fun getDescriptionContext(video: Video, channelConfig: ChannelConfig): Video {
+    override suspend fun getDescriptionContext(video: Video, ytConfig: YtConfig): Video {
         val descriptionsString = video.descriptions
-        val category = channelConfig.category
+        val category = ytConfig.category
         val chatCompletion = chatService.chatCompletion(
             messages = listOf(
                 ChatMessage(
@@ -133,10 +133,10 @@ internal class OpenAiRepositoryImpl(
         return contentInfo
     }
 
-    override suspend fun getMetaData(video: Video, channelConfig: ChannelConfig): Video {
+    override suspend fun getMetaData(video: Video, ytConfig: YtConfig): Video {
         val languages = VideoProcessingImpl.languageCodes
         val descriptions = video.descriptions
-        val category = channelConfig.category
+        val category = ytConfig.category
         val chatCompletion = chatService.chatCompletion(
             messages = listOf(
                 ChatMessage(

@@ -5,9 +5,9 @@ import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
+import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
 import com.charleex.vidgenius.datasource.feature.youtube.model.MyUploadsItem
-import com.charleex.vidgenius.datasource.feature.youtube.model.ytChannels
+import com.charleex.vidgenius.datasource.feature.youtube.model.ytConfigs
 import com.charleex.vidgenius.datasource.feature.youtube.video.MyUploadsService
 import com.charleex.vidgenius.datasource.feature.youtube.video.UpdateVideoService
 import com.squareup.sqldelight.runtime.coroutines.asFlow
@@ -107,7 +107,7 @@ internal class YoutubeRepositoryImpl(
         logger.d("Updating video: ${video.youtubeTitle} with:\n${video.contentInfo.enUS.title}")
 
         val result = updateVideoService.update(
-            channelConfig = ytChannel,
+            ytConfig = ytChannel,
             ytId = ytVideo.id,
             contentInfo = video.contentInfo,
         )
@@ -127,8 +127,8 @@ internal class YoutubeRepositoryImpl(
         googleAuth.signOut("updatevideo")
     }
 
-    private fun getChannel(): ChannelConfig? {
+    private fun getChannel(): YtConfig? {
         val config = database.configQueries.getAll().executeAsList().firstOrNull() ?: return null
-        return ytChannels.firstOrNull { it.id == config.channelConfig?.id }
+        return ytConfigs.firstOrNull { it.id == config.ytConfig?.id }
     }
 }

@@ -13,13 +13,12 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -47,11 +46,12 @@ enum class SegmentShape { ROUNDED, CUT }
 enum class SegmentOrientation { HORIZONTAL, VERTICAL }
 
 data class SegmentCorners(
-    val shape: SegmentShape = SegmentShape.CUT,
-    val topStart: Dp = 10.dp,
-    val topEnd: Dp = 10.dp,
-    val bottomStart: Dp = 10.dp,
-    val bottomEnd: Dp = 10.dp,
+    val shape: SegmentShape,
+    val topStart: Dp,
+    val topEnd: Dp,
+    val bottomStart: Dp,
+    val bottomEnd: Dp,
+    val contentPaddingValues: PaddingValues,
 )
 
 data class SegmentColors(
@@ -65,17 +65,22 @@ data class SegmentColors(
 
 object SegmentDefaults {
     fun defaultCorners(
-        shape: SegmentShape = SegmentShape.CUT,
-        topStart: Dp = 12.dp,
-        topEnd: Dp = 12.dp,
-        bottomStart: Dp = 12.dp,
-        bottomEnd: Dp = 12.dp,
+        shape: SegmentShape = SegmentShape.ROUNDED,
+        topStart: Dp = 20.dp,
+        topEnd: Dp = 20.dp,
+        bottomStart: Dp = 20.dp,
+        bottomEnd: Dp = 20.dp,
+        contentPaddingValues: PaddingValues = PaddingValues(
+            vertical = 6.dp,
+            horizontal = 8.dp,
+        ),
     ) = SegmentCorners(
         shape = shape,
         topStart = topStart,
         topEnd = topEnd,
         bottomStart = bottomStart,
         bottomEnd = bottomEnd,
+        contentPaddingValues = contentPaddingValues,
     )
 
     @Composable
@@ -99,7 +104,7 @@ object SegmentDefaults {
 data class SegmentSpec(
     val label: String,
     val icon: ImageVector? = null,
-    val borderWidth: Dp = 1.5.dp,
+    val borderWidth: Dp = 1.dp,
     val tonalElevation: Dp = 1.dp,
     val shadowElevation: Dp = 0.dp,
     val iconPadding: Dp = 8.dp,
@@ -150,8 +155,6 @@ private fun SegmentsGroupHorizontal(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
-            .width(300.dp)
-            .height(84.dp)
     ) {
         SegmentsLine(
             segmentModifier = segmentModifier.weight(1f),
@@ -173,8 +176,6 @@ private fun SegmentsGroupVertical(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
-            .width(300.dp)
-            .height(84.dp)
     ) {
         SegmentsLine(
             segmentModifier = segmentModifier.weight(1f),
@@ -313,15 +314,8 @@ private fun Segment(
     tonalElevation: Dp,
     shadowElevation: Dp,
     onClick: () -> Unit,
-    segmentCorners: SegmentCorners = SegmentCorners(),
-    segmentColors: SegmentColors = SegmentColors(
-        backgroundColorSelected = MaterialTheme.colorScheme.primary,
-        backgroundColorUnselected = MaterialTheme.colorScheme.surface,
-        borderColorSelected = MaterialTheme.colorScheme.primary,
-        borderColorUnselected = MaterialTheme.colorScheme.onSurface,
-        contentColorSelected = MaterialTheme.colorScheme.onPrimary,
-        contentColorUnselected = MaterialTheme.colorScheme.onSurface,
-    ),
+    segmentCorners: SegmentCorners,
+    segmentColors: SegmentColors,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -461,10 +455,9 @@ private fun Segment(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = modifier
-                    .height(42.dp)
                     .padding(
-                        horizontal = 16.dp,
-                        vertical = 8.dp,
+                        horizontal = 8.dp,
+                        vertical = 6.dp,
                     )
                     .graphicsLayer(
                         scaleX = contentScale,

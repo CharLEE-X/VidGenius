@@ -9,7 +9,8 @@ import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo
 import com.charleex.vidgenius.datasource.feature.open_ai.openAiModule
 import com.charleex.vidgenius.datasource.feature.video_file.videoFileModule
 import com.charleex.vidgenius.datasource.feature.vision_ai.visionAiModule
-import com.charleex.vidgenius.datasource.feature.youtube.model.ChannelConfig
+import com.charleex.vidgenius.datasource.feature.youtube.model.Category
+import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
 import com.charleex.vidgenius.datasource.feature.youtube.youtubeModule
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.PreferencesSettings
@@ -17,7 +18,6 @@ import com.russhwolf.settings.Settings
 import com.squareup.sqldelight.ColumnAdapter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.datetime.serializers.InstantComponentSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
@@ -100,7 +100,8 @@ private val databaseModule
         }
         single {
             Config.Adapter(
-                channelConfigAdapter = ChannelConfig.serializer().asColumnAdapter(),
+                ytConfigAdapter = YtConfig.serializer().asColumnAdapter(),
+                categoryAdapter = Category.serializer().asColumnAdapter(),
             )
         }
     }
