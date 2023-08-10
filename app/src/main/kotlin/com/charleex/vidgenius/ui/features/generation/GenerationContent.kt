@@ -15,9 +15,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pets
-import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -87,86 +88,92 @@ fun GenerationContent(
     }
     window.contentPane.dropTarget = target
 
-    Box(
-        contentAlignment = Alignment.TopCenter,
-        modifier = Modifier.fillMaxSize()
+    Surface(
+        tonalElevation = 1.dp
     ) {
-        LazyColumn(
-            state = layColumnState,
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-            contentPadding = PaddingValues(
-                top = 128.dp,
-                start = 32.dp,
-                end = 32.dp,
-                bottom = 32.dp
-            ),
-            modifier = Modifier
-                .fillMaxSize()
+        Box(
+            contentAlignment = Alignment.TopCenter,
+            modifier = Modifier.fillMaxSize()
         ) {
-            item {
-                Surface {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Row {
-                            Text(
-                                text = "Total:",
-                                modifier = Modifier
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            CounterAnimation(
-                                count = ytVideos.size,
+            LazyColumn(
+                state = layColumnState,
+                verticalArrangement = Arrangement.spacedBy(24.dp),
+                contentPadding = PaddingValues(
+                    top = 128.dp,
+                    start = 32.dp,
+                    end = 32.dp,
+                    bottom = 32.dp
+                ),
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                item {
+                    Surface {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Row {
+                                Text(
+                                    text = "Total:",
+                                    modifier = Modifier
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                CounterAnimation(
+                                    count = ytVideos.size,
+                                ) {
+                                    Text(
+                                        text = it.toString(),
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
+                            FilledTonalButton(
+//                            colors = ButtonDefaults.textButtonColors(
+//                                contentColor = MaterialTheme.colorScheme.onSurface
+//                            ),
+                                onClick = {
+                                    scope.launch {
+                                        videoProcessing.fetchUploads()
+                                    }
+                                }
                             ) {
                                 Text(
-                                    text = it.toString(),
+                                    text = "Refresh",
                                 )
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
-                        }
-                        Spacer(modifier = Modifier.weight(1f))
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    videoProcessing.fetchUploads()
-                                }
-                            }
-                        ) {
-                            Text(
-                                text = "Add videos",
-                            )
                         }
                     }
                 }
-            }
-            item {
-                NoVideos(ytVideos.isEmpty())
-            }
-            items(ytVideos) { ytVideo ->
-                ListItem(
-                    headlineContent = {
-                        Text(ytVideo.title)
-                    },
-                    leadingContent = {
-                        Icon(
-                            imageVector = Icons.Default.Pets,
-                            contentDescription = null
-                        )
-                    },
-                    overlineContent = {
-                        Text(ytVideo.publishedAt.pretty())
-                    },
-                    supportingContent = {
-                        Text(ytVideo.privacyStatus ?: "Not known")
-                    },
-                    trailingContent = {
-                        Text(ytVideo.tags.joinToString(" "))
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                )
-            }
+                item {
+                    NoVideos(ytVideos.isEmpty())
+                }
+                items(ytVideos) { ytVideo ->
+                    ListItem(
+                        headlineContent = {
+                            Text(ytVideo.title)
+                        },
+                        leadingContent = {
+                            Icon(
+                                imageVector = Icons.Default.Pets,
+                                contentDescription = null
+                            )
+                        },
+                        overlineContent = {
+                            Text(ytVideo.publishedAt.pretty())
+                        },
+                        supportingContent = {
+                            Text(ytVideo.privacyStatus ?: "Not known")
+                        },
+                        trailingContent = {
+                            Text(ytVideo.tags.joinToString(" "))
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
+                }
 
 
 //            item {
@@ -214,17 +221,18 @@ fun GenerationContent(
 //                    }
 //                )
 //            }
-        }
-        TopBar(
-            configManager = configManager,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
+            }
+            TopBar(
+                configManager = configManager,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
 
-        AppVerticalScrollbar(
-            adapter = rememberScrollbarAdapter(layColumnState),
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxHeight(),
-        )
+            AppVerticalScrollbar(
+                adapter = rememberScrollbarAdapter(layColumnState),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .fillMaxHeight(),
+            )
+        }
     }
 }

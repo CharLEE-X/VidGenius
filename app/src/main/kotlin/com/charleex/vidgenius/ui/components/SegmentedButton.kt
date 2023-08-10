@@ -516,7 +516,7 @@ private fun PreviewItem(
     darkTheme: Boolean,
 ) {
     AppTheme(
-        darkTheme = darkTheme
+        useDarkTheme = darkTheme
     ) {
         Surface(
             modifier = modifier

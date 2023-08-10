@@ -144,7 +144,7 @@ private fun TopBarContent(
     onShowConfig: () -> Unit,
 ) {
     val bgTonalElevation by animateDpAsState(
-        targetValue = if (showConfigs) tonalElevation else (tonalElevation + 2.dp),
+        targetValue = if (showConfigs) (tonalElevation + 1.dp) else (tonalElevation + 3.dp),
         animationSpec = tween(300)
     )
 
@@ -255,7 +255,7 @@ private fun ConfigPanel(
     onSetConfig: (YtConfig) -> Unit,
 ) {
     Surface(
-        tonalElevation = tonalElevation + 4.dp,
+        tonalElevation = tonalElevation + 6.dp,
         shadowElevation = shadowElevation,
         modifier = modifier
             .fillMaxWidth()
