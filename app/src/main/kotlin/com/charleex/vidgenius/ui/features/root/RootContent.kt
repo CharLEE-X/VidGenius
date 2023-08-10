@@ -17,6 +17,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.VideoProcessing
 import com.charleex.vidgenius.datasource.feature.ConfigManager
+import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
 import com.charleex.vidgenius.ui.AppState
 import com.charleex.vidgenius.ui.features.router.RouterContent
 import com.example.compose.AppTheme
@@ -24,7 +25,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun RootContent(
-    animalVideoProcessing: VideoProcessing,
+    videoProcessing: VideoProcessing,
+    youtubeRepository: YoutubeRepository,
     configManager: ConfigManager,
     window: ComposeWindow,
 ) {
@@ -54,7 +56,8 @@ fun RootContent(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     RouterContent(
-                        videoProcessing = animalVideoProcessing,
+                        videoProcessing = videoProcessing,
+                        youtubeRepository = youtubeRepository,
                         configManager = configManager,
                         window = window,
                         displayMessage = { message ->

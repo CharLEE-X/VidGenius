@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CarCrash
+import androidx.compose.material.icons.filled.LaptopMac
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ButtonDefaults
@@ -63,9 +64,12 @@ fun TopBar(
     val selectedCategory = config.category.title
     val categoryAnimals = allCategories.first { it.title == "Animals" }
     val categoryFails = allCategories.first { it.title == "Fails" }
+    val categoryHacks = allCategories.first { it.title == "Hacks" }
     val categoriesWithIcons = mapOf(
         categoryAnimals.title to Icons.Default.Pets,
         categoryFails.title to Icons.Default.CarCrash,
+        categoryFails.title to Icons.Default.CarCrash,
+        categoryHacks.title to Icons.Default.LaptopMac,
     )
 
     val categorySegments = categoriesWithIcons.map { (name, icon) ->
@@ -190,7 +194,7 @@ private fun TopBarContent(
                 selectedIndex = selectedIndex,
                 onSegmentSelected = onSelected,
                 modifier = Modifier
-                    .width(300.dp)
+                    .width(400.dp)
             )
         }
     }
@@ -200,8 +204,7 @@ private fun TopBarContent(
 @Composable
 private fun SettingsButton(
     onShowConfig: () -> Unit,
-
-    ) {
+) {
     var isHovered by remember {
         mutableStateOf(false)
     }

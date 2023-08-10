@@ -117,6 +117,7 @@ internal fun youtubeModule(appDataDir: File) = module {
             googleAuth = get(),
             myUploadsService = get(),
             updateVideoService = get(),
+            scope = CoroutineScope(Dispatchers.Default),
         ).also { println("YoutubeRepository in RELEASE mode") }
     }
     single<ConfigManager> {

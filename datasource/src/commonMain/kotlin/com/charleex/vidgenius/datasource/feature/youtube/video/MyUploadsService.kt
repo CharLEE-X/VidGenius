@@ -8,13 +8,14 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.services.youtube.YouTube
-import com.google.api.services.youtube.model.PlaylistItem
 import com.google.api.services.youtube.model.Video
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Instant
 import java.io.IOException
 
 interface MyUploadsService {
-    suspend fun getUploadList(ytConfig: YtConfig): List<MyUploadsItem>
+    suspend fun getUploadList(ytConfig: YtConfig): Flow<List<MyUploadsItem>>
     suspend fun getVideoDetail(videoId: String): MyUploadsItem
 }
 
@@ -32,30 +33,29 @@ internal class MyUploadsServiceImpl(
 
     private var youtube: YouTube? = null
 
-    override suspend fun getUploadList(ytConfig: YtConfig): List<MyUploadsItem> {
-        logger.d { "Getting upload list" }
-        return try {
+    override suspend fun getUploadList(ytConfig: YtConfig): Flow<List<MyUploadsItem>> = flow {
+        try {
+            logger.d { "Getting upload list" }
             val credential = googleAuth.authorize(scopes, ytConfig)
 
             val youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
                 .setApplicationName(APP_NAME)
                 .build()
+                ?: error("Unable to create YouTube object.")
 
-            val channelRequest = youtube!!.channels()
+            val channelResult = youtube.channels()
                 .list(listOf("contentDetails"))
-            channelRequest.mine = true
-            channelRequest.fields = "items/contentDetails,nextPageToken,pageInfo"
-            val channelResult = channelRequest.execute()
+                .setMine(true)
+                .setFields("items/contentDetails,nextPageToken,pageInfo")
+                .execute()
+                ?: error("Unable to get channel result.")
 
-            val channelsList = channelResult.items
-                ?: error("No channels found.")
-
+            val channelsList = channelResult.items ?: error("No channels found.")
             logger.d { "Channels: $channelsList" }
 
             val uploadPlaylistId = channelsList[0].contentDetails.relatedPlaylists.uploads
                 ?: error("Unable to find upload playlist for channel.")
 
-            val playlistItemList = mutableListOf<PlaylistItem>()
 
             val playlistItemRequest = youtube.playlistItems()
                 .list(listOf("id", "contentDetails", "snippet", "status"))
@@ -72,32 +72,33 @@ internal class MyUploadsServiceImpl(
                 "items($videoId,$title,$desc,$publishedAt,$status),nextPageToken,pageInfo"
 
             var nextToken: String? = ""
-
+            val playlistItemList = mutableListOf<MyUploadsItem>()
             do {
                 playlistItemRequest.pageToken = nextToken
                 val playlistItemResult = playlistItemRequest.execute()
+                val items = playlistItemResult.items
+                val myUploads = items.map { playlistItem ->
+                    val published = playlistItem.snippet.publishedAt.value
+                    val instant = Instant.fromEpochMilliseconds(published)
+                    val tags = getVideoTags(youtube, playlistItem.contentDetails.videoId)
+                    MyUploadsItem(
+                        ytId = playlistItem.contentDetails.videoId,
+                        title = playlistItem.snippet.title,
+                        description = playlistItem.snippet.description,
+                        tags = tags,
+                        privacyStatus = playlistItem.status.privacyStatus,
+                        publishedAt = instant,
+                    )
+                }
 
-                playlistItemList.addAll(playlistItemResult.items)
+                playlistItemList.addAll(myUploads)
+                emit(playlistItemList)
 
                 nextToken = playlistItemResult.nextPageToken
             } while (nextToken != null)
 
+            if (playlistItemList.isEmpty()) logger.e { "No videos found." }
             logger.d("Playlist Items: $playlistItemList")
-            val items = playlistItemList.map { playlistItem ->
-                val published = playlistItem.snippet.publishedAt.value
-                val instant = Instant.fromEpochMilliseconds(published)
-                val tags = getVideoTags(youtube, playlistItem.contentDetails.videoId)
-                MyUploadsItem(
-                    ytId = playlistItem.contentDetails.videoId,
-                    title = playlistItem.snippet.title,
-                    description = playlistItem.snippet.description,
-                    tags = tags,
-                    privacyStatus = playlistItem.status.privacyStatus,
-                    publishedAt = instant,
-                )
-            }
-            if (items.isEmpty()) logger.e { "No videos found." }
-            items
         } catch (e: GoogleJsonResponseException) {
             logger.e(e) { "GoogleJsonResponseException code: ${e.statusCode} message: ${e.message}" }
             throw e

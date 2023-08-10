@@ -12,6 +12,7 @@ import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.VideoProcessing
 import com.charleex.vidgenius.datasource.feature.ConfigManager
+import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
 import com.charleex.vidgenius.ui.features.generation.GenerationContent
 import com.copperleaf.ballast.navigation.routing.Backstack
 import com.copperleaf.ballast.navigation.routing.renderCurrentDestination
@@ -21,6 +22,7 @@ import com.copperleaf.ballast.navigation.vm.Router
 internal fun RouterContent(
     displayMessage: (String) -> Unit,
     videoProcessing: VideoProcessing,
+    youtubeRepository: YoutubeRepository,
     configManager: ConfigManager,
     window: ComposeWindow,
 ) {
@@ -48,6 +50,7 @@ internal fun RouterContent(
                     RouterScreen.Generation -> {
                         GenerationContent(
                             videoProcessing = videoProcessing,
+                            youtubeRepository = youtubeRepository,
                             configManager = configManager,
                             window = window,
                             displayMessage = displayMessage,

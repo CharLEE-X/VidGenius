@@ -35,7 +35,8 @@ fun main() = application {
         title = "Auto Yt Vid"
     ) {
         RootContent(
-            animalVideoProcessing = koinApplication.koin.get(),
+            videoProcessing = koinApplication.koin.get(),
+            youtubeRepository = koinApplication.koin.get(),
             configManager = koinApplication.koin.get(),
             window = window,
         )

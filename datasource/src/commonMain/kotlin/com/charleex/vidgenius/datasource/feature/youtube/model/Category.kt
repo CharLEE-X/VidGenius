@@ -20,4 +20,9 @@ val allCategories = listOf(
         title = "Fails",
         query = "epic fails",
     ),
+    Category(
+        id = "3",
+        title = "Hacks",
+        query = "life hacks",
+    ),
 )

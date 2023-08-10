@@ -2,56 +2,61 @@ package com.charleex.vidgenius.datasource.feature.youtube
 
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.Instant
 
 internal class YoutubeRepositoryDebug() : YoutubeRepository {
     override val isFetchingUploads: StateFlow<Boolean> = flowOf(false) as StateFlow<Boolean>
 
-    private var size = 4
-    override fun flowOfYtVideos(): Flow<List<YtVideo>> {
-        val yt1 = YtVideo(
-            id = "Sequence 02_1",
-            title = "Video 1",
-            description = "Description 1",
-            tags = listOf("tag1", "tag2"),
-            privacyStatus = "public",
-            publishedAt = Instant.DISTANT_FUTURE
+    override val ytVideos: StateFlow<List<YtVideo>> = flowOf(
+        listOf(
+            YtVideo(
+                id = "Sequence 02_1",
+                title = "Video 1",
+                description = "Description 1",
+                tags = listOf("tag1", "tag2"),
+                privacyStatus = "public",
+                publishedAt = Instant.DISTANT_FUTURE
+            ),
+            YtVideo(
+                id = "Sequence 02_2",
+                title = "Video 1",
+                description = "Description 1",
+                tags = listOf("tag1", "tag2"),
+                privacyStatus = "draft",
+                publishedAt = Instant.DISTANT_FUTURE
+            ),
+            YtVideo(
+                id = "Sequence 02_3",
+                title = "Video 1",
+                description = "Description 1",
+                tags = listOf("tag1", "tag2"),
+                privacyStatus = "public",
+                publishedAt = Instant.DISTANT_FUTURE
+            ),
+            YtVideo(
+                id = "Sequence 02_4",
+                title = "Video 1",
+                description = "Description 1",
+                tags = listOf("tag1", "tag2"),
+                privacyStatus = "draft",
+                publishedAt = Instant.DISTANT_FUTURE
+            ),
         )
-        val yt2 = YtVideo(
-            id = "Sequence 02_2",
-            title = "Video 1",
-            description = "Description 1",
-            tags = listOf("tag1", "tag2"),
-            privacyStatus = "draft",
-            publishedAt = Instant.DISTANT_FUTURE
-        )
-        val yt3 = YtVideo(
-            id = "Sequence 02_3",
-            title = "Video 1",
-            description = "Description 1",
-            tags = listOf("tag1", "tag2"),
-            privacyStatus = "public",
-            publishedAt = Instant.DISTANT_FUTURE
-        )
-        val yt4 = YtVideo(
-            id = "Sequence 02_4",
-            title = "Video 1",
-            description = "Description 1",
-            tags = listOf("tag1", "tag2"),
-            privacyStatus = "draft",
-            publishedAt = Instant.DISTANT_FUTURE
-        )
-        val all = listOf(yt1, yt2, yt3, yt4)
-        return flowOf(
-            all.take(size)
-        )
+    ).stateIn(
+        CoroutineScope(Dispatchers.Default), SharingStarted.WhileSubscribed(), emptyList()
+    )
+
+    override fun startFetchUploads() {
     }
 
-    override suspend fun fetchUploads() {
-        size = (1..4).random()
+    override fun stopFetchUploads() {
+
     }
 
     override suspend fun updateVideo(ytVideo: YtVideo, video: Video): Boolean {

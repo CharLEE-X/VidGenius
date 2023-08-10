@@ -9,22 +9,18 @@ import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepository
 import com.charleex.vidgenius.datasource.feature.vision_ai.GoogleCloudRepository
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
 import com.charleex.vidgenius.datasource.feature.youtube.model.Category
-import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
 
 interface VideoProcessing {
-    val videos: Flow<List<Video>>
-    val ytVideos: Flow<List<YtVideo>>
-    val isFetchingUploads: StateFlow<Boolean>
+    val videos: StateFlow<List<Video>>
 
-    fun fetchUploads()
     fun addVideos(files: List<*>)
     fun deleteVideo(videoId: String)
     fun processAll(videos: List<Video>, onError: (String) -> Unit)
@@ -46,21 +42,8 @@ internal class VideoProcessingImpl(
         val languageCodes = listOf("en-US", "es", "zh", "pt", "hi")
     }
 
-    override val videos: Flow<List<Video>>
-        get() = videoFileRepository.flowOfVideos()
-
-    override val ytVideos: Flow<List<YtVideo>>
-        get() = youtubeRepository.flowOfYtVideos()
-
-    override val isFetchingUploads: StateFlow<Boolean>
-        get() = youtubeRepository.isFetchingUploads
-
-    override fun fetchUploads() {
-        logger.d("Fetching uploads")
-        scope.launch {
-            youtubeRepository.fetchUploads()
-        }
-    }
+    override val videos: StateFlow<List<Video>> = videoFileRepository.flowOfVideos()
+        .stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
 
     override fun addVideos(files: List<*>) {
         logger.d("Adding videos $files")
@@ -97,7 +80,7 @@ internal class VideoProcessingImpl(
     ) {
         logger.d("Processing video ${video.id} | Try $tryIndex")
         try {
-            val ytVideo = youtubeRepository.flowOfYtVideos().first()
+            val ytVideo = youtubeRepository.ytVideos.value
                 .firstOrNull { it.title == video.youtubeTitle }
                 ?: error("No yt video found for ${video.youtubeTitle}")
 
@@ -106,7 +89,8 @@ internal class VideoProcessingImpl(
             val videoWithScreenshots = processVideo(video, 3)
             val videoWithDescriptions =
                 processScreenshotsToText(videoWithScreenshots, numberOfScreenshots)
-            val videoWithDescriptionContext = processDescriptions(videoWithDescriptions, config.category)
+            val videoWithDescriptionContext =
+                processDescriptions(videoWithDescriptions, config.category)
 
             logger.d { "Context: $videoWithDescriptionContext" }
 
