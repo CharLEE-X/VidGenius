@@ -6,6 +6,7 @@ import com.charleex.vidgenius.datasource.db.Config
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
 import com.charleex.vidgenius.datasource.feature.youtube.model.Category
+import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
 import com.charleex.vidgenius.datasource.feature.youtube.model.allCategories
 import com.charleex.vidgenius.datasource.feature.youtube.model.ytConfigs
@@ -24,6 +25,7 @@ interface ConfigManager {
     fun getMyChannels(): List<YtConfig>
     suspend fun setYtConfig(newYtConfig: YtConfig)
     suspend fun setCategory(category: Category)
+    fun setPrivacyStatus(privacyStatus: PrivacyStatus)
 }
 
 internal class ConfigManagerImpl(
@@ -36,6 +38,7 @@ internal class ConfigManagerImpl(
         id = uuid4().toString(),
         ytConfig = null,
         category = allCategories.first(),
+        selectedPrivacyStatuses = listOf(PrivacyStatus.PRIVATE),
     )
 
     init {
@@ -106,6 +109,21 @@ internal class ConfigManagerImpl(
         val currentConfig = getConfig()
         val updatedConfig = currentConfig.copy(category = category)
         updateConfig(updatedConfig)
+    }
+
+    override fun setPrivacyStatus(privacyStatus: PrivacyStatus) {
+        logger.d("Choosing privacy status $privacyStatus")
+        val selectedPrivacyStatuses = config.value.selectedPrivacyStatuses.toMutableList()
+        if (privacyStatus in selectedPrivacyStatuses) {
+            selectedPrivacyStatuses.remove(privacyStatus)
+            logger.d("Removing privacy status $privacyStatus")
+        } else {
+            selectedPrivacyStatuses.add(privacyStatus)
+            logger.d("Adding privacy status $privacyStatus")
+        }
+        logger.d("Selected privacy statuses: $selectedPrivacyStatuses")
+        val newYtConfig = config.value.copy(selectedPrivacyStatuses = selectedPrivacyStatuses)
+        database.configQueries.upsert(newYtConfig)
     }
 
     private fun getConfig(): Config {

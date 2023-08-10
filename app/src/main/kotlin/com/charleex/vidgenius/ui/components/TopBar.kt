@@ -81,6 +81,7 @@ fun TopBar(
         )
     }
     val selectedIndex = categorySegments.indexOfFirst { it.label == selectedCategory }
+    val selectedIndexes by remember { mutableStateOf(listOf(selectedIndex)) }
 
     var showConfigs by remember { mutableStateOf(false) }
 
@@ -123,7 +124,7 @@ fun TopBar(
             modifier = modifier,
             showConfigs = showConfigs,
             categorySegments = categorySegments,
-            selectedIndex = selectedIndex,
+            selectedIndexes = selectedIndexes,
             onSelected = {
                 scope.launch {
                     val index = it % categorySegments.size
@@ -142,7 +143,7 @@ private fun TopBarContent(
     modifier: Modifier = Modifier,
     showConfigs: Boolean,
     categorySegments: List<SegmentSpec>,
-    selectedIndex: Int,
+    selectedIndexes: List<Int>,
     onSelected: (Int) -> Unit,
     tonalElevation: Dp,
     onShowConfig: () -> Unit,
@@ -191,8 +192,8 @@ private fun TopBarContent(
             )
             SegmentsGroup(
                 segments = categorySegments,
-                selectedIndex = selectedIndex,
-                onSegmentSelected = onSelected,
+                selectedIndexes = selectedIndexes,
+                onSegmentClicked = onSelected,
                 modifier = Modifier
                     .width(400.dp)
             )

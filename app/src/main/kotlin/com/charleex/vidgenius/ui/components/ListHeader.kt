@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
+import com.charleex.vidgenius.datasource.feature.youtube.model.privacyStatusFromString
 
 @Composable
 internal fun ListHeader(
@@ -31,7 +33,24 @@ internal fun ListHeader(
     isRefreshing: Boolean,
     startRefresh: () -> Unit,
     stopRefresh: () -> Unit,
+    selectedPrivacyStatuses: List<PrivacyStatus>,
+    onPrivacySelected: (PrivacyStatus) -> Unit,
 ) {
+    val segmentsList = PrivacyStatus.values().map {
+        SegmentSpec(
+            label = it.value,
+            colors = SegmentDefaults.defaultColors(),
+            corners = SegmentDefaults.defaultCorners(),
+        )
+    }
+    val selectedIndexes = selectedPrivacyStatuses.map { it.ordinal }
+
+    val onSegmentClicked = { index: Int ->
+        val privacyString = segmentsList[index].label
+        val privacyStatus = privacyStatusFromString(privacyString)
+        onPrivacySelected(privacyStatus)
+    }
+
     Surface {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -58,6 +77,13 @@ internal fun ListHeader(
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
+            SegmentsGroup(
+                segments = segmentsList,
+                selectedIndexes = selectedIndexes,
+                onSegmentClicked = onSegmentClicked,
+                modifier = Modifier.width(320.dp),
+            )
+            Spacer(modifier = Modifier.width(16.dp))
             StartStopButton(
                 startLabel = "Refresh",
                 stopLabel = "Stop",

@@ -53,6 +53,8 @@ fun GenerationContent(
     val isFetchingUploads by youtubeRepository.isFetchingUploads.collectAsState()
     val ytVideos by youtubeRepository.ytVideos.collectAsState(emptyList())
     val videos by videoProcessing.videos.collectAsState(emptyList())
+    val config by configManager.config.collectAsState()
+    val selectedPrivacyStatuses = config.selectedPrivacyStatuses
 
     var message by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(message) {
@@ -98,6 +100,10 @@ fun GenerationContent(
                         },
                         stopRefresh = {
                             youtubeRepository.stopFetchUploads()
+                        },
+                        selectedPrivacyStatuses = selectedPrivacyStatuses,
+                        onPrivacySelected = {
+                            configManager.setPrivacyStatus(it)
                         }
                     )
                 }

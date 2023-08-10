@@ -117,8 +117,8 @@ fun SegmentsGroup(
     modifier: Modifier = Modifier,
     segmentModifier: Modifier = Modifier,
     segments: List<SegmentSpec>,
-    selectedIndex: Int?,
-    onSegmentSelected: (Int) -> Unit,
+    selectedIndexes: List<Int>,
+    onSegmentClicked: (Int) -> Unit,
     segmentOrientation: SegmentOrientation = SegmentOrientation.HORIZONTAL,
 ) {
     when (segmentOrientation) {
@@ -127,8 +127,8 @@ fun SegmentsGroup(
                 modifier = modifier,
                 segmentModifier = segmentModifier,
                 segments = segments,
-                selectedIndex = selectedIndex,
-                onSegmentSelected = onSegmentSelected,
+                selectedIndexes = selectedIndexes,
+                onSegmentSelected = onSegmentClicked,
             )
         }
 
@@ -137,8 +137,8 @@ fun SegmentsGroup(
                 modifier = modifier,
                 segmentModifier = segmentModifier,
                 segments = segments,
-                selectedIndex = selectedIndex,
-                onSegmentSelected = onSegmentSelected,
+                selectedIndexes = selectedIndexes,
+                onSegmentSelected = onSegmentClicked,
             )
         }
     }
@@ -149,7 +149,7 @@ private fun SegmentsGroupHorizontal(
     modifier: Modifier,
     segmentModifier: Modifier,
     segments: List<SegmentSpec>,
-    selectedIndex: Int?,
+    selectedIndexes: List<Int>,
     onSegmentSelected: (Int) -> Unit,
 ) {
     Row(
@@ -159,7 +159,7 @@ private fun SegmentsGroupHorizontal(
         SegmentsLine(
             segmentModifier = segmentModifier.weight(1f),
             segments = segments,
-            selectedIndex = selectedIndex,
+            selectedIndexes = selectedIndexes,
             onSegmentSelected = onSegmentSelected,
         )
     }
@@ -170,7 +170,7 @@ private fun SegmentsGroupVertical(
     modifier: Modifier,
     segmentModifier: Modifier = Modifier,
     segments: List<SegmentSpec>,
-    selectedIndex: Int?,
+    selectedIndexes: List<Int>,
     onSegmentSelected: (Int) -> Unit,
 ) {
     Column(
@@ -180,7 +180,7 @@ private fun SegmentsGroupVertical(
         SegmentsLine(
             segmentModifier = segmentModifier.weight(1f),
             segments = segments,
-            selectedIndex = selectedIndex,
+            selectedIndexes = selectedIndexes,
             onSegmentSelected = onSegmentSelected,
         )
     }
@@ -190,7 +190,7 @@ private fun SegmentsGroupVertical(
 private fun SegmentsLine(
     segmentModifier: Modifier = Modifier,
     segments: List<SegmentSpec>,
-    selectedIndex: Int?,
+    selectedIndexes: List<Int>,
     onSegmentSelected: (Int) -> Unit,
 ) = when (segments.size) {
     0 -> {
@@ -214,7 +214,7 @@ private fun SegmentsLine(
             segmentColors = item.colors,
             segmentCorners = item.corners,
             modifier = segmentModifier,
-            selected = selectedIndex == 0,
+            selected = 0 in selectedIndexes,
             onClick = { onSegmentSelected(0) },
         )
     }
@@ -232,7 +232,7 @@ private fun SegmentsLine(
             segmentColors = item1.colors,
             segmentCorners = item1.corners,
             modifier = segmentModifier,
-            selected = selectedIndex == 0,
+            selected = 0 in selectedIndexes,
             onClick = { onSegmentSelected(0) },
         )
         val item2 = segments[1]
@@ -247,7 +247,7 @@ private fun SegmentsLine(
             segmentColors = item2.colors,
             segmentCorners = item2.corners,
             modifier = segmentModifier,
-            selected = selectedIndex == 1,
+            selected = 1 in selectedIndexes,
             onClick = { onSegmentSelected(1) },
         )
     }
@@ -265,7 +265,7 @@ private fun SegmentsLine(
             segmentColors = itemFirst.colors,
             segmentCorners = itemFirst.corners,
             modifier = segmentModifier,
-            selected = selectedIndex == 0,
+            selected = 0 in selectedIndexes,
             onClick = { onSegmentSelected(0) },
         )
         segments.subList(1, segments.size - 1).forEachIndexed { index, segment ->
@@ -280,7 +280,7 @@ private fun SegmentsLine(
                 segmentColors = segment.colors,
                 segmentCorners = segment.corners,
                 modifier = segmentModifier,
-                selected = index + 1 == selectedIndex,
+                selected = (index + 1) in selectedIndexes,
                 onClick = { onSegmentSelected(index + 1) },
             )
         }
@@ -296,7 +296,7 @@ private fun SegmentsLine(
             segmentColors = itemLast.colors,
             segmentCorners = itemLast.corners,
             modifier = segmentModifier,
-            selected = selectedIndex == segments.size - 1,
+            selected = (segments.size - 1) in selectedIndexes,
             onClick = { onSegmentSelected(segments.size - 1) },
         )
     }
@@ -551,8 +551,8 @@ private fun PreviewItem(
                                 corners = SegmentDefaults.defaultCorners(),
                             ),
                         ),
-                        selectedIndex = 1,
-                        onSegmentSelected = {},
+                        selectedIndexes = listOf(1, 2),
+                        onSegmentClicked = {},
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 32.dp),
@@ -578,8 +578,8 @@ private fun PreviewItem(
                                 corners = SegmentDefaults.defaultCorners(),
                             ),
                         ),
-                        selectedIndex = 2,
-                        onSegmentSelected = {},
+                        selectedIndexes = listOf(2, 3),
+                        onSegmentClicked = {},
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 32.dp),

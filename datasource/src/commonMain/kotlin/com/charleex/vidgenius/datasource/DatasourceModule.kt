@@ -10,6 +10,7 @@ import com.charleex.vidgenius.datasource.feature.open_ai.openAiModule
 import com.charleex.vidgenius.datasource.feature.video_file.videoFileModule
 import com.charleex.vidgenius.datasource.feature.vision_ai.visionAiModule
 import com.charleex.vidgenius.datasource.feature.youtube.model.Category
+import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
 import com.charleex.vidgenius.datasource.feature.youtube.youtubeModule
 import com.russhwolf.settings.ObservableSettings
@@ -102,14 +103,22 @@ private val databaseModule
             Config.Adapter(
                 ytConfigAdapter = YtConfig.serializer().asColumnAdapter(),
                 categoryAdapter = Category.serializer().asColumnAdapter(),
+                selectedPrivacyStatusesAdapter = ListSerializer(PrivacyStatus.serializer()).asColumnAdapter(),
             )
         }
     }
 
-private fun <T : Any> KSerializer<T>.asColumnAdapter(json: Json = Json { ignoreUnknownKeys = true }) =
+private fun <T : Any> KSerializer<T>.asColumnAdapter(
+    json: Json = Json {
+        ignoreUnknownKeys = true
+    },
+) =
     JsonColumnAdapter(json, this)
 
-private class JsonColumnAdapter<T : Any>(private val json: Json, private val serializer: KSerializer<T>) :
+private class JsonColumnAdapter<T : Any>(
+    private val json: Json,
+    private val serializer: KSerializer<T>,
+) :
     ColumnAdapter<T, String> {
     override fun decode(databaseValue: String): T = json.decodeFromString(serializer, databaseValue)
     override fun encode(value: T): String = json.encodeToString(serializer, value)
