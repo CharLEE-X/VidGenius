@@ -8,6 +8,7 @@ import com.charleex.vidgenius.datasource.feature.open_ai.OpenAiRepository
 import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepository
 import com.charleex.vidgenius.datasource.feature.vision_ai.GoogleCloudRepository
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
+import com.charleex.vidgenius.datasource.feature.youtube.model.Category
 import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
@@ -101,16 +102,15 @@ internal class VideoProcessingImpl(
                 ?: error("No yt video found for ${video.youtubeTitle}")
 
             val config = database.configQueries.getAll().executeAsOne()
-            val channel = config.ytConfig ?: error("No channel found")
 
             val videoWithScreenshots = processVideo(video, 3)
             val videoWithDescriptions =
                 processScreenshotsToText(videoWithScreenshots, numberOfScreenshots)
-            val videoWithDescriptionContext = processDescriptions(videoWithDescriptions, channel)
+            val videoWithDescriptionContext = processDescriptions(videoWithDescriptions, config.category)
 
             logger.d { "Context: $videoWithDescriptionContext" }
 
-            val videoWithMetadata = generateMetaData(videoWithDescriptionContext, channel)
+            val videoWithMetadata = generateMetaData(videoWithDescriptionContext, config.category)
             updateYouTubeVideo(ytVideo, videoWithMetadata)
             logger.v { "Processing $video | Finished" }
         } catch (e: Exception) {
@@ -212,7 +212,7 @@ internal class VideoProcessingImpl(
         return newVideo
     }
 
-    private suspend fun processDescriptions(video: Video, ytConfig: YtConfig): Video {
+    private suspend fun processDescriptions(video: Video, category: Category): Video {
         val hasDescriptionContext = video.descriptionContext.isNullOrEmpty().not()
         if (hasDescriptionContext) {
             logger.d("Already has description context | ${video.id}")
@@ -221,7 +221,7 @@ internal class VideoProcessingImpl(
 
         logger.d("Description processing | ${video.id} | Start")
         val newVideo = try {
-            openAiRepository.getDescriptionContext(video, ytConfig)
+            openAiRepository.getDescriptionContext(video, category)
         } catch (e: Exception) {
             logger.e(e) { "Error generating description context" }
             throw e
@@ -230,7 +230,7 @@ internal class VideoProcessingImpl(
         return newVideo
     }
 
-    private suspend fun generateMetaData(video: Video, ytConfig: YtConfig): Video {
+    private suspend fun generateMetaData(video: Video, category: Category): Video {
         val hasContentInfoEnUS = video.contentInfo.enUS.title.isNotEmpty() &&
                 video.contentInfo.enUS.description.isNotEmpty()
         val hasContentInfoPt = video.contentInfo.pt.title.isNotEmpty() &&
@@ -259,7 +259,7 @@ internal class VideoProcessingImpl(
 
         logger.d("Metadata generation | ${video.id} | Start")
         val newVideo = try {
-            openAiRepository.getMetaData(video, ytConfig)
+            openAiRepository.getMetaData(video, category)
         } catch (e: Exception) {
             logger.e(e) { "Error generating metadata" }
             throw e

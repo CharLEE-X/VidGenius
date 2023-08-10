@@ -7,18 +7,18 @@ import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompleti
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompletionFunction
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatMessage
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.FunctionMode
-import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
+import com.charleex.vidgenius.datasource.feature.youtube.model.Category
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 internal class OpenAiRepositoryDebug : OpenAiRepository {
-    override suspend fun getDescriptionContext(video: Video, ytConfig: YtConfig): Video {
+    override suspend fun getDescriptionContext(video: Video, category: Category): Video {
         delay(100)
         return video.copy(descriptionContext = "description context")
     }
 
-    override suspend fun getMetaData(video: Video, ytConfig: YtConfig): Video {
+    override suspend fun getMetaData(video: Video, category: Category): Video {
         delay(300)
         return video
     }
@@ -47,7 +47,11 @@ internal class OpenAiRepositoryDebug : OpenAiRepository {
         )
     }
 
-    override suspend fun getContentInfo(title: String, description: String?, tags: List<String>): ContentInfo {
+    override suspend fun getContentInfo(
+        title: String,
+        description: String?,
+        tags: List<String>,
+    ): ContentInfo {
         TODO("Not yet implemented")
     }
 }

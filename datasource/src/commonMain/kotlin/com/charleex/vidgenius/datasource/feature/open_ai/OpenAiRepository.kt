@@ -10,13 +10,13 @@ import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatCompleti
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatMessage
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.ChatRole
 import com.charleex.vidgenius.datasource.feature.open_ai.model.chat.FunctionMode
-import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
+import com.charleex.vidgenius.datasource.feature.youtube.model.Category
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 
 interface OpenAiRepository {
-    suspend fun getDescriptionContext(video: Video, ytConfig: YtConfig): Video
-    suspend fun getMetaData(video: Video, ytConfig: YtConfig): Video
+    suspend fun getDescriptionContext(video: Video, category: Category): Video
+    suspend fun getMetaData(video: Video, category: Category): Video
 
     fun chats(
         messages: List<ChatMessage> = emptyList(),
@@ -42,9 +42,8 @@ internal class OpenAiRepositoryImpl(
     private val chatService: ChatService,
 ) : OpenAiRepository {
 
-    override suspend fun getDescriptionContext(video: Video, ytConfig: YtConfig): Video {
+    override suspend fun getDescriptionContext(video: Video, category: Category): Video {
         val descriptionsString = video.descriptions
-        val category = ytConfig.category
         val chatCompletion = chatService.chatCompletion(
             messages = listOf(
                 ChatMessage(
@@ -65,7 +64,11 @@ internal class OpenAiRepositoryImpl(
         return newVideo
     }
 
-    override suspend fun getContentInfo(title: String, description: String?, tags: List<String>): ContentInfo {
+    override suspend fun getContentInfo(
+        title: String,
+        description: String?,
+        tags: List<String>,
+    ): ContentInfo {
         val languages = VideoProcessingImpl.languageCodes
         val chatCompletion = chatService.chatCompletion(
             messages = listOf(
@@ -133,10 +136,9 @@ internal class OpenAiRepositoryImpl(
         return contentInfo
     }
 
-    override suspend fun getMetaData(video: Video, ytConfig: YtConfig): Video {
+    override suspend fun getMetaData(video: Video, category: Category): Video {
         val languages = VideoProcessingImpl.languageCodes
         val descriptions = video.descriptions
-        val category = ytConfig.category
         val chatCompletion = chatService.chatCompletion(
             messages = listOf(
                 ChatMessage(

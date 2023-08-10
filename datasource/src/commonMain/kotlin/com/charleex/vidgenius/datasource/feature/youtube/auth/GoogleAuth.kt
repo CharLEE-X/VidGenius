@@ -20,15 +20,7 @@ import java.io.InputStreamReader
  * Shared class used by every sample. Contains methods for authorizing a user and caching credentials.
  */
 interface GoogleAuth {
-
-    /**
-     * Authorizes the installed application to access user's protected data.
-     *
-     * @param scopes              list of scopes needed to run youtube upload.
-     * @param credentialDatastore name of the credential datastore to cache OAuth tokens
-     */
     fun authorize(scopes: List<String>, ytConfig: YtConfig): Credential
-
     fun signOut(channelId: String)
 }
 
@@ -51,8 +43,10 @@ internal class GoogleAuthImpl(
             .build()
 
         val localReceiver = getLocalServerReceiver()
-        return AuthorizationCodeInstalledApp(flow, localReceiver)
+        val credential = AuthorizationCodeInstalledApp(flow, localReceiver)
             .authorize("user")
+        logger.i { "Authorization successful." }
+        return credential
     }
 
     override fun signOut(channelId: String) {
@@ -61,8 +55,9 @@ internal class GoogleAuthImpl(
     }
 
     // Build the local server and bind it to port 8080
-    private fun getLocalServerReceiver(): LocalServerReceiver? {
+    private fun getLocalServerReceiver(): LocalServerReceiver {
         return LocalServerReceiver.Builder().setPort(8080).build()
+            ?: error("LocalServerReceiver not found")
     }
 
     // This creates the credentials datastore at ~/.oauth-credentials/${credentialDatastore}
