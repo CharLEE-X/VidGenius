@@ -5,17 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pets
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,17 +21,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.VideoProcessing
 import com.charleex.vidgenius.datasource.feature.ConfigManager
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
 import com.charleex.vidgenius.ui.components.AppVerticalScrollbar
 import com.charleex.vidgenius.ui.components.DropTarget
-import com.charleex.vidgenius.ui.components.ListHeader
-import com.charleex.vidgenius.ui.components.NoVideos
 import com.charleex.vidgenius.ui.components.TopBar
+import com.charleex.vidgenius.ui.components.list.AppListItem
+import com.charleex.vidgenius.ui.components.list.ListHeader
+import com.charleex.vidgenius.ui.components.list.NoVideos
 import com.charleex.vidgenius.ui.util.pretty
 import kotlinx.coroutines.launch
+import org.jetbrains.skia.Image
+import java.net.URL
 
 @Composable
 fun GenerationContent(
@@ -80,9 +78,9 @@ fun GenerationContent(
         ) {
             LazyColumn(
                 state = layColumnState,
-                verticalArrangement = Arrangement.spacedBy(24.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
                 contentPadding = PaddingValues(
-                    top = 92.dp,
+                    top = 100.dp,
                     start = 32.dp,
                     end = 32.dp,
                     bottom = 32.dp
@@ -111,27 +109,11 @@ fun GenerationContent(
                     NoVideos(ytVideos.isEmpty())
                 }
                 items(ytVideos) { ytVideo ->
-                    ListItem(
-                        headlineContent = {
-                            Text(ytVideo.title)
-                        },
-                        leadingContent = {
-                            Icon(
-                                imageVector = Icons.Default.Pets,
-                                contentDescription = null
-                            )
-                        },
-                        overlineContent = {
-                            Text(ytVideo.publishedAt.pretty())
-                        },
-                        supportingContent = {
-                            Text(ytVideo.privacyStatus ?: "Not known")
-                        },
-                        trailingContent = {
-                            Text(ytVideo.tags.joinToString(" "))
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
+                    AppListItem(
+                        title = ytVideo.title,
+                        thumbnailUrl = ytVideo.thumbnailUrl,
+                        privacyStatus = ytVideo.privacyStatus,
+                        publishedAt = ytVideo.publishedAt.pretty(),
                     )
                 }
 
@@ -196,3 +178,7 @@ fun GenerationContent(
         }
     }
 }
+
+fun loadImage(url: String) =
+    Image.makeFromEncoded(URL(url).readBytes())
+        .toComposeImageBitmap()

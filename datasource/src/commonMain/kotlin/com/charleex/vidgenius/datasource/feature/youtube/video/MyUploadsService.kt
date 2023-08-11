@@ -1,9 +1,10 @@
 package com.charleex.vidgenius.datasource.feature.youtube.video
 
 import co.touchlab.kermit.Logger
+import com.charleex.vidgenius.datasource.db.YtVideo
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
-import com.charleex.vidgenius.datasource.feature.youtube.model.MyUploadsItem
 import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
+import com.charleex.vidgenius.datasource.feature.youtube.model.privacyStatusFromString
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.json.JsonFactory
@@ -15,8 +16,8 @@ import kotlinx.datetime.Instant
 import java.io.IOException
 
 interface MyUploadsService {
-    suspend fun getUploadList(ytConfig: YtConfig): Flow<List<MyUploadsItem>>
-    suspend fun getVideoDetail(videoId: String): MyUploadsItem
+    suspend fun getUploadList(ytConfig: YtConfig): Flow<List<YtVideo>>
+    suspend fun getVideoDetail(videoId: String): YtVideo
 }
 
 internal class MyUploadsServiceImpl(
@@ -33,10 +34,10 @@ internal class MyUploadsServiceImpl(
 
     private var youtube: YouTube? = null
 
-    override suspend fun getUploadList(ytConfig: YtConfig): Flow<List<MyUploadsItem>> = flow {
+    override suspend fun getUploadList(ytConfig: YtConfig): Flow<List<YtVideo>> = flow {
         try {
             logger.d { "Getting upload list" }
-            val credential = googleAuth.authorize(scopes, ytConfig)
+            val credential = googleAuth.authorize(ytConfig)
 
             val youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
                 .setApplicationName(APP_NAME)
@@ -56,42 +57,44 @@ internal class MyUploadsServiceImpl(
             val uploadPlaylistId = channelsList[0].contentDetails.relatedPlaylists.uploads
                 ?: error("Unable to find upload playlist for channel.")
 
+            val items = listOf(
+                "contentDetails/videoId",
+                "snippet/title",
+                "snippet/description",
+                "snippet/thumbnails",
+                "snippet/publishedAt",
+                "status/privacyStatus",
+            ).joinToString(",")
 
             val playlistItemRequest = youtube.playlistItems()
                 .list(listOf("id", "contentDetails", "snippet", "status"))
-                ?: error("Unable to create playlist item list.")
-
-            playlistItemRequest.playlistId = uploadPlaylistId
-
-            val videoId = "contentDetails/videoId"
-            val title = "snippet/title"
-            val desc = "snippet/description"
-            val publishedAt = "snippet/publishedAt"
-            val status = "status/privacyStatus"
-            playlistItemRequest.fields =
-                "items($videoId,$title,$desc,$publishedAt,$status),nextPageToken,pageInfo"
+                .setPlaylistId(uploadPlaylistId)
+                .setFields("items($items),nextPageToken,pageInfo")
 
             var nextToken: String? = ""
-            val playlistItemList = mutableListOf<MyUploadsItem>()
+            val playlistItemList = mutableListOf<YtVideo>()
             do {
                 playlistItemRequest.pageToken = nextToken
                 val playlistItemResult = playlistItemRequest.execute()
                 val items = playlistItemResult.items
-                val myUploads = items.map { playlistItem ->
+                val uploadsChunk = items.map { playlistItem ->
                     val published = playlistItem.snippet.publishedAt.value
                     val instant = Instant.fromEpochMilliseconds(published)
                     val tags = getVideoTags(youtube, playlistItem.contentDetails.videoId)
-                    MyUploadsItem(
-                        ytId = playlistItem.contentDetails.videoId,
+                    val thumbnailUrl = playlistItem.snippet.thumbnails.default.url
+                    YtVideo(
+                        id = playlistItem.contentDetails.videoId,
                         title = playlistItem.snippet.title,
                         description = playlistItem.snippet.description,
                         tags = tags,
-                        privacyStatus = playlistItem.status.privacyStatus,
+                        privacyStatus = privacyStatusFromString(playlistItem.status.privacyStatus),
+                        thumbnailUrl = thumbnailUrl,
                         publishedAt = instant,
                     )
                 }
 
-                playlistItemList.addAll(myUploads)
+                logger.d { "Uploads chunk: $uploadsChunk" }
+                playlistItemList.addAll(uploadsChunk)
                 emit(playlistItemList)
 
                 nextToken = playlistItemResult.nextPageToken
@@ -118,45 +121,56 @@ internal class MyUploadsServiceImpl(
             ?: error("Unable to create video list.")
 
         videoList.fields =
-            "items(id,snippet/title,snippet/description,snippet/publishedAt,contentDetails/duration)"
+            "items(" +
+                    "id," +
+                    "snippet/tags," +
+                    ")"
 
         val videoResult = videoList.execute()
 
         val videos = videoResult.items ?: error("Error getting videos.")
-        if (videos.isNotEmpty()) {
+        return if (videos.isNotEmpty()) {
             val video: Video = videos[0]
             return video.snippet.tags ?: emptyList()
-        }
-        return emptyList()
+        } else emptyList()
     }
 
-    override suspend fun getVideoDetail(videoId: String): MyUploadsItem {
+    override suspend fun getVideoDetail(videoId: String): YtVideo {
         logger.d { "Getting video details for videoId: $videoId" }
 
-        val videoList = youtube!!.videos()
+        val videoResult = youtube!!.videos()
             .list(listOf("snippet", "contentDetails"))
             .setId(listOf(videoId))
-            ?: error("Unable to create video list.")
+            .setFields(
+                "items(" +
+                        "id," +
+                        "snippet/title," +
+                        "snippet/description," +
+                        "snippet/tags," +
+                        "snippet/publishedAt," +
+                        "status/privacyStatus," +
+                        "contentDetails/duration" +
+                        ")"
+            )
+            .execute()
 
-        videoList.fields =
-            "items(id,snippet/title,snippet/description,snippet/publishedAt,contentDetails/duration)"
-
-        val videoResult = videoList.execute()
         val videoItem = videoResult.items.firstOrNull { it.id == videoId }
             ?: error("Video with videoId: $videoId not found.")
 
-        val title = videoItem.snippet.title
-        val description = videoItem.snippet.description
-        val privacyStatus = videoItem.status.privacyStatus
-        val publishedAt = videoItem.snippet.publishedAt
-        val time = Instant.fromEpochMilliseconds(publishedAt.value)
-        return MyUploadsItem(
-            ytId = videoId,
+        val title = videoItem.snippet.title ?: "No Title"
+        val description = videoItem.snippet.description ?: "No Description"
+        val tags = videoItem.snippet.tags ?: emptyList()
+        val privacyStatus = videoItem.status.privacyStatus ?: "public"
+        val thumbnailUrl = videoItem.snippet.thumbnails.default.url
+        val publishedAt = Instant.fromEpochMilliseconds(videoItem.snippet.publishedAt.value)
+        return YtVideo(
+            id = videoId,
             title = title,
             description = description,
-            tags = error("Not implemented"),
-            privacyStatus = privacyStatus,
-            publishedAt = time
+            tags = tags,
+            privacyStatus = privacyStatusFromString(privacyStatus),
+            thumbnailUrl = thumbnailUrl,
+            publishedAt = publishedAt,
         )
     }
 }

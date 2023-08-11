@@ -97,6 +97,7 @@ private val databaseModule
             YtVideo.Adapter(
                 tagsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
                 publishedAtAdapter = InstantComponentSerializer.asColumnAdapter(),
+                privacyStatusAdapter = PrivacyStatus.serializer().asColumnAdapter(),
             )
         }
         single {

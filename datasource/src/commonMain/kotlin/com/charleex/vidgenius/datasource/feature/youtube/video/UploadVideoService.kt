@@ -60,7 +60,7 @@ internal class UploadVideoServiceImpl(
     ): String {
         logger.d { "Uploading: ${videoFile.path}" }
 
-        val credential = googleAuth.authorize(scopes, ytConfig)
+        val credential = googleAuth.authorize(ytConfig)
 
         youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
             .setApplicationName(APP_NAME)

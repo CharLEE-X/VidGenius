@@ -2,6 +2,7 @@ package com.charleex.vidgenius.datasource.feature.youtube
 
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
+import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,7 +21,8 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
                 title = "Video 1",
                 description = "Description 1",
                 tags = listOf("tag1", "tag2"),
-                privacyStatus = "public",
+                privacyStatus = PrivacyStatus.PUBLIC,
+                thumbnailUrl = "https://i.ytimg.com/vi/Sequence 02_2/maxresdefault.jpg",
                 publishedAt = Instant.DISTANT_FUTURE
             ),
             YtVideo(
@@ -28,7 +30,8 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
                 title = "Video 1",
                 description = "Description 1",
                 tags = listOf("tag1", "tag2"),
-                privacyStatus = "draft",
+                privacyStatus = PrivacyStatus.PRIVATE,
+                thumbnailUrl = "https://i.ytimg.com/vi/Sequence 02_2/maxresdefault.jpg",
                 publishedAt = Instant.DISTANT_FUTURE
             ),
             YtVideo(
@@ -36,7 +39,8 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
                 title = "Video 1",
                 description = "Description 1",
                 tags = listOf("tag1", "tag2"),
-                privacyStatus = "public",
+                privacyStatus = PrivacyStatus.PRIVATE,
+                thumbnailUrl = "https://i.ytimg.com/vi/Sequence 02_2/maxresdefault.jpg",
                 publishedAt = Instant.DISTANT_FUTURE
             ),
             YtVideo(
@@ -44,7 +48,8 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
                 title = "Video 1",
                 description = "Description 1",
                 tags = listOf("tag1", "tag2"),
-                privacyStatus = "draft",
+                privacyStatus = PrivacyStatus.UNLISTED,
+                thumbnailUrl = "https://i.ytimg.com/vi/Sequence 02_2/maxresdefault.jpg",
                 publishedAt = Instant.DISTANT_FUTURE
             ),
         )

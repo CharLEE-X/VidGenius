@@ -15,16 +15,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,6 +43,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.example.compose.AppTheme
 
 enum class SegmentType { START, INNER, SINGLE, END }
@@ -64,12 +69,14 @@ data class SegmentColors(
 )
 
 object SegmentDefaults {
+    private val defaultCorners = 8.dp
+
     fun defaultCorners(
-        shape: SegmentShape = SegmentShape.ROUNDED,
-        topStart: Dp = 20.dp,
-        topEnd: Dp = 20.dp,
-        bottomStart: Dp = 20.dp,
-        bottomEnd: Dp = 20.dp,
+        shape: SegmentShape = SegmentShape.CUT,
+        topStart: Dp = defaultCorners,
+        topEnd: Dp = defaultCorners,
+        bottomStart: Dp = defaultCorners,
+        bottomEnd: Dp = defaultCorners,
         contentPaddingValues: PaddingValues = PaddingValues(
             vertical = 6.dp,
             horizontal = 8.dp,
@@ -268,6 +275,14 @@ private fun SegmentsLine(
             selected = 0 in selectedIndexes,
             onClick = { onSegmentSelected(0) },
         )
+        Divider(
+            color = if (0 in selectedIndexes && 1 in selectedIndexes)
+                itemFirst.colors.backgroundColorUnselected else itemFirst.colors.backgroundColorSelected,
+            modifier = Modifier
+                .width(1.dp)
+                .height(40.dp)
+                .zIndex(1f)
+        )
         segments.subList(1, segments.size - 1).forEachIndexed { index, segment ->
             Segment(
                 label = segment.label,
@@ -282,6 +297,14 @@ private fun SegmentsLine(
                 modifier = segmentModifier,
                 selected = (index + 1) in selectedIndexes,
                 onClick = { onSegmentSelected(index + 1) },
+            )
+            Divider(
+                color = if ((index + 1) in selectedIndexes && (index + 2) in selectedIndexes)
+                    itemFirst.colors.backgroundColorUnselected else itemFirst.colors.backgroundColorSelected,
+                modifier = Modifier
+                    .width(1.dp)
+                    .height(40.dp)
+                    .zIndex(1f)
             )
         }
         val itemLast = segments[segments.size - 1]

@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CarCrash
@@ -81,7 +83,6 @@ fun TopBar(
         )
     }
     val selectedIndex = categorySegments.indexOfFirst { it.label == selectedCategory }
-    val selectedIndexes by remember { mutableStateOf(listOf(selectedIndex)) }
 
     var showConfigs by remember { mutableStateOf(false) }
 
@@ -110,9 +111,11 @@ fun TopBar(
             tonalElevation = tonalElevation,
             ytConfigs = ytConfigs,
             currentConfigId = currentConfigId,
-            onSetConfig = {
+            onSetConfig = { ytConfig ->
                 scope.launch {
-                    configManager.setYtConfig(it)
+                    if (configManager.setYtConfig(ytConfig)) {
+                        showConfigs = false
+                    }
                 }
             },
             modifier = Modifier
@@ -124,7 +127,7 @@ fun TopBar(
             modifier = modifier,
             showConfigs = showConfigs,
             categorySegments = categorySegments,
-            selectedIndexes = selectedIndexes,
+            selectedIndexes = listOf(selectedIndex),
             onSelected = {
                 scope.launch {
                     val index = it % categorySegments.size
@@ -194,6 +197,8 @@ private fun TopBarContent(
                 segments = categorySegments,
                 selectedIndexes = selectedIndexes,
                 onSegmentClicked = onSelected,
+                segmentModifier = Modifier
+                    .height(40.dp),
                 modifier = Modifier
                     .width(400.dp)
             )
@@ -236,6 +241,7 @@ private fun SettingsButton(
             imageVector = Icons.Default.Settings,
             contentDescription = null,
             modifier = Modifier
+                .size(32.dp)
                 .rotate(rotationState)
                 .onPointerEvent(
                     eventType = PointerEventType.Enter,

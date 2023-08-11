@@ -1,15 +1,20 @@
-package com.charleex.vidgenius.ui.components
+package com.charleex.vidgenius.ui.components.list
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
@@ -25,6 +30,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.model.privacyStatusFromString
+import com.charleex.vidgenius.ui.components.CounterAnimation
+import com.charleex.vidgenius.ui.components.SegmentDefaults
+import com.charleex.vidgenius.ui.components.SegmentSpec
+import com.charleex.vidgenius.ui.components.SegmentsGroup
 
 @Composable
 internal fun ListHeader(
@@ -37,8 +46,14 @@ internal fun ListHeader(
     onPrivacySelected: (PrivacyStatus) -> Unit,
 ) {
     val segmentsList = PrivacyStatus.values().map {
+        val icon = when (it) {
+            PrivacyStatus.PUBLIC -> Icons.Default.Visibility
+            PrivacyStatus.UNLISTED -> Icons.Default.Pending
+            PrivacyStatus.PRIVATE -> Icons.Default.VisibilityOff
+        }
         SegmentSpec(
             label = it.value,
+            icon = icon,
             colors = SegmentDefaults.defaultColors(),
             corners = SegmentDefaults.defaultCorners(),
         )
@@ -57,7 +72,8 @@ internal fun ListHeader(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp)
+                .padding(vertical = 24.dp)
+                .padding(start = 24.dp)
         ) {
             Text(
                 text = title,
@@ -81,9 +97,12 @@ internal fun ListHeader(
                 segments = segmentsList,
                 selectedIndexes = selectedIndexes,
                 onSegmentClicked = onSegmentClicked,
-                modifier = Modifier.width(320.dp),
+                segmentModifier = Modifier
+                    .height(40.dp) ,
+                modifier = Modifier
+                    .width(360.dp)
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             StartStopButton(
                 startLabel = "Refresh",
                 stopLabel = "Stop",
@@ -103,19 +122,23 @@ private fun StartStopButton(
     onStop: () -> Unit,
     isStarted: Boolean,
     width: Dp = 160.dp,
+    height: Dp = 40.dp,
 ) {
     val containerColor by animateColorAsState(
         targetValue = if (isStarted)
-            MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+            MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary
     )
     FilledTonalButton(
+        shape = CutCornerShape(8.dp),
         onClick = {
             if (isStarted) onStop() else onStart()
         },
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
         ),
-        modifier = Modifier.width(width)
+        modifier = Modifier
+            .width(width)
+            .height(height)
     ) {
         if (isStarted) {
             CircularProgressIndicator(

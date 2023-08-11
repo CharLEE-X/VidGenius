@@ -44,7 +44,7 @@ internal class UpdateVideoServiceImpl(
     ): Video? {
         logger.d { "Updating video $ytId\nContentInfo: $contentInfo" }
         return try {
-            val credential = googleAuth.authorize(scopes, ytConfig)
+            val credential = googleAuth.authorize(ytConfig)
 
             youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
                 .setApplicationName(APP_NAME)

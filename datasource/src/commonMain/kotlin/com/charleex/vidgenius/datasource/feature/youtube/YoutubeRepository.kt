@@ -6,8 +6,8 @@ import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.db.YtVideo
 import com.charleex.vidgenius.datasource.feature.ConfigManager
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
+import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
-import com.charleex.vidgenius.datasource.feature.youtube.model.privacyStatusFromString
 import com.charleex.vidgenius.datasource.feature.youtube.model.ytConfigs
 import com.charleex.vidgenius.datasource.feature.youtube.video.MyUploadsService
 import com.charleex.vidgenius.datasource.feature.youtube.video.UpdateVideoService
@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,7 +42,7 @@ internal class YoutubeRepositoryImpl(
     private val googleAuth: GoogleAuth,
     private val myUploadsService: MyUploadsService,
     private val updateVideoService: UpdateVideoService,
-    configManager: ConfigManager,
+    private val configManager: ConfigManager,
     private val scope: CoroutineScope,
 ) : YoutubeRepository {
     private var fetchUploadsJob: Job = Job()
@@ -51,17 +50,8 @@ internal class YoutubeRepositoryImpl(
     private val _isFetchingUploads = MutableStateFlow(false)
     override val isFetchingUploads: StateFlow<Boolean> = _isFetchingUploads.asStateFlow()
 
-    override val ytVideos: StateFlow<List<YtVideo>> = combine(
-        database.ytVideoQueries.getAll().asFlow().map { it.executeAsList() },
-        configManager.config,
-    ) { ytVideos, config ->
-        ytVideos.filter { ytVideo ->
-            ytVideo.privacyStatus?.let {
-                val ytPrivacyStatus = privacyStatusFromString(it)
-                ytPrivacyStatus in config.selectedPrivacyStatuses
-            } ?: false
-        }
-    }.stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
+    override val ytVideos: StateFlow<List<YtVideo>> = ytVideosFlow()
+        .stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
 
     override fun startFetchUploads() {
         logger.d { "Getting channel uploads" }
@@ -72,24 +62,9 @@ internal class YoutubeRepositoryImpl(
                 val ytChannel = getChannel() ?: error("Channel cannot be null")
                 myUploadsService.getUploadList(ytChannel).collect { myUploads ->
                     logger.d("Uploads: ${myUploads.size}")
-                    val newYtVideos = myUploads
-                        .map {
-                            YtVideo(
-                                id = it.ytId,
-                                title = it.title,
-                                description = it.description,
-                                tags = it.tags,
-                                privacyStatus = it.privacyStatus,
-                                publishedAt = it.publishedAt,
-                            )
-                        }
-                    logger.d("YtVideos: ${newYtVideos.size}")
 
                     withContext(Dispatchers.IO) {
-//                        newYtVideos.forEach {
-//                            database.ytVideoQueries.delete(it.id)
-//                        }
-                        newYtVideos.forEach { ytVideo ->
+                        myUploads.forEach { ytVideo ->
                             database.ytVideoQueries.upsert(ytVideo)
                         }
                     }
@@ -98,9 +73,9 @@ internal class YoutubeRepositoryImpl(
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
-            val publicCount = ytVideos.value.count { it.privacyStatus == "public" }
-            val privateCount = ytVideos.value.count { it.privacyStatus == "private" }
-            val unlistedCount = ytVideos.value.count { it.privacyStatus == "unlisted" }
+            val publicCount = ytVideos.value.count { it.privacyStatus == PrivacyStatus.PUBLIC }
+            val privateCount = ytVideos.value.count { it.privacyStatus == PrivacyStatus.PRIVATE }
+            val unlistedCount = ytVideos.value.count { it.privacyStatus == PrivacyStatus.UNLISTED }
             logger.d("YtVideos | Public: $publicCount | Private: $privateCount | Unlisted: $unlistedCount")
             _isFetchingUploads.value = false
         }
@@ -157,8 +132,12 @@ internal class YoutubeRepositoryImpl(
         googleAuth.signOut("updatevideo")
     }
 
-    private fun ytVideosFlow() = database.ytVideoQueries
-        .getAll().asFlow().map { it.executeAsList() }
+    private fun ytVideosFlow() = combine(
+        database.ytVideoQueries.getAll().asFlow().map { it.executeAsList() },
+        configManager.config,
+    ) { ytVideos, config ->
+        ytVideos.filter { it.privacyStatus in config.selectedPrivacyStatuses }
+    }
 
     private fun getChannel(): YtConfig? {
         val config =

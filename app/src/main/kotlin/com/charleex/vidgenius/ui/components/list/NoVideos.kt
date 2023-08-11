@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.ui.components
+package com.charleex.vidgenius.ui.components.list
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.desktop.ui.tooling.preview.Preview

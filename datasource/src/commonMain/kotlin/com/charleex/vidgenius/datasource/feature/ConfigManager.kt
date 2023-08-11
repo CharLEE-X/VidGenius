@@ -10,7 +10,6 @@ import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
 import com.charleex.vidgenius.datasource.feature.youtube.model.allCategories
 import com.charleex.vidgenius.datasource.feature.youtube.model.ytConfigs
-import com.google.common.collect.Lists
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +22,7 @@ import kotlinx.coroutines.withContext
 interface ConfigManager {
     val config: StateFlow<Config>
     fun getMyChannels(): List<YtConfig>
-    suspend fun setYtConfig(newYtConfig: YtConfig)
+    suspend fun setYtConfig(newYtConfig: YtConfig): Boolean
     suspend fun setCategory(category: Category)
     fun setPrivacyStatus(privacyStatus: PrivacyStatus)
 }
@@ -56,22 +55,32 @@ internal class ConfigManagerImpl(
         return ytConfigs
     }
 
-    override suspend fun setYtConfig(newYtConfig: YtConfig) {
+    override suspend fun setYtConfig(newYtConfig: YtConfig): Boolean {
         logger.d("Choosing channel $newYtConfig")
+        val config = getConfig()
+
+        if (config.ytConfig?.id == newYtConfig.id) {
+            logger.d("Channel already chosen")
+            return true
+        }
+
+
+        config.ytConfig?.id?.let { previousChannelId ->
+            logger.d("Signing out of channel $previousChannelId")
+            googleAuth.signOut(previousChannelId)
+        }
+
+        logger.d("Signing in to channel ${newYtConfig.title}")
+        val credentials = googleAuth.authorize(newYtConfig)
+
+        logger.d("Credentials: $credentials")
+
+        if (credentials?.clientAuthentication == null) {
+            logger.d("Failed to sign in to channel")
+            return false
+        }
+
         withContext(Dispatchers.IO) {
-            val config = getConfig()
-
-            if (config.ytConfig?.id == newYtConfig.id) {
-                logger.d("Channel already chosen")
-                return@withContext
-            }
-
-
-            config.ytConfig?.id?.let { previousChannelId ->
-                logger.d("Signing out of channel $previousChannelId")
-                googleAuth.signOut(previousChannelId)
-            }
-
             logger.d("Deleting all videos")
             database.videoQueries.getAll().executeAsList().forEach {
                 database.videoQueries.delete(it.id)
@@ -81,27 +90,14 @@ internal class ConfigManagerImpl(
             database.ytVideoQueries.getAll().executeAsList().forEach {
                 database.ytVideoQueries.delete(it.id)
             }
-
-            logger.d("Signing in to channel ${newYtConfig.title}")
-            val scopes = Lists.newArrayList("https://www.googleapis.com/auth/youtube")
-            val credentials = googleAuth.authorize(
-                scopes = scopes,
-                ytConfig = newYtConfig,
-            )
-
-            logger.d("Credentials: $credentials")
-
-            if (credentials.clientAuthentication == null) {
-                logger.d("Failed to sign in to channel")
-                return@withContext
-            }
-
-            logger.d("Signed in to channel ${newYtConfig.title}")
-
-            logger.d("Updating config with channel id ${newYtConfig.id}")
-            val newConfig = config.copy(ytConfig = newYtConfig)
-            updateConfig(newConfig)
         }
+
+        logger.d("Signed in to channel ${newYtConfig.title}")
+
+        logger.d("Updating config with channel id ${newYtConfig.id}")
+        val newConfig = config.copy(ytConfig = newYtConfig)
+        updateConfig(newConfig)
+        return true
     }
 
     override suspend fun setCategory(category: Category) {
@@ -130,8 +126,10 @@ internal class ConfigManagerImpl(
         return database.configQueries.getAll().executeAsOne()
     }
 
-    private fun updateConfig(config: Config) {
-        database.configQueries.upsert(config)
+    private suspend fun updateConfig(config: Config) {
+        withContext(Dispatchers.IO) {
+            database.configQueries.upsert(config)
+        }
     }
 }
 

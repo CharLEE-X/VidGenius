@@ -55,6 +55,7 @@ kotlin {
                 implementation("com.google.api-client:google-api-client:$client")
                 implementation("com.google.oauth-client:google-oauth-client-jetty:$jetty")
                 implementation("com.google.apis:google-api-services-youtube:$yt")
+                implementation("com.google.auth:google-auth-library-oauth2-http:1.19.0")
             }
         }
         val commonTest by getting {

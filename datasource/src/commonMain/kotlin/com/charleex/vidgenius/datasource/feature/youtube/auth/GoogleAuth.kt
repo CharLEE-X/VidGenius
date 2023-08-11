@@ -12,6 +12,7 @@ import com.google.api.client.http.HttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.client.util.store.DataStore
 import com.google.api.client.util.store.FileDataStoreFactory
+import com.google.common.collect.Lists
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
@@ -20,7 +21,7 @@ import java.io.InputStreamReader
  * Shared class used by every sample. Contains methods for authorizing a user and caching credentials.
  */
 interface GoogleAuth {
-    fun authorize(scopes: List<String>, ytConfig: YtConfig): Credential
+    fun authorize(ytConfig: YtConfig): Credential?
     fun signOut(channelId: String)
 }
 
@@ -32,10 +33,10 @@ internal class GoogleAuthImpl(
     private val credentialDirectory: String,
 ) : GoogleAuth {
     @Throws(IOException::class)
-    override fun authorize(scopes: List<String>, ytConfig: YtConfig): Credential {
-        logger.d { "Authorizing ${scopes}..." }
+    override fun authorize(ytConfig: YtConfig): Credential? {
+        logger.d { "Authorizing..." }
         val clientSecrets = getGoogleClientSecrets(ytConfig.secretsFile)
-
+        val scopes = Lists.newArrayList("https://www.googleapis.com/auth/youtube")
         val datastore = getDataStore(ytConfig.id)
         val flow = GoogleAuthorizationCodeFlow
             .Builder(httpTransport, jsonFactory, clientSecrets, scopes)
@@ -43,8 +44,9 @@ internal class GoogleAuthImpl(
             .build()
 
         val localReceiver = getLocalServerReceiver()
-        val credential = AuthorizationCodeInstalledApp(flow, localReceiver)
+        val credential: Credential = AuthorizationCodeInstalledApp(flow, localReceiver)
             .authorize("user")
+
         logger.i { "Authorization successful." }
         return credential
     }
