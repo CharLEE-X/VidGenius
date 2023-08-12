@@ -30,6 +30,7 @@ dependencies {
     implementation("com.github.tkuenneth:nativeparameterstoreaccess:0.1.2")
     implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.2.1")
     implementation("uk.co.caprica:vlcj:4.8.2")
+    implementation("com.github.ltttttttttttt:load-the-image:1.0.8")
 }
 
 compose.desktop {

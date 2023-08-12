@@ -178,7 +178,3 @@ fun GenerationContent(
         }
     }
 }
-
-fun loadImage(url: String) =
-    Image.makeFromEncoded(URL(url).readBytes())
-        .toComposeImageBitmap()

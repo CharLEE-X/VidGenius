@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,7 +39,7 @@ import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
-import com.charleex.vidgenius.ui.features.generation.loadImage
+import com.lt.load_the_image.rememberImagePainter
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -118,7 +119,7 @@ fun AppListItem(
                     ) {
                         thumbnailUrl?.let {
                             Image(
-                                loadImage(it),
+                                rememberImagePainter(it),
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
@@ -133,7 +134,8 @@ fun AppListItem(
                 },
                 supportingContent = {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Icon(
                             imageVector = privacyIcon,

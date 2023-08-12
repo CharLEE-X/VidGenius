@@ -8,37 +8,41 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.charleex.vidgenius.datasource.datasourceModule
 import com.charleex.vidgenius.ui.features.root.RootContent
+import com.lt.load_the_image.LoadTheImageManager
 import org.koin.core.context.startKoin
 
 @ExperimentalComposeUiApi
 @ExperimentalMaterialApi
 @ExperimentalComposeApi
-fun main() = application {
-    val koinApplication = startKoin {
-        modules(datasourceModule())
-    }
+fun main() {
+    LoadTheImageManager.defaultErrorImagePath = "load_error.jpeg"
+    return application {
+        val koinApplication = startKoin {
+            modules(datasourceModule())
+        }
 
-    val windowState = rememberWindowState()
-    windowState.apply {
-        size = DpSize(
-            width = 1200.dp,
-            height = 1600.dp
-        )
+        val windowState = rememberWindowState()
+        windowState.apply {
+            size = DpSize(
+                width = 1200.dp,
+                height = 1600.dp
+            )
 //        position = WindowPosition(
 //            alignment = Alignment.Center,
 //        )
-    }
+        }
 
-    Window(
-        onCloseRequest = ::exitApplication,
-        state = windowState,
-        title = "Auto Yt Vid"
-    ) {
-        RootContent(
-            videoProcessing = koinApplication.koin.get(),
-            youtubeRepository = koinApplication.koin.get(),
-            configManager = koinApplication.koin.get(),
-            window = window,
-        )
+        Window(
+            onCloseRequest = ::exitApplication,
+            state = windowState,
+            title = "Auto Yt Vid"
+        ) {
+            RootContent(
+                videoProcessing = koinApplication.koin.get(),
+                youtubeRepository = koinApplication.koin.get(),
+                configManager = koinApplication.koin.get(),
+                window = window,
+            )
+        }
     }
 }
