@@ -1,6 +1,11 @@
 package com.charleex.vidgenius.ui.components.list
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,19 +18,29 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import com.charleex.vidgenius.ui.features.generation.loadImage
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AppListItem(
     title: String,
@@ -33,6 +48,10 @@ fun AppListItem(
     privacyStatus: PrivacyStatus,
     publishedAt: String,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    var isHovered by remember { mutableStateOf(false) }
+
     val privacyIcon = when (privacyStatus) {
         PrivacyStatus.PUBLIC -> Icons.Default.Visibility
         PrivacyStatus.UNLISTED -> Icons.Default.Pending
@@ -44,9 +63,49 @@ fun AppListItem(
         PrivacyStatus.PRIVATE -> 6.dp
     }
 
+    val bgColor = when {
+        isHovered && isPressed -> tonalElevation + 6.dp
+        isHovered && !isPressed -> tonalElevation + 1.dp
+        else -> tonalElevation
+    }
+
+    val scale by animateFloatAsState(
+        targetValue = when {
+            isHovered && isPressed -> 0.99f
+            isHovered && !isPressed -> 1f
+            else -> 1f
+        }
+    )
+
     Surface(
-        tonalElevation = tonalElevation,
-        shape = CutCornerShape(12.dp)
+        tonalElevation = bgColor,
+        shape = CutCornerShape(12.dp),
+        border = BorderStroke(
+            width = 1.dp,
+            color = when {
+                isHovered && isPressed -> MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                isHovered && !isPressed -> MaterialTheme.colorScheme.primaryContainer
+                else -> Color.Transparent
+            }
+        ),
+        modifier = Modifier
+            .onPointerEvent(
+                eventType = PointerEventType.Enter,
+                onEvent = { isHovered = true },
+            )
+            .onPointerEvent(
+                eventType = PointerEventType.Exit,
+                onEvent = { isHovered = false },
+            )
+            .clickable(
+                indication = null,
+                interactionSource = interactionSource,
+                onClick = { }
+            )
+            .graphicsLayer(
+                scaleX = scale,
+                scaleY = scale,
+            )
     ) {
         Column {
             ListItem(
