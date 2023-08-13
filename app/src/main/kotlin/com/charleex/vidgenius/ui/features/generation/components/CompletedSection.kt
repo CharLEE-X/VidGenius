@@ -24,12 +24,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.charleex.vidgenius.datasource.db.Video
+import com.charleex.vidgenius.datasource.model.LocalVideo
 import com.charleex.vidgenius.ui.components.SectionContainer
 
 @Composable
 fun CompletedSection(
-    videos: List<Video>,
+    videos: List<LocalVideo>,
     onDelete: (String) -> Unit,
 ) {
     val completed = videos.filter { it.isCompleted }

@@ -14,16 +14,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.charleex.vidgenius.datasource.db.Video
-import com.charleex.vidgenius.datasource.db.YtVideo
+import com.charleex.vidgenius.datasource.model.LocalVideo
+import com.charleex.vidgenius.datasource.model.YtVideo
 import com.charleex.vidgenius.ui.components.SectionContainer
 
 @Composable
 fun LocalSection(
-    videos: List<Video>,
+    videos: List<LocalVideo>,
     ytVideos: List<YtVideo>,
     onStartAll: () -> Unit,
-    onStartOne: (Video) -> Unit,
+    onStartOne: (LocalVideo) -> Unit,
     onDelete: (String) -> Unit,
 ) {
     SectionContainer(
@@ -80,20 +80,7 @@ fun LocalSection(
             videos
                 .filter { !it.isCompleted }
                 .forEach { video ->
-                    val isOnYT =
-                        video.youtubeTitle in ytVideos.map { it.title }
-
-                    LocalVideo(
-                        video = video,
-                        onDeleteClicked = {
-                            onDelete(video.id)
-                        },
-                        onStartClicked = {
-                            onStartOne(video)
-                        },
-                        isOnYt = isOnYT,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+//                    val isOnYTw
                 }
         }
     }

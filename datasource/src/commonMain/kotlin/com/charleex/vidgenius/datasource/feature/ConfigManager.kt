@@ -71,7 +71,7 @@ internal class ConfigManagerImpl(
         }
 
         logger.d("Signing in to channel ${newYtConfig.title}")
-        val credentials = googleAuth.authorize(newYtConfig)
+        val credentials = googleAuth.authorizeYouTube(newYtConfig.secretsFile)
 
         logger.d("Credentials: $credentials")
 
@@ -87,9 +87,9 @@ internal class ConfigManagerImpl(
             }
 
             logger.d("Deleting all yt videos")
-            database.ytVideoQueries.getAll().executeAsList().forEach {
-                database.ytVideoQueries.delete(it.id)
-            }
+//            database.ytVideoQueries.getAll().executeAsList().forEach {
+//                database.ytVideoQueries.delete(it.id)
+//            }
         }
 
         logger.d("Signed in to channel ${newYtConfig.title}")

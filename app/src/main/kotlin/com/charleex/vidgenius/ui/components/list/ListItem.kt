@@ -38,37 +38,36 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import com.lt.load_the_image.rememberImagePainter
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AppListItem(
-    title: String,
-    thumbnailUrl: String?,
-    privacyStatus: PrivacyStatus,
-    publishedAt: String,
+    video: Video,
+    onClick: (String) -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     var isHovered by remember { mutableStateOf(false) }
 
-    val privacyIcon = when (privacyStatus) {
-        PrivacyStatus.PUBLIC -> Icons.Default.Visibility
-        PrivacyStatus.UNLISTED -> Icons.Default.Pending
-        PrivacyStatus.PRIVATE -> Icons.Default.VisibilityOff
-    }
-    val tonalElevation = when (privacyStatus) {
-        PrivacyStatus.PUBLIC -> 1.dp
-        PrivacyStatus.UNLISTED -> 3.dp
-        PrivacyStatus.PRIVATE -> 6.dp
-    }
+//    val privacyIcon = when (privacyStatus) {
+//        PrivacyStatus.PUBLIC -> Icons.Default.Visibility
+//        PrivacyStatus.UNLISTED -> Icons.Default.Pending
+//        PrivacyStatus.PRIVATE -> Icons.Default.VisibilityOff
+//    }
+//    val tonalElevation = when (privacyStatus) {
+//        PrivacyStatus.PUBLIC -> 1.dp
+//        PrivacyStatus.UNLISTED -> 3.dp
+//        PrivacyStatus.PRIVATE -> 6.dp
+//    }
 
-    val bgColor = when {
-        isHovered && isPressed -> tonalElevation + 6.dp
-        isHovered && !isPressed -> tonalElevation + 1.dp
-        else -> tonalElevation
-    }
+//    val bgColor = when {
+//        isHovered && isPressed -> tonalElevation + 6.dp
+//        isHovered && !isPressed -> tonalElevation + 1.dp
+//        else -> tonalElevation
+//    }
 
     val scale by animateFloatAsState(
         targetValue = when {
@@ -79,7 +78,7 @@ fun AppListItem(
     )
 
     Surface(
-        tonalElevation = bgColor,
+//        tonalElevation = bgColor,
         shape = CutCornerShape(12.dp),
         border = BorderStroke(
             width = 1.dp,
@@ -111,25 +110,25 @@ fun AppListItem(
         Column {
             ListItem(
                 headlineContent = {
-                    Text(title)
+//                    Text(title)
                 },
                 leadingContent = {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        thumbnailUrl?.let {
-                            Image(
-                                rememberImagePainter(it),
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .width(60.dp)
-                                    .height(60.dp)
-                            )
-                        } ?: Icon(
-                            Icons.Default.Error,
-                            contentDescription = null,
-                        )
+//                        thumbnailUrl?.let {
+//                            Image(
+//                                rememberImagePainter(it),
+//                                contentDescription = null,
+//                                contentScale = ContentScale.Crop,
+//                                modifier = Modifier
+//                                    .width(60.dp)
+//                                    .height(60.dp)
+//                            )
+//                        } ?: Icon(
+//                            Icons.Default.Error,
+//                            contentDescription = null,
+//                        )
                     }
                 },
                 supportingContent = {
@@ -137,14 +136,14 @@ fun AppListItem(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Icon(
-                            imageVector = privacyIcon,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .width(16.dp)
-                                .height(16.dp)
-                        )
-                        Text(publishedAt)
+//                        Icon(
+//                            imageVector = privacyIcon,
+//                            contentDescription = null,
+//                            modifier = Modifier
+//                                .width(16.dp)
+//                                .height(16.dp)
+//                        )
+//                        Text(publishedAt)
                     }
                 },
                 trailingContent = {

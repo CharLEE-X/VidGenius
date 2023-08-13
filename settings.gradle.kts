@@ -5,4 +5,8 @@ rootProject.name = "VidGenius"
 include(
     ":app",
     ":datasource",
+    ":open-ai",
+    ":vision-ai",
+    ":youtube",
+    ":video-screenshots",
 )

@@ -15,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.charleex.vidgenius.datasource.db.YtVideo
+import com.charleex.vidgenius.datasource.model.YtVideo
 
 @Composable
 internal fun YtVideoItem(
@@ -62,7 +62,8 @@ internal fun YtVideoItem(
                     AnimatedVisibility(!isFoundLocally) {
                         Text(
                             text = "Not found locally",
-                        )                    }
+                        )
+                    }
                 }
             }
         }

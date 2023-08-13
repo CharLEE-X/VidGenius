@@ -4,15 +4,23 @@ import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.db.Config
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
-import com.charleex.vidgenius.datasource.db.YtVideo
-import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo
-import com.charleex.vidgenius.datasource.feature.open_ai.openAiModule
-import com.charleex.vidgenius.datasource.feature.video_file.videoFileModule
-import com.charleex.vidgenius.datasource.feature.vision_ai.visionAiModule
+import com.charleex.vidgenius.datasource.feature.ConfigManager
+import com.charleex.vidgenius.datasource.feature.ConfigManagerImpl
+import com.charleex.vidgenius.datasource.feature.local_video.videoFileModule
 import com.charleex.vidgenius.datasource.feature.youtube.model.Category
 import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
 import com.charleex.vidgenius.datasource.feature.youtube.youtubeModule
+import com.charleex.vidgenius.datasource.model.LocalVideo
+import com.charleex.vidgenius.datasource.model.ProgressState
+import com.charleex.vidgenius.datasource.model.YtVideo
+import com.charleex.vidgenius.datasource.utils.DataTimeService
+import com.charleex.vidgenius.datasource.utils.DateTimeServiceImpl
+import com.charleex.vidgenius.datasource.utils.UuidProvider
+import com.charleex.vidgenius.datasource.utils.UuidProviderImpl
+import com.charleex.vidgenius.datasource.utils.getIsDebugBuild
+import com.charleex.vidgenius.open_ai.openAiModule
+import com.charleex.vidgenius.vision_ai.visionAiModule
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.PreferencesSettings
 import com.russhwolf.settings.Settings
@@ -22,23 +30,22 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.datetime.serializers.InstantComponentSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import java.io.File
 import java.util.prefs.Preferences
 
-fun datasourceModule() = module {
+fun datasourceModule(isDebugBuild: Boolean = getIsDebugBuild()) = module {
     val appDataDir = createAppDataDir()
 
     includes(
         databaseModule,
         platformModule(appDataDir),
         settingsModule,
-        openAiModule,
-        visionAiModule,
-        youtubeModule(appDataDir),
+        openAiModule(isDebugBuild),
+        visionAiModule(isDebugBuild),
+        youtubeModule(appDataDir, isDebugBuild),
         videoFileModule(appDataDir),
     )
 
@@ -46,12 +53,39 @@ fun datasourceModule() = module {
         VideoProcessingImpl(
             logger = Logger.withTag(VideoProcessing::class.simpleName!!),
             database = get(),
-            videoFileRepository = get(),
+            localVideoProcessor = get(),
             openAiRepository = get(),
             googleCloudRepository = get(),
             youtubeRepository = get(),
-            scope = CoroutineScope(Dispatchers.Default)
+            uuidProvider = get(),
+            datetimeService = get(),
         )
+    }
+
+    single<VideoService> { params ->
+        VideoServiceImpl(
+            logger = Logger.withTag(VideoService::class.simpleName!!),
+            videoProcessor = get(),
+            youtubeRepository = get(),
+            configManager = get(),
+            scope = params.get(),
+        )
+    }
+
+    single<ConfigManager> {
+        ConfigManagerImpl(
+            logger = Logger.withTag(ConfigManager::class.simpleName!!),
+            database = get(),
+            googleAuth = get(),
+            scope = CoroutineScope(Dispatchers.Default),
+        )
+    }
+
+    single<DataTimeService> {
+        DateTimeServiceImpl()
+    }
+    single<UuidProvider> {
+        UuidProviderImpl()
     }
 }
 
@@ -79,25 +113,8 @@ private val databaseModule
         single {
             VidGeniusDatabase(
                 driver = get(),
-                VideoAdapter = get(),
-                YtVideoAdapter = get(),
                 ConfigAdapter = get(),
-            )
-        }
-        single {
-            Video.Adapter(
-                screenshotsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
-                descriptionsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
-                createdAtAdapter = InstantComponentSerializer.asColumnAdapter(),
-                modifiedAtAdapter = InstantComponentSerializer.asColumnAdapter(),
-                contentInfoAdapter = ContentInfo.serializer().asColumnAdapter(),
-            )
-        }
-        single {
-            YtVideo.Adapter(
-                tagsAdapter = ListSerializer(String.serializer()).asColumnAdapter(),
-                publishedAtAdapter = InstantComponentSerializer.asColumnAdapter(),
-                privacyStatusAdapter = PrivacyStatus.serializer().asColumnAdapter(),
+                VideoAdapter = get(),
             )
         }
         single {
@@ -105,6 +122,15 @@ private val databaseModule
                 ytConfigAdapter = YtConfig.serializer().asColumnAdapter(),
                 categoryAdapter = Category.serializer().asColumnAdapter(),
                 selectedPrivacyStatusesAdapter = ListSerializer(PrivacyStatus.serializer()).asColumnAdapter(),
+            )
+        }
+        single {
+            Video.Adapter(
+                ytVideoAdapter = YtVideo.serializer().asColumnAdapter(),
+                localVideoAdapter = LocalVideo.serializer().asColumnAdapter(),
+                progressStateAdapter = ProgressState.serializer().asColumnAdapter(),
+                createdAtAdapter = InstantComponentSerializer.asColumnAdapter(),
+                modifiedAtAdapter = InstantComponentSerializer.asColumnAdapter(),
             )
         }
     }

@@ -3,27 +3,30 @@ package com.charleex.vidgenius.datasource
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.db.VidGeniusDatabase
 import com.charleex.vidgenius.datasource.db.Video
-import com.charleex.vidgenius.datasource.db.YtVideo
-import com.charleex.vidgenius.datasource.feature.open_ai.OpenAiRepository
-import com.charleex.vidgenius.datasource.feature.video_file.VideoFileRepository
-import com.charleex.vidgenius.datasource.feature.vision_ai.GoogleCloudRepository
+import com.charleex.vidgenius.datasource.feature.local_video.LocalVideoProcessor
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
 import com.charleex.vidgenius.datasource.feature.youtube.model.Category
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
+import com.charleex.vidgenius.datasource.model.LocalVideo
+import com.charleex.vidgenius.datasource.model.YtVideo
+import com.charleex.vidgenius.datasource.utils.DataTimeService
+import com.charleex.vidgenius.datasource.utils.UuidProvider
+import com.charleex.vidgenius.open_ai.OpenAiRepository
+import com.charleex.vidgenius.vision_ai.GoogleCloudRepository
+import com.squareup.sqldelight.runtime.coroutines.asFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.io.File
 
 interface VideoProcessing {
-    val videos: StateFlow<List<Video>>
+    suspend fun addLocalVideos(files: List<*>)
+    fun flowOfVideos(): Flow<List<Video>>
+    fun deleteLocalVideo(video: Video)
 
-    fun addVideos(files: List<*>)
-    fun deleteVideo(videoId: String)
-    fun processAll(videos: List<Video>, onError: (String) -> Unit)
+    suspend fun processVideoToScreenshots(
+        video: Video,
+        numberOfScreenshots: Int,
+        onError: (String) -> Unit,
+    )
 
     fun signOut()
 }
@@ -31,82 +34,72 @@ interface VideoProcessing {
 internal class VideoProcessingImpl(
     private val logger: Logger,
     private val database: VidGeniusDatabase,
-    private val videoFileRepository: VideoFileRepository,
+    private val localVideoProcessor: LocalVideoProcessor,
     private val googleCloudRepository: GoogleCloudRepository,
     private val openAiRepository: OpenAiRepository,
     private val youtubeRepository: YoutubeRepository,
-    private val scope: CoroutineScope,
+    private val uuidProvider: UuidProvider,
+    private val datetimeService: DataTimeService,
 ) : VideoProcessing {
     companion object {
-        private const val MAX_RETRIES = 3
         val languageCodes = listOf("en-US", "es", "zh", "pt", "hi")
     }
 
-    override val videos: StateFlow<List<Video>> = videoFileRepository.flowOfVideos()
-        .stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
+    override fun flowOfVideos(): Flow<List<Video>> =
+        database.videoQueries.getAll().asFlow().map { it.executeAsList() }
 
-    override fun addVideos(files: List<*>) {
+    override suspend fun addLocalVideos(files: List<*>) {
         logger.d("Adding videos $files")
-        scope.launch {
-            videoFileRepository.filterVideos(files)
+        val filteredFiles = localVideoProcessor.filterVideos(files)
+        val localVideos = filteredFiles.map { videoFile ->
+            val videoName = videoFile.nameWithoutExtension
+                .replace("_", " ")
+            logger.d("Storing video ${videoFile.absolutePath} | youtubeVideoId: $videoName")
+            LocalVideo(
+                id = uuidProvider.uuid(),
+                name = videoName,
+                path = videoFile.absolutePath,
+                screenshots = emptyList(),
+                descriptions = emptyList(),
+                descriptionContext = null,
+                contentInfo = null,
+                isCompleted = false,
+                createdAt = datetimeService.nowInstant(),
+                modifiedAt = datetimeService.nowInstant(),
+            )
         }
+
+        // TODO: Handle LocalVideos
     }
 
-    override fun deleteVideo(videoId: String) {
-        logger.d("Deleting video $videoId")
-        videoFileRepository.deleteVideo(videoId)
+    override fun deleteLocalVideo(video: Video) {
+        logger.d("Deleting video ${video.id}")
+        val newVideo = video.copy(localVideo = null)
+        database.videoQueries.upsert(newVideo)
     }
 
-    override fun processAll(videos: List<Video>, onError: (String) -> Unit) {
-        scope.launch {
-            val jobs = videos.map { video ->
-                // Start each processVideo coroutine asynchronously
-                scope.async {
-                    startProcessing(video, 3) {
-                        onError(it)
-                    }
-                }
-            }
-
-            awaitAll(*jobs.toTypedArray())
-        }
-    }
-
-    private suspend fun startProcessing(
+    override suspend fun processVideoToScreenshots(
         video: Video,
         numberOfScreenshots: Int,
-        tryIndex: Int = 0,
         onError: (String) -> Unit,
     ) {
-        logger.d("Processing video ${video.id} | Try $tryIndex")
-        try {
-            val ytVideo = youtubeRepository.ytVideos.value
-                .firstOrNull { it.title == video.youtubeTitle }
-                ?: error("No yt video found for ${video.youtubeTitle}")
+        if (video.localVideo == null) return
+        if (video.ytVideo == null) return
 
-            val config = database.configQueries.getAll().executeAsOne()
+        logger.d("Processing video ${video.id}")
+        val config = database.configQueries.getAll().executeAsOne()
 
-            val videoWithScreenshots = processVideo(video, 3)
-            val videoWithDescriptions =
-                processScreenshotsToText(videoWithScreenshots, numberOfScreenshots)
-            val videoWithDescriptionContext =
-                processDescriptions(videoWithDescriptions, config.category)
+        val videoWithScreenshots = processVideoToScreenshots(video.localVideo, 3)
+        val videoWithDescriptions =
+            processScreenshotsToText(videoWithScreenshots, numberOfScreenshots)
+        val videoWithDescriptionContext =
+            processDescriptionsToContext(videoWithDescriptions, config.category)
 
-            logger.d { "Context: $videoWithDescriptionContext" }
+        logger.d { "Context: $videoWithDescriptionContext" }
 
-            val videoWithMetadata = generateMetaData(videoWithDescriptionContext, config.category)
-            updateYouTubeVideo(ytVideo, videoWithMetadata)
-            logger.v { "Processing $video | Finished" }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            val nextTryIndex = tryIndex + 1
-            if (nextTryIndex < MAX_RETRIES) {
-                onError(e.message ?: "Error while processing ${video.id} | Retrying $nextTryIndex")
-                startProcessing(video, numberOfScreenshots, nextTryIndex, onError)
-            } else {
-                onError(e.message ?: "Error while processing ${video.id}")
-            }
-        }
+        val videoWithMetadata = generateMetaData(videoWithDescriptionContext, config.category)
+        updateYouTubeVideo(video.ytVideo, videoWithMetadata)
+        logger.v { "Processing ${video.id} | Finished" }
     }
 
     override fun signOut() {
@@ -147,86 +140,96 @@ internal class VideoProcessingImpl(
 //        return this.replace(emojiRegex, "")
 //    }
 //
-    private suspend fun processVideo(video: Video, numberOfScreenshots: Int): Video {
-        val hasScreenshots = video.screenshots.size == numberOfScreenshots
+    private suspend fun processVideoToScreenshots(
+        localVideo: LocalVideo,
+        numberOfScreenshots: Int,
+    ): LocalVideo {
+        val hasScreenshots = localVideo.screenshots.size == numberOfScreenshots
         if (!hasScreenshots) {
-            logger.d("No screenshots | ${video.id}")
+            logger.d("No screenshots | ${localVideo.id}")
         }
-        val screenshotsHaveText = video.descriptions.all { it.isNotEmpty() }
+        val screenshotsHaveText = localVideo.descriptions.all { it.isNotEmpty() }
 
-        val allFilesExist = video.screenshots.all { File(it).exists() }
+        val allFilesExist = localVideo.screenshots.all { File(it).exists() }
         if (hasScreenshots && screenshotsHaveText && allFilesExist) {
-            logger.d("Screenshots already exist | ${video.id}")
-            return video
+            logger.d("Screenshots already exist | ${localVideo.id}")
+            return localVideo
         }
 
-        logger.d("Video processing | ${video.id} | Start")
-        val newVideo = try {
-            videoFileRepository.captureScreenshots(video, numberOfScreenshots)
+        logger.d("Video processing | ${localVideo.id} | Start")
+        val screenshots = try {
+            localVideoProcessor.captureScreenshots(localVideo.path, numberOfScreenshots)
         } catch (e: Exception) {
             logger.e(e) { "Error generating screenshots" }
             throw e
         }
-        logger.d("Video processing | ${video.id} | Done | ${newVideo.screenshots}")
-        return newVideo
+        logger.d("Video processing | ${localVideo.id} | Done | $screenshots")
+        return localVideo.copy(screenshots = screenshots)
     }
 
-    private suspend fun processScreenshotsToText(video: Video, numberOfScreenshots: Int): Video {
-        val hasDescriptions = video.descriptions.size == numberOfScreenshots
+    private suspend fun processScreenshotsToText(
+        localVideo: LocalVideo,
+        numberOfScreenshots: Int,
+    ): LocalVideo {
+        val hasDescriptions = localVideo.descriptions.size == numberOfScreenshots
         if (!hasDescriptions) {
-            logger.d("No descriptions | ${video.id}")
+            logger.d("No descriptions | ${localVideo.id}")
         }
-        val allDescriptionsHaveText = video.descriptions.all { it.isNotEmpty() }
+        val allDescriptionsHaveText = localVideo.descriptions.all { it.isNotEmpty() }
         if (!allDescriptionsHaveText) {
-            logger.d("Not all descriptions have text | ${video.id}")
+            logger.d("Not all descriptions have text | ${localVideo.id}")
         }
         if (hasDescriptions && allDescriptionsHaveText) {
-            logger.d("Already has descriptions | ${video.id}")
-            return video
+            logger.d("Already has descriptions | ${localVideo.id}")
+            return localVideo
         }
 
-        logger.d("Text processing | ${video.id} | Start")
-        val newVideo = try {
-            googleCloudRepository.getTextFromImages(video)
+        logger.d("Text processing | ${localVideo.id} | Start")
+        val descriptions = try {
+            googleCloudRepository.getDescriptionsFromScreenshots(localVideo.screenshots)
         } catch (e: Exception) {
             logger.e(e) { "Error generating descriptions" }
             throw e
         }
-        logger.d("Text processing | ${video.id} | Done | ${newVideo.descriptions}")
+        val newVideo = localVideo.copy(descriptions = descriptions)
+        logger.d("Text processing | ${localVideo.id} | Done | ${newVideo.descriptions}")
         return newVideo
     }
 
-    private suspend fun processDescriptions(video: Video, category: Category): Video {
-        val hasDescriptionContext = video.descriptionContext.isNullOrEmpty().not()
+    private suspend fun processDescriptionsToContext(
+        localVideo: LocalVideo,
+        category: Category,
+    ): LocalVideo {
+        val hasDescriptionContext = localVideo.descriptionContext.isNullOrEmpty().not()
         if (hasDescriptionContext) {
-            logger.d("Already has description context | ${video.id}")
-            return video
+            logger.d("Already has description context | ${localVideo.id}")
+            return localVideo
         }
 
-        logger.d("Description processing | ${video.id} | Start")
-        val newVideo = try {
-            openAiRepository.getDescriptionContext(video, category)
+        logger.d("Description processing | ${localVideo.id} | Start")
+        val context = try {
+            openAiRepository.getContextFromDescriptions(localVideo.descriptions, category.query)
         } catch (e: Exception) {
             logger.e(e) { "Error generating description context" }
             throw e
         }
-        logger.d("Description processing | ${video.id} | Done | ${newVideo.descriptionContext}")
-        return newVideo
+        logger.d("Description processing | ${localVideo.id} | Done | $context")
+        return localVideo.copy(descriptionContext = context)
     }
 
-    private suspend fun generateMetaData(video: Video, category: Category): Video {
-        val hasContentInfoEnUS = video.contentInfo.enUS.title.isNotEmpty() &&
-                video.contentInfo.enUS.description.isNotEmpty()
-        val hasContentInfoPt = video.contentInfo.pt.title.isNotEmpty() &&
-                video.contentInfo.pt.description.isNotEmpty()
-        val hasContentInfoEs = video.contentInfo.es.title.isNotEmpty() &&
-                video.contentInfo.es.description.isNotEmpty()
-        val hasContentInfoFr = video.contentInfo.zh.title.isNotEmpty() &&
-                video.contentInfo.es.description.isNotEmpty()
-        val hasContentInfoHi = video.contentInfo.hi.title.isNotEmpty() &&
-                video.contentInfo.es.description.isNotEmpty()
-        val hasTags = video.contentInfo.tags.isNotEmpty()
-        val tagsHaveText = video.contentInfo.tags.all { it.isNotEmpty() }
+    private suspend fun generateMetaData(localVideo: LocalVideo, category: Category): LocalVideo {
+        val hasContentInfoEnUS = localVideo.contentInfo?.enUS?.title?.isNotEmpty() == true &&
+                localVideo.contentInfo.enUS.description.isNotEmpty()
+        val hasContentInfoPt = localVideo.contentInfo?.pt?.title?.isNotEmpty() == true &&
+                localVideo.contentInfo.pt.description.isNotEmpty()
+        val hasContentInfoEs = localVideo.contentInfo?.es?.title?.isNotEmpty() == true &&
+                localVideo.contentInfo.es.description.isNotEmpty()
+        val hasContentInfoFr = localVideo.contentInfo?.zh?.title?.isNotEmpty() == true &&
+                localVideo.contentInfo.es.description.isNotEmpty()
+        val hasContentInfoHi = localVideo.contentInfo?.hi?.title?.isNotEmpty() == true &&
+                localVideo.contentInfo.es.description.isNotEmpty()
+        val hasTags = localVideo.contentInfo?.tags?.isNotEmpty() == true
+        val tagsHaveText = localVideo.contentInfo?.tags?.all { it.isNotEmpty() } == true
 
         if (
             hasContentInfoEnUS &&
@@ -237,34 +240,32 @@ internal class VideoProcessingImpl(
             hasTags &&
             tagsHaveText
         ) {
-            logger.d("Metadata generation | ${video.id} | Already has metadata")
-            return video
+            logger.d("Metadata generation | ${localVideo.id} | Already has metadata")
+            return localVideo
         }
 
-        logger.d("Metadata generation | ${video.id} | Start")
-        val newVideo = try {
-            openAiRepository.getMetaData(video, category)
+        logger.d("Metadata generation | ${localVideo.id} | Start")
+        val contentInfo = try {
+            openAiRepository.getContentInfo(localVideo.descriptions, category.query, languageCodes)
         } catch (e: Exception) {
             logger.e(e) { "Error generating metadata" }
             throw e
         }
-        logger.d("Metadata generation | ${video.id} | Done")
-        return newVideo
+        logger.d("Metadata generation | ${localVideo.id} | Done")
+        return localVideo.copy(contentInfo = contentInfo)
     }
 
     private suspend fun updateYouTubeVideo(
         ytVideo: YtVideo,
-        video: Video,
+        localVideo: LocalVideo,
     ) {
-        logger.d("Updating YouTube video | ${video.youtubeTitle} | Start")
-        val result = youtubeRepository.updateVideo(ytVideo, video)
-        if (result) {
-            val newVideo = video.copy(isCompleted = true)
-            database.videoQueries.upsert(newVideo)
-            database.ytVideoQueries.delete(video.youtubeTitle)
-            logger.d("Upload YouTube video | ${video.id} | Done | $result")
-        } else {
-            logger.e { "Error updating YouTube video | ${video.youtubeTitle}" }
-        }
+        logger.d("Updating YouTube video ${ytVideo.id} | Start")
+//        val result = youtubeRepository.updateVideo(ytVideo, localVideo)
+//        if (result) {
+//            val newVideo = localVideo.copy(isCompleted = true)
+//            logger.d("Upload YouTube video | ${localVideo.id} | Done | $result")
+//        } else {
+//            logger.e { "Error updating YouTube video | ${ytVideo.id}" }
+//        }
     }
 }

@@ -32,7 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.unit.dp
-import com.charleex.vidgenius.datasource.db.Video
+import com.charleex.vidgenius.datasource.model.LocalVideo
 import com.charleex.vidgenius.ui.components.LocalImage
 import com.charleex.vidgenius.ui.components.SectionContainer
 import com.charleex.vidgenius.ui.util.pretty
@@ -40,7 +40,7 @@ import com.charleex.vidgenius.ui.util.pretty
 @Composable
 internal fun CompletedVideo(
     modifier: Modifier = Modifier,
-    video: Video,
+    video: LocalVideo,
     isOnYt: Boolean = true,
     onDeleteClicked: () -> Unit,
 ) {
@@ -48,7 +48,7 @@ internal fun CompletedVideo(
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     SectionContainer(
-        name = video.youtubeTitle,
+        name = video.id,
         openInitially = false,
         modifier = modifier,
         extra = {
@@ -134,7 +134,7 @@ internal fun CompletedVideo(
 
 @Composable
 fun ContentText(
-    video: Video,
+    video: LocalVideo,
     modifier: Modifier = Modifier,
 ) {
     val clipboardManager = LocalClipboardManager.current
@@ -209,30 +209,30 @@ fun ContentText(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    LocalizationItem(
-                        languageCode = "English",
-                        title = video.contentInfo.enUS.title,
-                        description = video.contentInfo.enUS.description,
-                    )
-                    LocalizationItem(
-                        languageCode = "Spanish",
-                        title = video.contentInfo.es.title,
-                        description = video.contentInfo.es.description,
-                    )
-                    LocalizationItem(
-                        languageCode = "Hindi",
-                        title = video.contentInfo.hi.title,
-                        description = video.contentInfo.hi.description,
-                    )
-                    Text(
-                        text = "Tags: ${video.contentInfo.tags.joinToString(", ")}",
-                    )
+//                    LocalizationItem(
+//                        languageCode = "English",
+//                        title = video.contentInfo.enUS.title,
+//                        description = video.contentInfo.enUS.description,
+//                    )
+//                    LocalizationItem(
+//                        languageCode = "Spanish",
+//                        title = video.contentInfo.es.title,
+//                        description = video.contentInfo.es.description,
+//                    )
+//                    LocalizationItem(
+//                        languageCode = "Hindi",
+//                        title = video.contentInfo.hi.title,
+//                        description = video.contentInfo.hi.description,
+//                    )
+//                    Text(
+//                        text = "Tags: ${video.contentInfo.tags.joinToString(", ")}",
+//                    )
                 }
             }
-            Text(
-                text = "Youtube Video Id: ${video.youtubeTitle}",
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+//            Text(
+//                text = "Youtube Video Id: ${video.youtubeTitle}",
+//                modifier = Modifier.align(Alignment.CenterHorizontally)
+//            )
         }
     }
 }

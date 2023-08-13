@@ -2,6 +2,8 @@ plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
     id("com.squareup.sqldelight")
+    id("com.google.devtools.ksp")
+    id("org.jetbrains.kotlinx.kover") version "0.7.3"
 }
 
 group = "com.charleex.vidgenius.datasource"
@@ -12,6 +14,11 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                implementation(projects.openAi)
+                implementation(projects.visionAi)
+                implementation(projects.youtube)
+                implementation(projects.videoScreenshots)
+
                 implementation(libs.koin.core)
 
                 implementation(libs.kotlin.dateTime)
@@ -91,4 +98,8 @@ dependencies {
         .forEach {
             add(it.name, libs.test.mockative.processor)
         }
+}
+
+ksp {
+    arg("mockative.stubsUnitByDefault", "true")
 }

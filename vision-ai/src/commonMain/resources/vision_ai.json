@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "autovidyt",
+  "private_key_id": "9142f31d5049ee09924ba5f46451219d275658fc",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQCebGtoR+gsEBGS\n3sRSnLiXLTySD0Bp0ZIZ7etvG1ahjHBAKsD9+9i/Fj/ko9Psw4k7vQvXm80izm9i\nxQWuBfV2jU1eHJHb9F3iKhvANAsl1uJ4j74FT7nCwcccZW9YmAhRt1DuOc8w1r23\nReKgPguBlQIdXLfDAHUGVLifPXbYHiNYKJXAA4CKjREciNeGzhBN2A3AGafVlx3Q\nETlwiVJAnSmhWGkCGODpO9areAw2P4hLDq1hK0XWgjTXq+Aa8XnvEZN2W7kNG0ou\nBbpfqtjin3AykwQRNTt83l3QhnOH6YINU+UUmbCySD+cJi1aCuxVW7i5SUsUrwEA\nVARkbDCnAgMBAAECggEAOsc4LJctTZfipU7woUQTesemZvywpfJDFkq/ZNhMUqD0\nDuKt+y4DU5aSOycLnJdJ5fe0mpjsSeM00X0PJ+t/EK7Ji0bnWSf3409DP5Mvpaju\nGtQeKQNVBSz3TpJV9xVlVMhChzi8pj6uYf7UYCbVBw19nN5HMdsMED7DxxU7cGBc\njh+l9ctHfw83FuAJnxwpekC+gvEALVEtY2KFTsvLWnaTiLfa3iwsSaRWEKaSaPl+\nVLKRMvH2sa52UxOZdz3bM604W0NF4idT7Kzn4oWDvjHLAqXh70ijc0k/vEW/JRiR\ngx2yqOYQo8r5ReMm2MvQtpCQXbZaEebIWQk3ZQLdeQKBgQDUgnnSNDUPA1T0GS6Z\n6t/5ATSXDS2b7TbmHJNoGU2gXLzQ3VzuLIOue1buL/w+lGT2VfeCK0VMLC2cF+WT\ngWO7oDOGKNIOF/r1vARKFFXUs9O77hCLw6SJ+tvae9jpxfU/W15l769bqyPVq2ub\ny2peoeemvu6Fg2TEFIolGecz3wKBgQC+2FVqNDFlQ7RYZDzNvU6SM7MzXQr6MMkX\nvJa/I6on5hPXK4jEqdkUEVVpNioA1gGt7yoGqAHY7Rq0+vG6VRMQOmgSZ2znLhJK\nI1x8h2RCK8dsGi03aQhdnpN/XIQwcVj2VOsiSgZugf7PuqP/sEdv2si5NLtD/P7l\nJMBFbGLcOQKBgQC/aqeAiDYix8WF+gjX65DDIirUxLIIeauxqpu8cM5TXDVXjY1f\nnAkg6UhsVBzJ4bDvko/XWFKbQk/zAjNwomPLZYoDllFfEIqlPi4+7AJEDZby+IU+\n34MeJjBSpKvGJuG5p/tnpnY2A/nLRRUwyBGQHBYlRGZlLO1fEYE92g8/0QJ/HRLX\n8FYDMGogD1c17CHq1lsJ8ck64uKLwBH65SOJyIpEe4MmUs+NQoFhgaW+wGHZ36WP\nwXPW1DVK3EdejARp4w8Cy8r1zEI4hxLcBBycKXiB6PYT7V0S6TA/SCfP+5FI/D3z\nlEWytSMYrozAbzNrrp6l9ZES9kiUjFQM9oaMiQKBgHOnxAjAHPlNekCSDVW5+qHP\nBMGW2ZQpxkw4KW/ObOdiZm/ouens0mmDjKJCPyiG5Fd9akrT44EpdftiZcRB/PTw\nsFtQbv7v/JsA0m701A/kDvB7iZIcstCl+KPk/oAq8/V+JiakFVrXJMnraoyeb0ht\neWq/5pAbmLyKPCE/UrWe\n-----END PRIVATE KEY-----\n",
+  "client_email": "visiopapi-service-account@autovidyt.iam.gserviceaccount.com",
+  "client_id": "113032457260887096447",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/visiopapi-service-account%40autovidyt.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

@@ -12,14 +12,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.charleex.vidgenius.datasource.db.Video
-import com.charleex.vidgenius.datasource.db.YtVideo
+import com.charleex.vidgenius.datasource.model.LocalVideo
+import com.charleex.vidgenius.datasource.model.YtVideo
 import com.charleex.vidgenius.ui.components.SectionContainer
 
 @Composable
 fun YtSection(
     ytVideos: List<YtVideo>,
-    videos: List<Video>,
+    videos: List<LocalVideo>,
     isFetchingUploads: Boolean,
     onRefresh: () -> Unit,
 ) {
@@ -64,14 +64,14 @@ fun YtSection(
                 .padding(24.dp)
         ) {
             ytVideos.forEach { ytVideo ->
-                val videoYtIds = videos.map { it.youtubeTitle }
-                val isFoundLocally = ytVideo.title in videoYtIds
-                println("isFoundLocally: $isFoundLocally, ytVideo: ${ytVideo.title}, videos: $videoYtIds")
-                YtVideoItem(
-                    ytVideo = ytVideo,
-                    isFoundLocally = videos.any { it.youtubeTitle == ytVideo.title },
-                    modifier = Modifier.fillMaxWidth()
-                )
+//                val videoYtIds = videos.map { it.youtubeTitle }
+//                val isFoundLocally = ytVideo.title in videoYtIds
+//                println("isFoundLocally: $isFoundLocally, ytVideo: ${ytVideo.title}, videos: $videoYtIds")
+//                YtVideoItem(
+//                    ytVideo = ytVideo,
+//                    isFoundLocally = videos.any { it.youtubeTitle == ytVideo.title },
+//                    modifier = Modifier.fillMaxWidth()
+//                )
             }
         }
     }

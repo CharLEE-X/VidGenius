@@ -2,17 +2,16 @@ import java.lang.String;
 import kotlin.Boolean;
 import kotlin.collections.List;
 import kotlinx.datetime.Instant;
-import com.charleex.vidgenius.datasource.feature.open_ai.model.ContentInfo;
+import com.charleex.vidgenius.open_ai.model.ContentInfo;
+import com.charleex.vidgenius.datasource.model.ProgressState;
+import com.charleex.vidgenius.datasource.model.YtVideo;
+import com.charleex.vidgenius.datasource.model.LocalVideo;
 
 CREATE TABLE IF NOT EXISTS Video (
   id TEXT PRIMARY KEY NOT NULL,
-  youtubeTitle TEXT NOT NULL,
-  path TEXT NOT NULL,
-  screenshots TEXT AS List<String> NOT NULL,
-  descriptions TEXT AS List<String> NOT NULL,
-  descriptionContext TEXT,
-  contentInfo TEXT AS ContentInfo NOT NULL,
-  isCompleted INTEGER AS Boolean DEFAULT 0 NOT NULL,
+  ytVideo TEXT AS YtVideo,
+  localVideo TEXT AS LocalVideo,
+  progressState TEXT AS ProgressState NOT NULL,
   createdAt TEXT AS Instant NOT NULL,
   modifiedAt TEXT AS Instant NOT NULL
 );
