@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.ui.features.generation.components
+package com.charleex.vidgenius.ui.features.videos.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

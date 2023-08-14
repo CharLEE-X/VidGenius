@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.map
 
 interface YoutubeRepository {
     suspend fun fetchUploads(config: String): Flow<List<YouTubeItem>>
+    fun getChannelName(config: String): String?
+    suspend fun getVideoExtendedDetails(youTubeItem: YouTubeItem, config: String): YouTubeItem
 
     //    suspend fun updateVideo(ytVideo: YtVideo, localVideo: LocalVideo): Boolean
     fun signOut()
@@ -19,11 +21,21 @@ internal class YoutubeRepositoryImpl(
     private val googleAuth: GoogleAuth,
     private val youTubeService: YouTubeService,
 ) : YoutubeRepository {
-
     override suspend fun fetchUploads(config: String): Flow<List<YouTubeItem>> {
         logger.d { "Getting channel uploads" }
         return youTubeService.getUploadList(config)
             .map { it.map { it.toYouTubeItem() } }
+    }
+
+    override fun getChannelName(config: String): String {
+        return youTubeService.getChannel(config).snippet?.title ?: "No channel name"
+    }
+
+    override suspend fun getVideoExtendedDetails(
+        youTubeItem: YouTubeItem,
+        config: String,
+    ): YouTubeItem {
+        return youTubeService.getVideoDetail(youTubeItem.id, config)?.toYouTubeItem() ?: youTubeItem
     }
 
 //    override suspend fun updateVideo(ytVideo: YtVideo, localVideo: LocalVideo): Boolean {
@@ -76,6 +88,17 @@ internal class YoutubeRepositoryImpl(
 internal class YoutubeRepositoryDebug() : YoutubeRepository {
 
     override suspend fun fetchUploads(config: String): Flow<List<YouTubeItem>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getChannelName(config: String): String? {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getVideoExtendedDetails(
+        youTubeItem: YouTubeItem,
+        config: String,
+    ): YouTubeItem {
         TODO("Not yet implemented")
     }
 

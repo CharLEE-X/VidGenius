@@ -111,7 +111,7 @@ object SegmentDefaults {
 data class SegmentSpec(
     val label: String,
     val icon: ImageVector? = null,
-    val borderWidth: Dp = 1.dp,
+    val borderWidth: Dp = 2.dp,
     val tonalElevation: Dp = 1.dp,
     val shadowElevation: Dp = 0.dp,
     val iconPadding: Dp = 8.dp,
@@ -411,13 +411,13 @@ private fun Segment(
     )
 
     val translationX = when (segmentType) {
-        SegmentType.START -> borderWidth.value
+        SegmentType.START -> borderWidth.value + 1
 
         SegmentType.INNER,
         SegmentType.SINGLE,
         -> 0F
 
-        SegmentType.END -> -borderWidth.value
+        SegmentType.END -> -borderWidth.value - 1
     }
 
     val backgroundColor by animateColorAsState(

@@ -40,6 +40,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
+import com.charleex.vidgenius.ui.util.pretty
 import com.lt.load_the_image.rememberImagePainter
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -48,110 +49,116 @@ fun AppListItem(
     video: Video,
     onClick: (String) -> Unit,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    var isHovered by remember { mutableStateOf(false) }
+    video.ytVideo?.let { ytVideo ->
+        val interactionSource = remember { MutableInteractionSource() }
+        val isPressed by interactionSource.collectIsPressedAsState()
+        var isHovered by remember { mutableStateOf(false) }
 
-//    val privacyIcon = when (privacyStatus) {
-//        PrivacyStatus.PUBLIC -> Icons.Default.Visibility
-//        PrivacyStatus.UNLISTED -> Icons.Default.Pending
-//        PrivacyStatus.PRIVATE -> Icons.Default.VisibilityOff
-//    }
-//    val tonalElevation = when (privacyStatus) {
-//        PrivacyStatus.PUBLIC -> 1.dp
-//        PrivacyStatus.UNLISTED -> 3.dp
-//        PrivacyStatus.PRIVATE -> 6.dp
-//    }
-
-//    val bgColor = when {
-//        isHovered && isPressed -> tonalElevation + 6.dp
-//        isHovered && !isPressed -> tonalElevation + 1.dp
-//        else -> tonalElevation
-//    }
-
-    val scale by animateFloatAsState(
-        targetValue = when {
-            isHovered && isPressed -> 0.99f
-            isHovered && !isPressed -> 1f
-            else -> 1f
+        val privacyIcon = when (ytVideo.privacyStatus) {
+            PrivacyStatus.PUBLIC -> Icons.Default.Visibility
+            PrivacyStatus.UNLISTED -> Icons.Default.Pending
+            PrivacyStatus.PRIVATE -> Icons.Default.VisibilityOff
         }
-    )
+        val tonalElevation = when (ytVideo.privacyStatus) {
+            PrivacyStatus.PUBLIC -> 1.dp
+            PrivacyStatus.UNLISTED -> 3.dp
+            PrivacyStatus.PRIVATE -> 6.dp
+        }
 
-    Surface(
-//        tonalElevation = bgColor,
-        shape = CutCornerShape(12.dp),
-        border = BorderStroke(
-            width = 1.dp,
-            color = when {
-                isHovered && isPressed -> MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                isHovered && !isPressed -> MaterialTheme.colorScheme.primaryContainer
-                else -> Color.Transparent
+        val bgColor = when {
+            isHovered && isPressed -> tonalElevation + 6.dp
+            isHovered && !isPressed -> tonalElevation + 1.dp
+            else -> tonalElevation
+        }
+
+        val scale by animateFloatAsState(
+            targetValue = when {
+                isHovered && isPressed -> 0.99f
+                isHovered && !isPressed -> 1f
+                else -> 1f
             }
-        ),
-        modifier = Modifier
-            .onPointerEvent(
-                eventType = PointerEventType.Enter,
-                onEvent = { isHovered = true },
-            )
-            .onPointerEvent(
-                eventType = PointerEventType.Exit,
-                onEvent = { isHovered = false },
-            )
-            .clickable(
-                indication = null,
-                interactionSource = interactionSource,
-                onClick = { }
-            )
-            .graphicsLayer(
-                scaleX = scale,
-                scaleY = scale,
-            )
-    ) {
-        Column {
-            ListItem(
-                headlineContent = {
-//                    Text(title)
-                },
-                leadingContent = {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                    ) {
-//                        thumbnailUrl?.let {
-//                            Image(
-//                                rememberImagePainter(it),
-//                                contentDescription = null,
-//                                contentScale = ContentScale.Crop,
-//                                modifier = Modifier
-//                                    .width(60.dp)
-//                                    .height(60.dp)
-//                            )
-//                        } ?: Icon(
-//                            Icons.Default.Error,
-//                            contentDescription = null,
-//                        )
-                    }
-                },
-                supportingContent = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-//                        Icon(
-//                            imageVector = privacyIcon,
-//                            contentDescription = null,
-//                            modifier = Modifier
-//                                .width(16.dp)
-//                                .height(16.dp)
-//                        )
-//                        Text(publishedAt)
-                    }
-                },
-                trailingContent = {
-                    // TODO: Add more
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-            )
+        )
+
+        Surface(
+            tonalElevation = bgColor,
+            shape = CutCornerShape(12.dp),
+            border = BorderStroke(
+                width = 1.dp,
+                color = when {
+                    isHovered && isPressed -> MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                    isHovered && !isPressed -> MaterialTheme.colorScheme.primaryContainer
+                    else -> Color.Transparent
+                }
+            ),
+            modifier = Modifier
+                .onPointerEvent(
+                    eventType = PointerEventType.Enter,
+                    onEvent = { isHovered = true },
+                )
+                .onPointerEvent(
+                    eventType = PointerEventType.Exit,
+                    onEvent = { isHovered = false },
+                )
+                .clickable(
+                    indication = null,
+                    interactionSource = interactionSource,
+                    onClick = { onClick(video.id) }
+                )
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                )
+        ) {
+            Column {
+                ListItem(
+                    headlineContent = {
+                        Text(video.ytVideo?.title ?: video.localVideo?.name ?: "Unknown")
+                    },
+                    leadingContent = {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                        ) {
+                            val thumbnail =
+                                video.ytVideo?.thumbnailSmall ?: video.ytVideo?.thumbnailLarge
+                            thumbnail?.let {
+                                Image(
+                                    painter = rememberImagePainter(it),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .width(60.dp)
+                                        .height(60.dp)
+                                )
+                            } ?: Icon(
+                                Icons.Default.Error,
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                    supportingContent = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Icon(
+                                imageVector = privacyIcon,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .width(16.dp)
+                                    .height(16.dp)
+                            )
+                            video.ytVideo?.publishedAt?.let {
+                                Text(it.pretty())
+                            }
+                        }
+                    },
+                    trailingContent = {
+                        // TODO: Add more
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                )
+            }
         }
     }
 }

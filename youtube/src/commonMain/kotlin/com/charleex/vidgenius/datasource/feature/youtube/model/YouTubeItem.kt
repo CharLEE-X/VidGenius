@@ -11,13 +11,15 @@ data class YouTubeItem(
     val privacyStatus: String,
     val localizations: Map<String, Pair<String, String>>,
     val duration: String?,
-    val channelTitle: String,
+    val thumbnailSmall: String,
+    val thumbnailLarge: String,
     val rejectionReason: String? = null,
     val likeCount: Int? = null,
     val dislikeCount: Int? = null,
     val viewCount: Int? = null,
     val commentCount: Int? = null,
     val favoriteCount: Int? = null,
+    val publishedAt: Long? = null,
 )
 
 internal fun Video.toYouTubeItem() = YouTubeItem(
@@ -30,7 +32,8 @@ internal fun Video.toYouTubeItem() = YouTubeItem(
         key to (value.title to value.description)
     }.toMap(),
     duration = contentDetails.duration,
-    channelTitle = snippet.channelTitle,
+    thumbnailSmall = snippet.thumbnails.medium.url,
+    thumbnailLarge = snippet.thumbnails.high.url,
     rejectionReason = status.rejectionReason,
     likeCount = statistics.likeCount.toInt(),
     dislikeCount = statistics.dislikeCount.toInt(),
@@ -40,18 +43,20 @@ internal fun Video.toYouTubeItem() = YouTubeItem(
 )
 
 internal fun PlaylistItem.toYouTubeItem() = YouTubeItem(
-    id = id,
+    id = contentDetails.videoId,
     title = snippet.title,
     description = snippet.description,
     tags = emptyList(),
     privacyStatus = status.privacyStatus,
     localizations = emptyMap(),
     duration = null,
-    channelTitle = snippet.channelTitle,
     rejectionReason = null,
     likeCount = null,
     dislikeCount = null,
     viewCount = null,
     commentCount = null,
     favoriteCount = null,
+    thumbnailSmall = snippet.thumbnails.medium.url,
+    thumbnailLarge = snippet.thumbnails.high.url,
+    publishedAt = snippet.publishedAt.value,
 )

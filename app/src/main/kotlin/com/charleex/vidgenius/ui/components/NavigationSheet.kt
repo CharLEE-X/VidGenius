@@ -118,7 +118,7 @@ fun NavigationSheet(
                                 )
                             },
                             label = { Text("Generation") },
-                            selected = routerScreen == RouterScreen.Generation,
+                            selected = routerScreen == RouterScreen.Videos,
                             onClick = onGoToGeneration,
                             modifier = Modifier
                         )

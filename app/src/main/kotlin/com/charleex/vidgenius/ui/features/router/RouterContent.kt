@@ -1,20 +1,37 @@
 package com.charleex.vidgenius.ui.features.router
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.VideoService
 import com.charleex.vidgenius.datasource.feature.ConfigManager
-import com.charleex.vidgenius.ui.features.generation.GenerationContent
+import com.charleex.vidgenius.ui.components.AppVerticalScrollbar
+import com.charleex.vidgenius.ui.components.TopBar
+import com.charleex.vidgenius.ui.components.TopBarState
+import com.charleex.vidgenius.ui.features.video_detail.VideoDetailContent
+import com.charleex.vidgenius.ui.features.videos.VideosContent
 import com.copperleaf.ballast.navigation.routing.Backstack
+import com.copperleaf.ballast.navigation.routing.RouterContract
+import com.copperleaf.ballast.navigation.routing.build
+import com.copperleaf.ballast.navigation.routing.directions
+import com.copperleaf.ballast.navigation.routing.pathParameter
 import com.copperleaf.ballast.navigation.routing.renderCurrentDestination
+import com.copperleaf.ballast.navigation.routing.stringPath
 import com.copperleaf.ballast.navigation.vm.Router
 
 @Composable
@@ -29,33 +46,84 @@ internal fun RouterContent(
         remember(scope) {
             RouterViewModel(
                 viewModelScope = scope,
-                initialRoute = RouterScreen.Generation,
+                initialRoute = RouterScreen.Videos,
             )
         }
     val routerState: Backstack<RouterScreen> by router.observeStates().collectAsState()
 
+    val listState = rememberLazyListState()
+    var lazyListState: LazyListState by remember { mutableStateOf(listState) }
+    var title: String? by remember { mutableStateOf(null) }
+    var topBarState: TopBarState by remember { mutableStateOf(TopBarState.VideoList) }
+
     Surface(
-        tonalElevation = 0.dp,
-        modifier = Modifier.fillMaxSize()
+        tonalElevation = 1.dp
     ) {
-        routerState.renderCurrentDestination(
-            route = { routerScreen: RouterScreen ->
-                when (routerScreen) {
-                    RouterScreen.Dashboard -> {
+        Box(
+            contentAlignment = Alignment.TopCenter,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            routerState.renderCurrentDestination(
+                route = { routerScreen: RouterScreen ->
+                    when (routerScreen) {
+                        RouterScreen.Dashboard -> {
 
-                    }
+                        }
 
-                    RouterScreen.Generation -> {
-                        GenerationContent(
-                            videoService = videoService,
-                            configManager = configManager,
-                            window = window,
-                            displayMessage = displayMessage,
-                        )
+                        RouterScreen.Videos -> {
+                            title = null
+                            topBarState = TopBarState.VideoList
+
+                            VideosContent(
+                                videoService = videoService,
+                                configManager = configManager,
+                                window = window,
+                                displayMessage = displayMessage,
+                                onItemClicked = { videoId ->
+                                    router.trySend(
+                                        RouterContract.Inputs.GoToDestination(
+                                            RouterScreen.VideoDetail
+                                                .directions()
+                                                .pathParameter("videoId", videoId)
+                                                .build()
+                                        )
+                                    )
+                                },
+                                scroll = { lazyListState = it },
+                            )
+                        }
+
+                        RouterScreen.VideoDetail -> {
+                            val videoId by stringPath("videoId")
+                            val video by videoService.getVideo(videoId).collectAsState()
+                            title = video.ytVideo?.id
+                            topBarState = TopBarState.VideoDetail
+
+                            VideoDetailContent(
+                                video = video,
+                                scroll = { lazyListState = it },
+                            )
+                        }
                     }
-                }
-            },
-            notFound = { },
-        )
+                },
+                notFound = { },
+            )
+            TopBar(
+                title = title,
+                configManager = configManager,
+                onBackClicked = {
+                    router.trySend(RouterContract.Inputs.GoBack())
+                },
+                topBarState = topBarState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+
+            AppVerticalScrollbar(
+                adapter = rememberScrollbarAdapter(lazyListState),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .fillMaxHeight(),
+            )
+        }
     }
 }

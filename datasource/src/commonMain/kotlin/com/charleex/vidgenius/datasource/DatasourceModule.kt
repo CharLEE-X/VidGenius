@@ -7,6 +7,8 @@ import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.feature.ConfigManager
 import com.charleex.vidgenius.datasource.feature.ConfigManagerImpl
 import com.charleex.vidgenius.datasource.feature.local_video.videoFileModule
+import com.charleex.vidgenius.datasource.feature.video.VideoRepository
+import com.charleex.vidgenius.datasource.feature.video.VideoRepositoryImpl
 import com.charleex.vidgenius.datasource.feature.youtube.model.Category
 import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.model.YtConfig
@@ -14,7 +16,7 @@ import com.charleex.vidgenius.datasource.feature.youtube.youtubeModule
 import com.charleex.vidgenius.datasource.model.LocalVideo
 import com.charleex.vidgenius.datasource.model.ProgressState
 import com.charleex.vidgenius.datasource.model.YtVideo
-import com.charleex.vidgenius.datasource.utils.DataTimeService
+import com.charleex.vidgenius.datasource.utils.DateTimeService
 import com.charleex.vidgenius.datasource.utils.DateTimeServiceImpl
 import com.charleex.vidgenius.datasource.utils.UuidProvider
 import com.charleex.vidgenius.datasource.utils.UuidProviderImpl
@@ -65,10 +67,20 @@ fun datasourceModule(isDebugBuild: Boolean = getIsDebugBuild()) = module {
     single<VideoService> { params ->
         VideoServiceImpl(
             logger = Logger.withTag(VideoService::class.simpleName!!),
-            videoProcessor = get(),
+            videoProcessing = get(),
             youtubeRepository = get(),
             configManager = get(),
+            videoRepository = get(),
+            uuidProvider = get(),
+            dateTimeService = get(),
             scope = params.get(),
+        )
+    }
+
+    single<VideoRepository> {
+        VideoRepositoryImpl(
+            logger = Logger.withTag(VideoRepository::class.simpleName!!),
+            database = get(),
         )
     }
 
@@ -81,7 +93,7 @@ fun datasourceModule(isDebugBuild: Boolean = getIsDebugBuild()) = module {
         )
     }
 
-    single<DataTimeService> {
+    single<DateTimeService> {
         DateTimeServiceImpl()
     }
     single<UuidProvider> {

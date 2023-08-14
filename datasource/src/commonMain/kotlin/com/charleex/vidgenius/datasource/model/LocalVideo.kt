@@ -1,6 +1,5 @@
 package com.charleex.vidgenius.datasource.model
 
-import com.charleex.vidgenius.open_ai.model.ContentInfo
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -13,7 +12,7 @@ data class LocalVideo(
     val screenshots: List<String>,
     val descriptions: List<String>,
     val descriptionContext: String?,
-    val contentInfo: ContentInfo?,
+    val localizations: Map<String, Pair<String, String>>,
     val isCompleted: Boolean,
     val createdAt: Instant = Clock.System.now(),
     val modifiedAt: Instant = Clock.System.now(),

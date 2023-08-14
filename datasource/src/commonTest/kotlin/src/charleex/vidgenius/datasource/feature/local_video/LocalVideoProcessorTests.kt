@@ -5,7 +5,7 @@ import com.charleex.vidgenius.datasource.feature.local_video.FileProcessor
 import com.charleex.vidgenius.datasource.feature.local_video.LocalVideoProcessorImpl
 import com.charleex.vidgenius.datasource.feature.local_video.LocalVideoProcessor
 import com.charleex.vidgenius.datasource.feature.local_video.ScreenshotCapturing
-import com.charleex.vidgenius.datasource.utils.DataTimeService
+import com.charleex.vidgenius.datasource.utils.DateTimeService
 import com.charleex.vidgenius.datasource.utils.UuidProvider
 import io.mockative.Mock
 import io.mockative.any
@@ -32,7 +32,7 @@ class LocalVideoProcessorTests {
     private val fileProcessor = mock(classOf<FileProcessor>())
 
     @Mock
-    private val datetimeService = mock(classOf<DataTimeService>())
+    private val datetimeService = mock(classOf<DateTimeService>())
 
     @Mock
     private val uuidProvider = mock(classOf<UuidProvider>())

@@ -1,6 +1,5 @@
 package src.charleex.vidgenius.youtube
 
-import app.cash.turbine.test
 import co.touchlab.kermit.Logger.Companion.withTag
 import com.charleex.vidgenius.datasource.feature.youtube.CREDENTIALS_DIRECTORY
 import com.charleex.vidgenius.datasource.feature.youtube.YouTubeService
@@ -9,13 +8,11 @@ import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuthImpl
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import java.io.File
+import kotlin.system.measureTimeMillis
 import kotlin.test.Test
+import kotlin.time.Duration.Companion.seconds
 
 class YouTubeServiceTests {
     private lateinit var sut: YouTubeService
@@ -43,7 +40,7 @@ class YouTubeServiceTests {
 
     private fun startTest(
         block: suspend () -> Unit,
-    ) = runTest {
+    ) = runTest(timeout = 60.seconds) {
 //        given(googleAuth)
 //            .function(googleAuth::authorizeYouTube)
 //            .whenInvokedWith(any())
@@ -60,12 +57,26 @@ class YouTubeServiceTests {
     }
 
     @Test
-    fun `test `() = startTest {
-        sut.getUploadList(config).test {
-            val item1 = awaitItem()
-            println("item1: $item1")
-            val item2 = awaitItem()
-            println("item2: $item2")
+    fun `test plylist items`() = startTest {
+        val l = measureTimeMillis {
+            sut.getUploadList(config).collect {
+
+//                val item1 = awaitItem()
+//                println("item1: $item1")
+//                val item2 = awaitItem()
+//                println("item2: $it")
+            }
         }
+        println("time: $l")
+    }
+
+    @Test
+    fun `test videos`() = startTest {
+        val l = measureTimeMillis {
+            sut.getVideoDetail("J83XMa4hqMs",config)
+        }
+        println("time: $l")
     }
 }
+
+// 33-37s only id and privacy status

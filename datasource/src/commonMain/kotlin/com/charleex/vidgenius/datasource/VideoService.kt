@@ -3,17 +3,25 @@ package com.charleex.vidgenius.datasource
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.feature.ConfigManager
+import com.charleex.vidgenius.datasource.feature.video.VideoRepository
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
 import com.charleex.vidgenius.datasource.model.LocalVideo
+import com.charleex.vidgenius.datasource.model.ProgressState
+import com.charleex.vidgenius.datasource.model.toYoutubeVideo
+import com.charleex.vidgenius.datasource.utils.DateTimeService
+import com.charleex.vidgenius.datasource.utils.UuidProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -24,6 +32,7 @@ interface VideoService {
     val videos: StateFlow<List<Video>>
     val message: StateFlow<String?>
 
+    fun getVideo(videoId: String): StateFlow<Video>
     fun startFetchingUploads()
     fun stopFetchingUploads()
 
@@ -40,9 +49,12 @@ interface VideoService {
 
 internal class VideoServiceImpl(
     private val logger: Logger,
-    private val videoProcessor: VideoProcessing,
+    private val videoProcessing: VideoProcessing,
     private val youtubeRepository: YoutubeRepository,
+    private val videoRepository: VideoRepository,
     private val configManager: ConfigManager,
+    private val uuidProvider: UuidProvider,
+    private val dateTimeService: DateTimeService,
     private val scope: CoroutineScope,
 ) : VideoService {
     companion object {
@@ -53,23 +65,70 @@ internal class VideoServiceImpl(
     private var processingAllJob: Job? = null
 
     override val isFetchingUploads: StateFlow<Boolean>
-        get() = MutableStateFlow(fetchUploadsJob?.isActive == true)
+        get() = MutableStateFlow(fetchUploadsJob?.isActive == true).asStateFlow()
 
-    override val videos: StateFlow<List<Video>>
-        get() = emptyFlow<List<Video>>()
-            .stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
+    override val videos: StateFlow<List<Video>> = flowOfVideos()
+        .stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _message = MutableStateFlow<String?>(null)
     override val message: StateFlow<String?> = _message.asStateFlow()
 
+    override fun getVideo(videoId: String): StateFlow<Video> {
+        return videoProcessing.getVideoByIdFlow(videoId)
+            .stateIn(scope, SharingStarted.WhileSubscribed(), videoProcessing.getVideoById(videoId))
+    }
+
     override fun startFetchingUploads() {
         logger.d("Starting fetching uploads")
+        val secretsFile = configManager.config.value.ytConfig?.secretsFile
+            ?: error("No yt config found")
         scope.launch {
             supervisorScope {
-                val secretsFile = configManager.config.value.ytConfig?.secretsFile
-                    ?: error("No yt config found")
                 fetchUploadsJob = launch {
-                    youtubeRepository.fetchUploads(secretsFile)
+                    youtubeRepository.fetchUploads(secretsFile).collect { youTubeItems ->
+                        logger.d("Fetched ${youTubeItems.size} uploads")
+
+                        val videosWithLocalVideos = videos.value.filter { it.localVideo != null }
+
+                        val ytVideos = youTubeItems.map { it.toYoutubeVideo() }
+
+                        val ytVideosHavingLocalVideo = ytVideos.filter { ytVideo ->
+                            videosWithLocalVideos.any { video ->
+                                video.localVideo?.name == ytVideo.title
+                            }
+                        }
+
+                        ytVideos // Existing Videos with LocalVideo's
+                            .mapNotNull { ytVideo ->
+                                val video =
+                                    videosWithLocalVideos.find { video ->
+                                        video.localVideo?.name == ytVideo.title
+                                    }
+                                video?.copy(ytVideo = ytVideo)
+                            }
+                            .also { logger.d("Existing videos: ${it.size}") }
+                            .forEach {
+                                videoRepository.updateVideo(it)
+                            }
+
+                        ytVideos // New Videos
+                            .filter { it !in ytVideosHavingLocalVideo }
+                            .also { logger.d("New videos: ${it.size}") }
+                            .map {
+                                Video(
+                                    id = uuidProvider.uuid(),
+                                    ytVideo = it,
+                                    progressState = ProgressState.Queued,
+                                    localVideo = null,
+                                    createdAt = dateTimeService.nowInstant(),
+                                    modifiedAt = dateTimeService.nowInstant(),
+                                )
+                            }
+                            .forEach {
+                                videoRepository.createVideo(it)
+                            }
+                    }
+                    logger.d("Finished fetching uploads")
                 }
             }
         }
@@ -84,13 +143,13 @@ internal class VideoServiceImpl(
     override fun addLocalVideos(files: List<*>) {
         logger.d("Adding videos $files")
         scope.launch {
-            videoProcessor.addLocalVideos(files)
+            videoProcessing.addLocalVideos(files)
         }
     }
 
     override fun deleteLocalVideo(video: Video) {
         logger.d("Deleting video ${video.localVideo?.path}")
-        videoProcessor.deleteLocalVideo(video)
+        videoProcessing.deleteLocalVideo(video)
     }
 
     override fun startProcessingAllVideos(videos: List<Video>) {
@@ -160,7 +219,7 @@ internal class VideoServiceImpl(
 
         while (tryIndex < MAX_RETRIES || !isCompleted) {
             try {
-                videoProcessor.processVideoToScreenshots(
+                videoProcessing.processVideoToScreenshots(
                     video = video,
                     numberOfScreenshots = 3,
                     onError = { msg ->
@@ -189,5 +248,18 @@ internal class VideoServiceImpl(
 //                }
             }
         }
+    }
+
+    private fun flowOfVideos(): Flow<List<Video>> {
+        return combine(
+            videoProcessing.flowOfVideos(),
+            configManager.config
+        ) { videos, config ->
+            videos.filter { video ->
+                video.ytVideo?.privacyStatus in config.selectedPrivacyStatuses
+            }
+        }
+            .map { it.sortedByDescending { it.ytVideo?.publishedAt } }
+            .onEach { logger.d("Videos: ${it.size}") }
     }
 }

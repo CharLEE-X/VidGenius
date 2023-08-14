@@ -1,6 +1,7 @@
 package com.charleex.vidgenius.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
@@ -19,11 +20,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CarCrash
+import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.LaptopMac
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ThumbDown
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,8 +63,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun TopBar(
     modifier: Modifier = Modifier,
+    title: String?,
+    topBarState: TopBarState,
     configManager: ConfigManager,
     tonalElevation: Dp = 1.dp,
+    onBackClicked: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val config by configManager.config.collectAsState()
@@ -125,6 +134,7 @@ fun TopBar(
         )
         TopBarContent(
             modifier = modifier,
+            title = title,
             showConfigs = showConfigs,
             categorySegments = categorySegments,
             selectedIndexes = listOf(selectedIndex),
@@ -137,19 +147,29 @@ fun TopBar(
             },
             tonalElevation = tonalElevation,
             onShowConfig = { showConfigs = !showConfigs },
+            topBarState = topBarState,
+            onBackClicked = onBackClicked,
         )
     }
+}
+
+enum class TopBarState {
+    VideoList,
+    VideoDetail,
 }
 
 @Composable
 private fun TopBarContent(
     modifier: Modifier = Modifier,
+    title: String?,
     showConfigs: Boolean,
     categorySegments: List<SegmentSpec>,
     selectedIndexes: List<Int>,
     onSelected: (Int) -> Unit,
     tonalElevation: Dp,
     onShowConfig: () -> Unit,
+    topBarState: TopBarState,
+    onBackClicked: () -> Unit,
 ) {
     val bgTonalElevation by animateDpAsState(
         targetValue = if (showConfigs) (tonalElevation + 1.dp) else (tonalElevation + 3.dp),
@@ -165,44 +185,162 @@ private fun TopBarContent(
         tonalElevation = bgTonalElevation,
         modifier = modifier
             .fillMaxWidth()
+            .animateContentSize()
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = 72.dp,
-                    end = 48.dp,
-                )
-                .padding(vertical = paddingVertical)
-        ) {
-            Row {
-                Text(
-                    text = "VID",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.secondary,
-                )
-                Text(
-                    text = "GENIUS",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
+        when (topBarState) {
+            TopBarState.VideoList -> {
+                TopBarVideoList(
+                    paddingVertical = paddingVertical,
+                    onShowConfig = onShowConfig,
+                    categorySegments = categorySegments,
+                    selectedIndexes = selectedIndexes,
+                    onSelected = onSelected,
+                    modifier = Modifier
                 )
             }
-            Spacer(modifier = Modifier.weight(1f))
-            SettingsButton(
-                onShowConfig = onShowConfig,
+
+            TopBarState.VideoDetail -> {
+                TopBarVideoDetail(
+                    title = title,
+                    onBackClicked = onBackClicked,
+                    paddingVertical = paddingVertical,
+                    modifier = Modifier
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TopBarVideoList(
+    modifier: Modifier = Modifier,
+    paddingVertical: Dp,
+    onShowConfig: () -> Unit,
+    categorySegments: List<SegmentSpec>,
+    selectedIndexes: List<Int>,
+    onSelected: (Int) -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                start = 72.dp,
+                end = 48.dp,
             )
-            SegmentsGroup(
-                segments = categorySegments,
-                selectedIndexes = selectedIndexes,
-                onSegmentClicked = onSelected,
-                segmentModifier = Modifier
-                    .height(40.dp),
-                modifier = Modifier
-                    .width(400.dp)
+            .padding(vertical = paddingVertical)
+            .animateContentSize()
+    ) {
+        Row {
+            Text(
+                text = "VID",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+            Text(
+                text = "GENIUS",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.primary,
             )
         }
+
+        Spacer(modifier = Modifier.weight(1f))
+        SettingsButton(
+            onShowConfig = onShowConfig,
+        )
+        SegmentsGroup(
+            segments = categorySegments,
+            selectedIndexes = selectedIndexes,
+            onSegmentClicked = onSelected,
+            segmentModifier = Modifier
+                .height(40.dp),
+            modifier = Modifier
+                .width(400.dp)
+        )
+    }
+}
+
+@Composable
+private fun TopBarVideoDetail(
+    title: String?,
+    modifier: Modifier = Modifier,
+    onBackClicked: () -> Unit,
+    paddingVertical: Dp,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                start = 72.dp,
+                end = 48.dp,
+            )
+            .padding(vertical = paddingVertical)
+            .animateContentSize()
+    ) {
+        FilledTonalIconButton(
+            onClick = onBackClicked,
+            modifier = Modifier
+                .size(40.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = null,
+            )
+        }
+        Row {
+            Text(
+                text = "YouTube ID:",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(end = 4.dp)
+            )
+            Text(
+                text = title ?: "N/A",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+        Icon(
+            imageVector = Icons.Default.ThumbUp,
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp)
+        )
+        Text(
+            text = "520",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(end = 4.dp)
+        )
+        Icon(
+            imageVector = Icons.Default.ThumbDown,
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp)
+        )
+        Text(
+            text = "14",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(end = 4.dp)
+        )
+        Icon(
+            imageVector = Icons.Default.Comment,
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp)
+        )
+        Text(
+            text = "2",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(end = 16.dp)
+        )
     }
 }
 

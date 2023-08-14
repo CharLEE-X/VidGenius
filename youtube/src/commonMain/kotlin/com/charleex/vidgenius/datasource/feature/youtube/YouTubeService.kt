@@ -6,6 +6,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.services.youtube.YouTube
+import com.google.api.services.youtube.model.Channel
 import com.google.api.services.youtube.model.PlaylistItem
 import com.google.api.services.youtube.model.Video
 import com.google.api.services.youtube.model.VideoLocalization
@@ -14,8 +15,9 @@ import kotlinx.coroutines.flow.flow
 import java.io.IOException
 
 interface YouTubeService {
+    fun getChannel(config: String): Channel
     suspend fun getUploadList(config: String): Flow<List<PlaylistItem>>
-    suspend fun getVideoDetail(videoId: String): Video?
+    suspend fun getVideoDetail(videoId: String, config: String): Video?
 
     fun update(
         config: String,
@@ -39,11 +41,64 @@ internal class YouTubeServiceImpl(
         private const val APP_NAME = "youtube-cmdline-channeluploads-sample"
     }
 
-    private lateinit var youtube: YouTube
+    private var youtube: YouTube? = null
 
     override suspend fun getUploadList(
         config: String,
     ): Flow<List<PlaylistItem>> = flow {
+        logger.d { "Getting upload list" }
+        val channel = getChannel(config)
+        val uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads
+            ?: error("Unable to find upload playlist for channel.")
+
+        val requestPlaylistItemsProperties = listOf(
+            "contentDetails/videoId",
+            "snippet/title",
+            "snippet/description",
+            "snippet/thumbnails",
+            "snippet/publishedAt",
+            "status/privacyStatus",
+        ).joinToString(",")
+
+        val playlistItemRequest = withYouTube(config).playlistItems()
+            .list(
+                listOf(
+                    "id",
+                    "contentDetails",
+                    "snippet",
+                    "status",
+                )
+            )
+            .setPlaylistId(uploadPlaylistId)
+            .setFields("items($requestPlaylistItemsProperties),nextPageToken,pageInfo")
+
+        var nextToken: String? = ""
+        do {
+            playlistItemRequest.pageToken = nextToken
+            val playlistItemResult = playlistItemRequest.execute()
+            val items = playlistItemResult.items
+
+            logger.d { "Uploads chunk: $items" }
+            emit(items)
+
+            nextToken = playlistItemResult.nextPageToken
+        } while (nextToken != null)
+    }
+
+    private fun withYouTube(config: String): YouTube {
+        logger.d { "Getting YouTube" }
+        if (youtube != null) return youtube!!
+
+        val credential = googleAuth.authorizeYouTube(config)
+
+        youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
+            .setApplicationName(APP_NAME)
+            .build()
+
+        return youtube ?: error("YouTube not authorized")
+    }
+
+    override fun getChannel(config: String): Channel {
         logger.d { "Getting upload list" }
         val credential = googleAuth.authorizeYouTube(config)
 
@@ -52,7 +107,7 @@ internal class YouTubeServiceImpl(
             .build()
             ?: error("YouTube not authorized")
 
-        val channelResult = youtube.channels()
+        val channelResult = withYouTube(config).channels()
             .list(listOf("contentDetails"))
             .setMine(true)
             .setFields("items/contentDetails,nextPageToken,pageInfo")
@@ -62,43 +117,10 @@ internal class YouTubeServiceImpl(
         val channelsList = channelResult.items ?: error("No channels found.")
         logger.d { "Channels: $channelsList" }
 
-        val uploadPlaylistId = channelsList[0].contentDetails.relatedPlaylists.uploads
-            ?: error("Unable to find upload playlist for channel.")
-
-        val requestPlaylistItems = listOf(
-            "contentDetails/videoId",
-            "snippet/title",
-            "snippet/description",
-            "snippet/thumbnails/medium/url",
-            "snippet/thumbnails/maxres/url",
-            "snippet/publishedAt",
-            "status/privacyStatus",
-        ).joinToString(",")
-
-        val playlistItemRequest = youtube.playlistItems()
-            .list(listOf("id", "contentDetails", "snippet", "status"))
-            .setPlaylistId(uploadPlaylistId)
-            .setFields("items($requestPlaylistItems),nextPageToken,pageInfo")
-
-        var nextToken: String? = ""
-        val playlistItemList = mutableListOf<PlaylistItem>()
-        do {
-            playlistItemRequest.pageToken = nextToken
-            val playlistItemResult = playlistItemRequest.execute()
-            val items = playlistItemResult.items
-
-            logger.d { "Uploads chunk: $items" }
-            playlistItemList.addAll(items)
-            emit(playlistItemList)
-
-            nextToken = playlistItemResult.nextPageToken
-        } while (nextToken != null)
-
-        if (playlistItemList.isEmpty()) logger.e { "No videos found." }
-        logger.d("Playlist Items: $playlistItemList")
+        return channelsList[0] ?: error("Unable to get channel.")
     }
 
-    override suspend fun getVideoDetail(videoId: String): Video? {
+    override suspend fun getVideoDetail(videoId: String, config: String): Video? {
         logger.d { "Getting video details for videoId: $videoId" }
 
         val requestItems = listOf(
@@ -106,19 +128,36 @@ internal class YouTubeServiceImpl(
             "snippet/title",
             "snippet/description",
             "snippet/tags",
-            "snippet/tags",
             "snippet/publishedAt",
             "status/privacyStatus",
+            "localizations",
             "contentDetails/duration",
+            "status/rejectionReason",
+            "statistics/likeCount",
+            "statistics/dislikeCount",
+            "statistics/viewCount",
+            "statistics/commentCount",
+            "statistics/favoriteCount",
         ).joinToString(",")
 
-        val videoResult = youtube.videos()
-            .list(listOf("snippet", "contentDetails", "status"))
+        val videoResult = withYouTube(config).videos()
+            .list(
+                listOf(
+                    "id",
+                    "snippet",
+                    "contentDetails",
+                    "status",
+                    "localizations",
+                    "statistics",
+                )
+            )
             .setId(listOf(videoId))
             .setFields("items($requestItems)")
             .execute()
 
-        return videoResult.items.firstOrNull { it.id == videoId }
+        val video = videoResult.items.firstOrNull { it.id == videoId }
+        logger.d { "Video: $video" }
+        return video
     }
 
     override fun update(
@@ -132,14 +171,7 @@ internal class YouTubeServiceImpl(
     ): Video? {
         logger.d { "Updating video $ytId" }
         return try {
-            val credential = googleAuth.authorizeYouTube(config)
-
-            youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
-                .setApplicationName(APP_NAME)
-                .build()
-                ?: error("YouTube not authorized")
-
-            val listResponse = youtube.videos()
+            val listResponse = withYouTube(config).videos()
                 .list(listOf("snippet", "contentDetails", "status", "localizations", "statistics"))
                 .setId(listOf(ytId))
                 .execute()
@@ -184,7 +216,7 @@ internal class YouTubeServiceImpl(
 
             video.status.privacyStatus = privacyStatus
 
-            val videoResponse = youtube.videos()
+            val videoResponse = withYouTube(config).videos()
                 .update(listOf("snippet", "status", "localizations"), video)
                 .execute()
                 ?: error("Can't update video with ID: $ytId")

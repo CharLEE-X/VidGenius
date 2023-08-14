@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.ui.features.generation.local
+package com.charleex.vidgenius.ui.features.videos.local
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

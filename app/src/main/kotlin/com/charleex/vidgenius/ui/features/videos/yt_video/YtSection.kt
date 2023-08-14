@@ -1,4 +1,4 @@
-package com.charleex.vidgenius.ui.features.generation.yt_video
+package com.charleex.vidgenius.ui.features.videos.yt_video
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement

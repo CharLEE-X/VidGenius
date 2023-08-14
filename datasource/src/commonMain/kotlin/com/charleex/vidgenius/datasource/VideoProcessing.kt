@@ -8,11 +8,12 @@ import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
 import com.charleex.vidgenius.datasource.feature.youtube.model.Category
 import com.charleex.vidgenius.datasource.model.LocalVideo
 import com.charleex.vidgenius.datasource.model.YtVideo
-import com.charleex.vidgenius.datasource.utils.DataTimeService
+import com.charleex.vidgenius.datasource.utils.DateTimeService
 import com.charleex.vidgenius.datasource.utils.UuidProvider
 import com.charleex.vidgenius.open_ai.OpenAiRepository
 import com.charleex.vidgenius.vision_ai.GoogleCloudRepository
 import com.squareup.sqldelight.runtime.coroutines.asFlow
+import com.squareup.sqldelight.runtime.coroutines.mapToOne
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.io.File
@@ -20,6 +21,8 @@ import java.io.File
 interface VideoProcessing {
     suspend fun addLocalVideos(files: List<*>)
     fun flowOfVideos(): Flow<List<Video>>
+    fun getVideoByIdFlow(id: String): Flow<Video>
+    fun getVideoById(id: String): Video
     fun deleteLocalVideo(video: Video)
 
     suspend fun processVideoToScreenshots(
@@ -39,7 +42,7 @@ internal class VideoProcessingImpl(
     private val openAiRepository: OpenAiRepository,
     private val youtubeRepository: YoutubeRepository,
     private val uuidProvider: UuidProvider,
-    private val datetimeService: DataTimeService,
+    private val datetimeService: DateTimeService,
 ) : VideoProcessing {
     companion object {
         val languageCodes = listOf("en-US", "es", "zh", "pt", "hi")
@@ -47,6 +50,14 @@ internal class VideoProcessingImpl(
 
     override fun flowOfVideos(): Flow<List<Video>> =
         database.videoQueries.getAll().asFlow().map { it.executeAsList() }
+
+    override fun getVideoByIdFlow(id: String): Flow<Video> {
+        return database.videoQueries.getById(id).asFlow().mapToOne()
+    }
+
+    override fun getVideoById(id: String): Video {
+        return database.videoQueries.getById(id).executeAsOne()
+    }
 
     override suspend fun addLocalVideos(files: List<*>) {
         logger.d("Adding videos $files")
@@ -62,7 +73,7 @@ internal class VideoProcessingImpl(
                 screenshots = emptyList(),
                 descriptions = emptyList(),
                 descriptionContext = null,
-                contentInfo = null,
+                localizations = emptyMap(),
                 isCompleted = false,
                 createdAt = datetimeService.nowInstant(),
                 modifiedAt = datetimeService.nowInstant(),
@@ -218,41 +229,41 @@ internal class VideoProcessingImpl(
     }
 
     private suspend fun generateMetaData(localVideo: LocalVideo, category: Category): LocalVideo {
-        val hasContentInfoEnUS = localVideo.contentInfo?.enUS?.title?.isNotEmpty() == true &&
-                localVideo.contentInfo.enUS.description.isNotEmpty()
-        val hasContentInfoPt = localVideo.contentInfo?.pt?.title?.isNotEmpty() == true &&
-                localVideo.contentInfo.pt.description.isNotEmpty()
-        val hasContentInfoEs = localVideo.contentInfo?.es?.title?.isNotEmpty() == true &&
-                localVideo.contentInfo.es.description.isNotEmpty()
-        val hasContentInfoFr = localVideo.contentInfo?.zh?.title?.isNotEmpty() == true &&
-                localVideo.contentInfo.es.description.isNotEmpty()
-        val hasContentInfoHi = localVideo.contentInfo?.hi?.title?.isNotEmpty() == true &&
-                localVideo.contentInfo.es.description.isNotEmpty()
-        val hasTags = localVideo.contentInfo?.tags?.isNotEmpty() == true
-        val tagsHaveText = localVideo.contentInfo?.tags?.all { it.isNotEmpty() } == true
-
-        if (
-            hasContentInfoEnUS &&
-            hasContentInfoPt &&
-            hasContentInfoEs &&
-            hasContentInfoFr &&
-            hasContentInfoHi &&
-            hasTags &&
-            tagsHaveText
-        ) {
-            logger.d("Metadata generation | ${localVideo.id} | Already has metadata")
-            return localVideo
-        }
-
-        logger.d("Metadata generation | ${localVideo.id} | Start")
-        val contentInfo = try {
-            openAiRepository.getContentInfo(localVideo.descriptions, category.query, languageCodes)
-        } catch (e: Exception) {
-            logger.e(e) { "Error generating metadata" }
-            throw e
-        }
-        logger.d("Metadata generation | ${localVideo.id} | Done")
-        return localVideo.copy(contentInfo = contentInfo)
+//        val hasContentInfoEnUS = localVideo.contentInfo?.enUS?.title?.isNotEmpty() == true &&
+//                localVideo.contentInfo.enUS.description.isNotEmpty()
+//        val hasContentInfoPt = localVideo.contentInfo?.pt?.title?.isNotEmpty() == true &&
+//                localVideo.contentInfo.pt.description.isNotEmpty()
+//        val hasContentInfoEs = localVideo.contentInfo?.es?.title?.isNotEmpty() == true &&
+//                localVideo.contentInfo.es.description.isNotEmpty()
+//        val hasContentInfoFr = localVideo.contentInfo?.zh?.title?.isNotEmpty() == true &&
+//                localVideo.contentInfo.es.description.isNotEmpty()
+//        val hasContentInfoHi = localVideo.contentInfo?.hi?.title?.isNotEmpty() == true &&
+//                localVideo.contentInfo.es.description.isNotEmpty()
+//        val hasTags = localVideo.contentInfo?.tags?.isNotEmpty() == true
+//        val tagsHaveText = localVideo.contentInfo?.tags?.all { it.isNotEmpty() } == true
+//
+//        if (
+//            hasContentInfoEnUS &&
+//            hasContentInfoPt &&
+//            hasContentInfoEs &&
+//            hasContentInfoFr &&
+//            hasContentInfoHi &&
+//            hasTags &&
+//            tagsHaveText
+//        ) {
+//            logger.d("Metadata generation | ${localVideo.id} | Already has metadata")
+        return localVideo
+//        }
+//
+//        logger.d("Metadata generation | ${localVideo.id} | Start")
+//        val contentInfo = try {
+//            openAiRepository.getContentInfo(localVideo.descriptions, category.query, languageCodes)
+//        } catch (e: Exception) {
+//            logger.e(e) { "Error generating metadata" }
+//            throw e
+//        }
+//        logger.d("Metadata generation | ${localVideo.id} | Done")
+//        return localVideo.copy(contentInfo = contentInfo)
     }
 
     private suspend fun updateYouTubeVideo(
