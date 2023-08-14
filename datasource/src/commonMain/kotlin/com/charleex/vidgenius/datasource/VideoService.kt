@@ -7,6 +7,7 @@ import com.charleex.vidgenius.datasource.feature.video.VideoRepository
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
 import com.charleex.vidgenius.datasource.model.LocalVideo
 import com.charleex.vidgenius.datasource.model.ProgressState
+import com.charleex.vidgenius.datasource.model.toYouTubeItem
 import com.charleex.vidgenius.datasource.model.toYoutubeVideo
 import com.charleex.vidgenius.datasource.utils.DateTimeService
 import com.charleex.vidgenius.datasource.utils.UuidProvider
@@ -35,6 +36,7 @@ interface VideoService {
     fun getVideo(videoId: String): StateFlow<Video>
     fun startFetchingUploads()
     fun stopFetchingUploads()
+    fun getVideoDetails(video: Video)
 
     fun addLocalVideos(files: List<*>)
     fun deleteLocalVideo(video: Video)
@@ -109,6 +111,7 @@ internal class VideoServiceImpl(
                             .also { logger.d("Existing videos: ${it.size}") }
                             .forEach {
                                 videoRepository.updateVideo(it)
+                                getVideoDetails(it)
                             }
 
                         ytVideos // New Videos
@@ -126,6 +129,7 @@ internal class VideoServiceImpl(
                             }
                             .forEach {
                                 videoRepository.createVideo(it)
+                                getVideoDetails(it)
                             }
                     }
                     logger.d("Finished fetching uploads")
@@ -138,6 +142,28 @@ internal class VideoServiceImpl(
         logger.d("Stopping fetching uploads")
         fetchUploadsJob?.cancel()
         fetchUploadsJob = null
+    }
+
+    override fun getVideoDetails(video: Video) {
+        scope.launch {
+            if (video.ytVideo == null) {
+                logger.d("Video is null")
+                return@launch
+            }
+
+            val ytConfig = configManager.config.value.ytConfig
+            if (ytConfig == null) {
+                logger.d("YtConfig is null")
+                return@launch
+            }
+
+            val youTubeItem = youtubeRepository.getVideoExtendedDetails(
+                video.ytVideo.toYouTubeItem(),
+                ytConfig.secretsFile
+            )
+            val newVideo = video.copy(ytVideo = youTubeItem.toYoutubeVideo())
+            videoRepository.updateVideo(newVideo)
+        }
     }
 
     override fun addLocalVideos(files: List<*>) {

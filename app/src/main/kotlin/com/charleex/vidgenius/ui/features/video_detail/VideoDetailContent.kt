@@ -112,17 +112,15 @@ internal fun VideoDetailContent(
 
                             var newTitle by remember { mutableStateOf(ytVideo.title) }
                             var newDescription by remember { mutableStateOf(ytVideo.description) }
-//                            var newTags by remember { mutableStateOf(ytVideo.tags) }
-                            var newTags by remember {
-                                mutableStateOf(
-                                    listOf(
-                                        "one",
-                                        "two",
-                                        "three"
-                                    )
-                                )
-                            }
+                            var newTags by remember { mutableStateOf(ytVideo.tags) }
                             var newPrivacyIndex by remember { mutableStateOf(ytVideo.privacyStatus.ordinal) }
+
+                            LaunchedEffect(ytVideo) {
+                                newTitle = ytVideo.title
+                                newDescription = ytVideo.description
+                                newTags = ytVideo.tags
+                                newPrivacyIndex = ytVideo.privacyStatus.ordinal
+                            }
 
                             val categorySegments = privacyWithIcons.map { (name, icon) ->
                                 SegmentSpec(
@@ -138,12 +136,10 @@ internal fun VideoDetailContent(
                                 modifier = Modifier
                                     .fillMaxWidth()
                             ) {
-                                ytVideo.publishedAt?.let {
-                                    Text(
-                                        text = it.pretty(),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                    )
-                                }
+                                Text(
+                                    text = "Published: ${ytVideo.publishedAt?.pretty()}",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
                                 Spacer(modifier = Modifier.weight(1f))
                                 SegmentsGroup(
                                     segments = categorySegments,
@@ -218,32 +214,30 @@ internal fun VideoDetailContent(
                             }
                         }
 
-                        video.localVideo?.let { localVideo ->
-                            Text(text = "YouTube video id:: ${localVideo.id}")
-                            Text(text = "Name: ${localVideo.name}")
-                            Text(text = "Path: ${localVideo.path}")
-                            Row {
-                                localVideo.screenshots.forEach {
-                                    LocalImage(
-                                        filePath = it,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .size(100.dp)
-                                    ) {}
-                                }
+                        Text(text = "YouTube video id:: ${video.localVideo?.id}")
+                        Text(text = "Name: ${video.localVideo?.name}")
+                        Text(text = "Path: ${video.localVideo?.path}")
+                        Row {
+                            video.localVideo?.screenshots?.forEach {
+                                LocalImage(
+                                    filePath = it,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                ) {}
                             }
-                            Text(text = "Path: ${localVideo.screenshots}")
-                            Text(text = "Path: ${localVideo.descriptions}")
-                            Text(text = "Path: ${localVideo.descriptionContext}")
-                            Text(text = "CreatedAt: ${localVideo.createdAt.pretty()}")
-                            Column(
-                                modifier = Modifier.padding(start = 16.dp)
-                            ) {
-                                localVideo.localizations.forEach { (s, pair) ->
-                                    Text(text = "Path: $s")
-                                    Text(text = "Path: ${pair.first}")
-                                    Text(text = "Path: ${pair.second}")
-                                }
+                        }
+                        Text(text = "Path: ${video.localVideo?.screenshots}")
+                        Text(text = "Path: ${video.localVideo?.descriptions}")
+                        Text(text = "Path: ${video.localVideo?.descriptionContext}")
+                        Text(text = "CreatedAt: ${video.localVideo?.createdAt?.pretty()}")
+                        Column(
+                            modifier = Modifier.padding(start = 16.dp)
+                        ) {
+                            video.localVideo?.localizations?.forEach { (s, pair) ->
+                                Text(text = "Path: $s")
+                                Text(text = "Path: ${pair.first}")
+                                Text(text = "Path: ${pair.second}")
                             }
                         }
                     }

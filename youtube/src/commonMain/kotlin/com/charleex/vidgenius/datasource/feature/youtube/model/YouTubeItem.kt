@@ -25,8 +25,8 @@ data class YouTubeItem(
 internal fun Video.toYouTubeItem() = YouTubeItem(
     id = id,
     title = snippet.title,
-    description = snippet.description,
-    tags = snippet.tags,
+    description = snippet.description ?: "",
+    tags = snippet.tags ?: emptyList(),
     privacyStatus = status.privacyStatus,
     localizations = localizations.map { (key, value) ->
         key to (value.title to value.description)

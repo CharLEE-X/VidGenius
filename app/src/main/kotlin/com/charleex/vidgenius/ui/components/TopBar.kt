@@ -1,5 +1,6 @@
 package com.charleex.vidgenius.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.RepeatMode
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.Watch
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -49,6 +51,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.unit.Dp
@@ -64,6 +67,10 @@ import kotlinx.coroutines.launch
 fun TopBar(
     modifier: Modifier = Modifier,
     title: String?,
+    likeCount: Int?,
+    dislikeCount: Int?,
+    viewCount: Int?,
+    commentCount: Int?,
     topBarState: TopBarState,
     configManager: ConfigManager,
     tonalElevation: Dp = 1.dp,
@@ -135,6 +142,10 @@ fun TopBar(
         TopBarContent(
             modifier = modifier,
             title = title,
+            likeCount = likeCount,
+            dislikeCount = dislikeCount,
+            viewCount = viewCount,
+            commentCount = commentCount,
             showConfigs = showConfigs,
             categorySegments = categorySegments,
             selectedIndexes = listOf(selectedIndex),
@@ -162,6 +173,10 @@ enum class TopBarState {
 private fun TopBarContent(
     modifier: Modifier = Modifier,
     title: String?,
+    likeCount: Int?,
+    dislikeCount: Int?,
+    viewCount: Int?,
+    commentCount: Int?,
     showConfigs: Boolean,
     categorySegments: List<SegmentSpec>,
     selectedIndexes: List<Int>,
@@ -202,6 +217,10 @@ private fun TopBarContent(
             TopBarState.VideoDetail -> {
                 TopBarVideoDetail(
                     title = title,
+                    likeCount = likeCount,
+                    dislikeCount = dislikeCount,
+                    viewCount = viewCount,
+                    commentCount = commentCount,
                     onBackClicked = onBackClicked,
                     paddingVertical = paddingVertical,
                     modifier = Modifier
@@ -264,6 +283,10 @@ private fun TopBarVideoList(
 @Composable
 private fun TopBarVideoDetail(
     title: String?,
+    likeCount: Int?,
+    dislikeCount: Int?,
+    viewCount: Int?,
+    commentCount: Int?,
     modifier: Modifier = Modifier,
     onBackClicked: () -> Unit,
     paddingVertical: Dp,
@@ -305,42 +328,53 @@ private fun TopBarVideoDetail(
         }
 
         Spacer(modifier = Modifier.weight(1f))
-        Icon(
-            imageVector = Icons.Default.ThumbUp,
-            contentDescription = null,
+        StatItem(
+            value = likeCount,
+            icon = Icons.Default.ThumbUp,
             modifier = Modifier
-                .size(24.dp)
         )
-        Text(
-            text = "520",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(end = 4.dp)
-        )
-        Icon(
-            imageVector = Icons.Default.ThumbDown,
-            contentDescription = null,
+        StatItem(
+            value = dislikeCount,
+            icon = Icons.Default.ThumbDown,
             modifier = Modifier
-                .size(24.dp)
         )
-        Text(
-            text = "14",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(end = 4.dp)
-        )
-        Icon(
-            imageVector = Icons.Default.Comment,
-            contentDescription = null,
+        StatItem(
+            value = commentCount,
+            icon = Icons.Default.Comment,
             modifier = Modifier
-                .size(24.dp)
         )
-        Text(
-            text = "2",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
+        StatItem(
+            value = viewCount,
+            icon = Icons.Default.Watch,
             modifier = Modifier.padding(end = 16.dp)
         )
+    }
+}
+
+@Composable
+internal fun StatItem(
+    modifier: Modifier = Modifier,
+    value: Int?,
+    icon: ImageVector,
+) {
+    AnimatedVisibility(value != null) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = modifier
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = value.toString(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+            )
+        }
     }
 }
 

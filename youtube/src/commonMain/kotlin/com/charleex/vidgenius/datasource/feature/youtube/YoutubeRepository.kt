@@ -35,7 +35,12 @@ internal class YoutubeRepositoryImpl(
         youTubeItem: YouTubeItem,
         config: String,
     ): YouTubeItem {
-        return youTubeService.getVideoDetail(youTubeItem.id, config)?.toYouTubeItem() ?: youTubeItem
+        val video = youTubeService.getVideoDetail(youTubeItem.id, config)
+        if (video == null) {
+            logger.e { "YouTube Video is not null" }
+            return youTubeItem
+        }
+        return video.toYouTubeItem()
     }
 
 //    override suspend fun updateVideo(ytVideo: YtVideo, localVideo: LocalVideo): Boolean {

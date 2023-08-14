@@ -128,6 +128,7 @@ internal class YouTubeServiceImpl(
             "snippet/title",
             "snippet/description",
             "snippet/tags",
+            "snippet/thumbnails",
             "snippet/publishedAt",
             "status/privacyStatus",
             "localizations",

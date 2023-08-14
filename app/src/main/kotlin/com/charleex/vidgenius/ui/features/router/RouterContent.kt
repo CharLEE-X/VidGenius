@@ -54,6 +54,10 @@ internal fun RouterContent(
     val listState = rememberLazyListState()
     var lazyListState: LazyListState by remember { mutableStateOf(listState) }
     var title: String? by remember { mutableStateOf(null) }
+    var likeCount: Int? by remember { mutableStateOf(null) }
+    var dislikeCount: Int? by remember { mutableStateOf(null) }
+    var viewCount: Int? by remember { mutableStateOf(null) }
+    var commentCount: Int? by remember { mutableStateOf(null) }
     var topBarState: TopBarState by remember { mutableStateOf(TopBarState.VideoList) }
 
     Surface(
@@ -96,8 +100,13 @@ internal fun RouterContent(
                         RouterScreen.VideoDetail -> {
                             val videoId by stringPath("videoId")
                             val video by videoService.getVideo(videoId).collectAsState()
+                            videoService.getVideoDetails(video)
                             title = video.ytVideo?.id
                             topBarState = TopBarState.VideoDetail
+                            likeCount = video.ytVideo?.likeCount
+                            dislikeCount = video.ytVideo?.dislikeCount
+                            viewCount = video.ytVideo?.viewCount
+                            commentCount = video.ytVideo?.commentCount
 
                             VideoDetailContent(
                                 video = video,
@@ -110,6 +119,10 @@ internal fun RouterContent(
             )
             TopBar(
                 title = title,
+                likeCount = likeCount,
+                dislikeCount = dislikeCount,
+                viewCount = viewCount,
+                commentCount = commentCount,
                 configManager = configManager,
                 onBackClicked = {
                     router.trySend(RouterContract.Inputs.GoBack())
