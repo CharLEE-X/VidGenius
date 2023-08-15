@@ -24,6 +24,7 @@ interface VideoProcessing {
     fun getVideoByIdFlow(id: String): Flow<Video>
     fun getVideoById(id: String): Video
     fun deleteLocalVideo(video: Video)
+    fun deleteVideo(video: Video)
 
     suspend fun processVideoToScreenshots(
         video: Video,
@@ -32,6 +33,24 @@ interface VideoProcessing {
     )
 
     fun signOut()
+
+    suspend fun generateTitle(
+        description: String? = null,
+        category: Category,
+        languageCode: String = "en-US",
+    ): String?
+
+    suspend fun generateDescription(
+        description: String? = null,
+        category: Category,
+        languageCode: String = "en-US",
+        channelLink: String,
+    ): Pair<String?, List<String>>
+
+    suspend fun translateText(
+        text: String,
+        targetLanguage: String,
+    ): String?
 }
 
 internal class VideoProcessingImpl(
@@ -44,10 +63,6 @@ internal class VideoProcessingImpl(
     private val uuidProvider: UuidProvider,
     private val datetimeService: DateTimeService,
 ) : VideoProcessing {
-    companion object {
-        val languageCodes = listOf("en-US", "es", "zh", "pt", "hi")
-    }
-
     override fun flowOfVideos(): Flow<List<Video>> =
         database.videoQueries.getAll().asFlow().map { it.executeAsList() }
 
@@ -84,9 +99,14 @@ internal class VideoProcessingImpl(
     }
 
     override fun deleteLocalVideo(video: Video) {
-        logger.d("Deleting video ${video.id}")
+        logger.d("Deleting local video ${video.id}")
         val newVideo = video.copy(localVideo = null)
         database.videoQueries.upsert(newVideo)
+    }
+
+    override fun deleteVideo(video: Video) {
+        logger.d("Deleting video ${video.id}")
+        database.videoQueries.delete(video.id)
     }
 
     override suspend fun processVideoToScreenshots(
@@ -115,6 +135,32 @@ internal class VideoProcessingImpl(
 
     override fun signOut() {
         youtubeRepository.signOut()
+    }
+
+    override suspend fun generateTitle(
+        description: String?,
+        category: Category,
+        languageCode: String,
+    ): String? {
+        return openAiRepository.generateTitle(description, category.query, languageCode)
+    }
+
+    override suspend fun generateDescription(
+        description: String?,
+        category: Category,
+        languageCode: String,
+        channelLink: String,
+    ): Pair<String?, List<String>> {
+        return openAiRepository.generateDescription(
+            description = description,
+            categoryQuery = category.query,
+            languageCodes = languageCode,
+            channelLink = channelLink
+        )
+    }
+
+    override suspend fun translateText(text: String, targetLanguage: String): String? {
+        return openAiRepository.translateText(text, targetLanguage)
     }
 
     //    private fun moveFileToUploaded(finalVideo: Video) {
@@ -220,6 +266,7 @@ internal class VideoProcessingImpl(
         logger.d("Description processing | ${localVideo.id} | Start")
         val context = try {
             openAiRepository.getContextFromDescriptions(localVideo.descriptions, category.query)
+                ?: error("Context is null")
         } catch (e: Exception) {
             logger.e(e) { "Error generating description context" }
             throw e

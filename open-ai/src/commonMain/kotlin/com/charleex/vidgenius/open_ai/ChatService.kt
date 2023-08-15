@@ -7,6 +7,7 @@ import com.charleex.vidgenius.open_ai.model.chat.ChatCompletionChunk
 import com.charleex.vidgenius.open_ai.model.chat.ChatCompletionFunction
 import com.charleex.vidgenius.open_ai.model.chat.ChatCompletionRequest
 import com.charleex.vidgenius.open_ai.model.chat.ChatMessage
+import com.charleex.vidgenius.open_ai.model.chat.ChatRole
 import com.charleex.vidgenius.open_ai.model.chat.FunctionMode
 import com.charleex.vidgenius.open_ai.model.chat.extensions.streamEventsFrom
 import com.charleex.vidgenius.open_ai.model.chat.extensions.streamRequestOf
@@ -31,6 +32,8 @@ private const val API_PATH_CHAT_COMPLETIONS = "chat/completions"
 private const val API_PATH_COMPLETIONS = "completions"
 
 interface ChatService {
+    suspend fun simpleChat(message: String): String?
+
     suspend fun chatCompletion(
         messages: List<ChatMessage> = emptyList(),
         temperature: Double? = null,
@@ -66,6 +69,18 @@ internal class ChatServiceImpl(
     private val requester: OpenAiApi,
     private val modelId: ModelId,
 ) : ChatService {
+    override suspend fun simpleChat(message: String): String? {
+        val chatCompletion = chatCompletion(
+            messages = listOf(
+                ChatMessage(
+                    role = ChatRole.User.role,
+                    content = message,
+                )
+            )
+        )
+        return chatCompletion.choices.firstOrNull()?.message?.content
+    }
+
     override suspend fun chatCompletion(
         messages: List<ChatMessage>,
         temperature: Double?,

@@ -2,6 +2,8 @@ package com.charleex.vidgenius.datasource.feature.youtube
 
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
+import com.charleex.vidgenius.datasource.feature.youtube.model.UpdateLiveVideoResult
+import com.charleex.vidgenius.datasource.feature.youtube.model.YouTubeItem
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.json.JsonFactory
@@ -10,6 +12,7 @@ import com.google.api.services.youtube.model.Channel
 import com.google.api.services.youtube.model.PlaylistItem
 import com.google.api.services.youtube.model.Video
 import com.google.api.services.youtube.model.VideoLocalization
+import com.google.api.services.youtube.model.VideoSnippet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.io.IOException
@@ -27,6 +30,12 @@ interface YouTubeService {
         tags: List<String>,
         localizations: Map<String, Pair<String, String>>,
         privacyStatus: String,
+    ): Video?
+
+    fun updateLiveVideo(
+        youtubeId: String,
+        config: String,
+        youTubeItem: YouTubeItem,
     ): Video?
 }
 
@@ -173,7 +182,7 @@ internal class YouTubeServiceImpl(
         logger.d { "Updating video $ytId" }
         return try {
             val listResponse = withYouTube(config).videos()
-                .list(listOf("snippet", "contentDetails", "status", "localizations", "statistics"))
+                .list(listOf("snippet", "status", "localizations", "statistics"))
                 .setId(listOf(ytId))
                 .execute()
 
@@ -196,7 +205,7 @@ internal class YouTubeServiceImpl(
             println("  - ViewCount: " + video.statistics.viewCount)
             println("  - CommentCount: " + video.statistics.commentCount)
             println("  - FavoriteCount: " + video.statistics.favoriteCount)
-            println("  - Duration: " + video.contentDetails.duration)
+//            println("  - Duration: " + video.contentDetails.duration)
 
             val multipleLocalizations = localizations.map { localization ->
                 val videoLocalization = VideoLocalization()
@@ -218,9 +227,102 @@ internal class YouTubeServiceImpl(
             video.status.privacyStatus = privacyStatus
 
             val videoResponse = withYouTube(config).videos()
-                .update(listOf("snippet", "status", "localizations"), video)
+                .update(listOf("snippet", "status", "localizations", "statistics"), video)
                 .execute()
                 ?: error("Can't update video with ID: $ytId")
+
+            println("\n================== Returned Video ==================\n")
+            println("  - ID: " + video.id)
+            println("  - Title: " + video.snippet.title)
+            println("  - Description: " + video.snippet.description)
+            println("  - Tags: " + video.snippet.tags)
+            println("  - PrivacyStatus: " + video.status.privacyStatus)
+            println("  - Localizations: " + video.localizations)
+            println("  - Channel title: " + video.snippet.channelTitle)
+            println("  - RejectionReason: " + video.status.rejectionReason)
+            println("  - LikeCount: " + video.statistics.likeCount)
+            println("  - DislikeCount: " + video.statistics.dislikeCount)
+            println("  - ViewCount: " + video.statistics.viewCount)
+            println("  - CommentCount: " + video.statistics.commentCount)
+            println("  - FavoriteCount: " + video.statistics.favoriteCount)
+            videoResponse.localizations.forEach {
+                println("  - ${it.key} ${it.value}")
+            }
+
+            videoResponse
+        } catch (e: GoogleJsonResponseException) {
+            System.err.println(
+                "GoogleJsonResponseException code: " + e.details.code + " : "
+                        + e.details.message
+            )
+            e.printStackTrace()
+            null
+        } catch (e: IOException) {
+            System.err.println("IOException: " + e.message)
+            e.printStackTrace()
+            null
+        } catch (t: Throwable) {
+            System.err.println("Throwable: " + t.message)
+            t.printStackTrace()
+            null
+        }
+    }
+
+    override fun updateLiveVideo(
+        youtubeId: String,
+        config: String,
+        youTubeItem: YouTubeItem,
+    ): Video? {
+        return try {
+        logger.d { "Updating live video $youtubeId" }
+            val credential = googleAuth.authorizeYouTube(config)
+
+            youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
+                .setApplicationName(APP_NAME_UPDATE)
+                .build()
+
+            val listResponse = withYouTube(config).videos()
+                .list(listOf("snippet", "status", "localizations", "statistics"))
+                .setId(listOf(youtubeId))
+                .execute()
+                ?: error("Can't find a video with ID: $youtubeId")
+
+            val videoList = listResponse.items
+                .ifEmpty { error("Can't find a video with ID: $youtubeId") }
+
+            val video = videoList[0] ?: error("Can't find a video with ID: $youtubeId")
+
+            println("\n================== Video to Update ==================\n")
+            println("  - ID: " + video.id)
+            println("  - Title: " + video.snippet.title)
+            println("  - Description: " + video.snippet.description)
+            println("  - Tags: " + video.snippet.tags)
+            println("  - PrivacyStatus: " + video.status.privacyStatus)
+            println("  - Localizations: " + video.localizations)
+
+            video.status.privacyStatus = youTubeItem.privacyStatus
+
+            video.snippet = VideoSnippet().apply {
+                title = youTubeItem.title
+                description = youTubeItem.description
+                tags = youTubeItem.tags
+                defaultLanguage = "en-US"
+            }
+
+            video.localizations = youTubeItem.localizations.map { localization ->
+                val videoLocalization = VideoLocalization()
+                videoLocalization.title = localization.value.first
+                videoLocalization.description = localization.value.second
+                localization.key to videoLocalization
+            }.toMap()
+
+            logger.d { "Updating video $youtubeId" }
+            val videoResponse = withYouTube(config).videos()
+                .update(listOf("snippet", "status", "localizations", "statistics"), video)
+                .execute()
+                ?: error("Can't update video with ID: $youtubeId")
+
+            logger.d { "Updated video $youtubeId" }
 
             println("\n================== Returned Video ==================\n")
             println("  - ID: " + videoResponse.id)

@@ -110,6 +110,7 @@ internal fun RouterContent(
 
                             VideoDetailContent(
                                 video = video,
+                                videoService = videoService,
                                 scroll = { lazyListState = it },
                             )
                         }

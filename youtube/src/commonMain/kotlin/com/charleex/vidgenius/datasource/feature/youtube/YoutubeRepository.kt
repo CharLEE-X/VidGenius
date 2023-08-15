@@ -2,6 +2,7 @@ package com.charleex.vidgenius.datasource.feature.youtube
 
 import co.touchlab.kermit.Logger
 import com.charleex.vidgenius.datasource.feature.youtube.auth.GoogleAuth
+import com.charleex.vidgenius.datasource.feature.youtube.model.UpdateLiveVideoResult
 import com.charleex.vidgenius.datasource.feature.youtube.model.YouTubeItem
 import com.charleex.vidgenius.datasource.feature.youtube.model.toYouTubeItem
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,11 @@ interface YoutubeRepository {
 
     //    suspend fun updateVideo(ytVideo: YtVideo, localVideo: LocalVideo): Boolean
     fun signOut()
+    suspend fun updateLiveVideo(
+        youtubeId: String,
+        config: String,
+        youTubeItem: YouTubeItem,
+    ): YouTubeItem?
 }
 
 internal class YoutubeRepositoryImpl(
@@ -88,6 +94,23 @@ internal class YoutubeRepositoryImpl(
     override fun signOut() {
         googleAuth.signOut("updatevideo")
     }
+
+    override suspend fun updateLiveVideo(
+        youtubeId: String,
+        config: String,
+        youTubeItem: YouTubeItem,
+    ): YouTubeItem {
+        val video = youTubeService.update(
+            config = config,
+            ytId = youTubeItem.id,
+            title = youTubeItem.title,
+            description = youTubeItem.description,
+            tags = youTubeItem.tags,
+            localizations = youTubeItem.localizations,
+            privacyStatus = youTubeItem.privacyStatus,
+        )
+        return video?.toYouTubeItem() ?: youTubeItem
+    }
 }
 
 internal class YoutubeRepositoryDebug() : YoutubeRepository {
@@ -109,4 +132,13 @@ internal class YoutubeRepositoryDebug() : YoutubeRepository {
 
     override fun signOut() {
     }
+
+    override suspend fun updateLiveVideo(
+        youtubeId: String,
+        config: String,
+        youTubeItem: YouTubeItem,
+    ): YouTubeItem? {
+        TODO("Not yet implemented")
+    }
+
 }

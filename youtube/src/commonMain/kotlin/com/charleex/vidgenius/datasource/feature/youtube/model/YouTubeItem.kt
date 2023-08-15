@@ -31,7 +31,8 @@ internal fun Video.toYouTubeItem() = YouTubeItem(
     localizations = localizations.map { (key, value) ->
         key to (value.title to value.description)
     }.toMap(),
-    duration = contentDetails.duration,
+//    duration "=" contentDetails.duration,
+    duration = "0",
     thumbnailSmall = snippet.thumbnails.medium.url,
     thumbnailLarge = snippet.thumbnails.high.url,
     rejectionReason = status.rejectionReason,

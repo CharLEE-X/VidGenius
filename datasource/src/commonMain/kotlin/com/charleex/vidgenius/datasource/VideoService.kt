@@ -5,6 +5,7 @@ import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.feature.ConfigManager
 import com.charleex.vidgenius.datasource.feature.video.VideoRepository
 import com.charleex.vidgenius.datasource.feature.youtube.YoutubeRepository
+import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import com.charleex.vidgenius.datasource.model.LocalVideo
 import com.charleex.vidgenius.datasource.model.ProgressState
 import com.charleex.vidgenius.datasource.model.toYouTubeItem
@@ -12,6 +13,7 @@ import com.charleex.vidgenius.datasource.model.toYoutubeVideo
 import com.charleex.vidgenius.datasource.utils.DateTimeService
 import com.charleex.vidgenius.datasource.utils.UuidProvider
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -21,12 +23,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withContext
 
 interface VideoService {
     val isFetchingUploads: StateFlow<Boolean>
@@ -40,6 +44,7 @@ interface VideoService {
 
     fun addLocalVideos(files: List<*>)
     fun deleteLocalVideo(video: Video)
+    fun deleteVideo(video: Video)
 
     fun startProcessingAllVideos(videos: List<Video>)
     fun stopProcessingVideo(video: LocalVideo)
@@ -47,6 +52,24 @@ interface VideoService {
     suspend fun updateVideo(video: Video)
 
     fun signOut()
+
+    suspend fun generateTitle(
+        description: String? = null,
+        languageCode: String = "en-US",
+    ): String?
+
+    suspend fun generateDescription(
+        description: String? = null,
+        languageCode: String = "en-US",
+    ): Pair<String?, List<String>>
+
+    fun updateLiveVideo(
+        video: Video,
+        title: String?,
+        description: String?,
+        privacyStatus: PrivacyStatus?,
+        tags: List<String>?,
+    )
 }
 
 internal class VideoServiceImpl(
@@ -60,6 +83,7 @@ internal class VideoServiceImpl(
     private val scope: CoroutineScope,
 ) : VideoService {
     companion object {
+        val languageCodes = listOf("en-US", "es", "zh", "pt", "hi")
         private const val MAX_RETRIES = 3
     }
 
@@ -87,6 +111,9 @@ internal class VideoServiceImpl(
         scope.launch {
             supervisorScope {
                 fetchUploadsJob = launch {
+                    videoRepository.videos.first().forEach {
+                        deleteVideo(it)
+                    }
                     youtubeRepository.fetchUploads(secretsFile).collect { youTubeItems ->
                         logger.d("Fetched ${youTubeItems.size} uploads")
 
@@ -174,8 +201,13 @@ internal class VideoServiceImpl(
     }
 
     override fun deleteLocalVideo(video: Video) {
-        logger.d("Deleting video ${video.localVideo?.path}")
+        logger.d("Deleting local video ${video.localVideo?.path}")
         videoProcessing.deleteLocalVideo(video)
+    }
+
+    override fun deleteVideo(video: Video) {
+        logger.d("Deleting  video ${video.localVideo?.path}")
+        videoProcessing.deleteVideo(video)
     }
 
     override fun startProcessingAllVideos(videos: List<Video>) {
@@ -237,6 +269,111 @@ internal class VideoServiceImpl(
 
     override fun signOut() {
         youtubeRepository.signOut()
+    }
+
+    override suspend fun generateTitle(
+        description: String?,
+        languageCode: String,
+    ): String? {
+        val category = configManager.config.value.category
+        logger.d("Generating title for ${category.query}")
+        return withContext(Dispatchers.Default) {
+            videoProcessing.generateTitle(
+                description = description,
+                category = category,
+                languageCode = languageCode,
+            )
+        }
+    }
+
+    override suspend fun generateDescription(
+        description: String?,
+        languageCode: String,
+    ): Pair<String?, List<String>> {
+        val category = configManager.config.value.category
+        logger.d("Generating description for ${category.query}")
+        return withContext(Dispatchers.Default) {
+            videoProcessing.generateDescription(
+                description = description,
+                category = category,
+                languageCode = languageCode,
+                channelLink = category.channelLink,
+            )
+        }
+    }
+
+    override fun updateLiveVideo(
+        video: Video,
+        title: String?,
+        description: String?,
+        privacyStatus: PrivacyStatus?,
+        tags: List<String>?,
+    ) {
+        scope.launch {
+            logger.d("Updating live video ${video.id}")
+
+            val youTubeItem = video.ytVideo
+            if (youTubeItem == null) {
+                logger.d("Yt video is null")
+                return@launch
+            }
+
+            val secretsConfig = configManager.config.value.ytConfig?.secretsFile
+            if (secretsConfig == null) {
+                logger.d("Secrets config is null")
+                return@launch
+            }
+
+            val deferredList = languageCodes.map { code ->
+                async {
+                    val lngTitle = translateText(title ?: youTubeItem.title, code) ?: ""
+                    val lngDescription = translateText(description ?: youTubeItem.description, code) ?: ""
+                    code to Pair(lngTitle, lngDescription)
+                }
+            }
+
+            val updatedLocalizations = deferredList.awaitAll().toMap()
+
+            val updatedTitle = title ?: youTubeItem.title
+            val updatedDescription = description ?: youTubeItem.description
+            val updatedPrivacyStatus = privacyStatus ?: youTubeItem.privacyStatus
+            val updatedTags = tags ?: youTubeItem.tags
+            val updatedYouTubeItem = youTubeItem.copy(
+                title = updatedTitle,
+                description = updatedDescription,
+                privacyStatus = updatedPrivacyStatus,
+                tags = updatedTags,
+                localizations = updatedLocalizations,
+            )
+
+            youtubeRepository.updateLiveVideo(
+                youtubeId = video.ytVideo.id,
+                config = secretsConfig,
+                youTubeItem = updatedYouTubeItem.toYouTubeItem(),
+            )?.let { liveVideo ->
+                val newVideo = video.copy(
+                    ytVideo = video.ytVideo.copy(
+                        title = liveVideo.title,
+                        description = liveVideo.description,
+                    )
+                )
+                videoRepository.updateVideo(newVideo)
+                logger.d("Updated live video ${video.id}")
+            }
+        }
+    }
+
+    private suspend fun translateText(
+        text: String,
+        targetLanguage: String,
+    ): String? {
+        logger.d("Translating text $text to $targetLanguage")
+        return withContext(Dispatchers.Default) {
+            videoProcessing.translateText(
+                text = text,
+                targetLanguage = targetLanguage,
+            )
+        }
     }
 
     private suspend fun processVideo(video: Video) {
