@@ -43,16 +43,6 @@ kotlin {
                 implementation(libs.sqlDelight.coroutinesExtensions)
                 implementation(libs.sqlDelight.runtime)
 
-                // Video
-                implementation(libs.java.javacv)
-                implementation(libs.java.ffmpeg)
-
-                // Google cloud
-                implementation(enforcedPlatform("com.google.cloud:libraries-bom:26.20.0"))
-                implementation("com.google.cloud:google-cloud-vision")
-                implementation("com.google.guava:guava:32.1.1-jre")
-                implementation("com.google.http-client:google-http-client-jackson2")
-
                 // Youtube
                 val yt = "v3-rev20230521-2.0.0"
                 val jetty = "1.34.0"

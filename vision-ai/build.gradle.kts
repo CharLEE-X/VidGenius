@@ -32,7 +32,6 @@ kotlin {
                 implementation(enforcedPlatform("com.google.cloud:libraries-bom:26.20.0"))
                 implementation("com.google.cloud:google-cloud-vision")
                 implementation("com.google.guava:guava:32.1.1-jre")
-                implementation("com.google.http-client:google-http-client-jackson2")
             }
         }
         val commonTest by getting {

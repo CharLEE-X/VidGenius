@@ -50,6 +50,7 @@ import com.charleex.vidgenius.ui.components.SegmentsGroup
 import com.charleex.vidgenius.ui.util.pretty
 import com.lt.load_the_image.rememberImagePainter
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -70,6 +71,7 @@ internal fun VideoDetailContent(
     var isTitleChanged by remember { mutableStateOf(false) }
     var isDescriptionChanged by remember { mutableStateOf(false) }
     var isTagsChanged by remember { mutableStateOf(false) }
+    var isPrivacyChanged by remember { mutableStateOf(false) }
 
     LaunchedEffect(video.ytVideo) {
         newTitle = video.ytVideo?.title
@@ -88,6 +90,10 @@ internal fun VideoDetailContent(
 
     LaunchedEffect(newTags) {
         isTagsChanged = newTags != video.ytVideo?.tags
+    }
+
+    LaunchedEffect(newPrivacyIndex) {
+        isPrivacyChanged = newPrivacyIndex != video.ytVideo?.privacyStatus?.ordinal
     }
 
     LaunchedEffect(layColumnState) {
@@ -263,17 +269,17 @@ internal fun VideoDetailContent(
                                     ) {}
                                 }
                             }
-                            Text(text = "Path: ${video.localVideo?.screenshots}")
-                            Text(text = "Path: ${video.localVideo?.descriptions}")
-                            Text(text = "Path: ${video.localVideo?.descriptionContext}")
+                            Text(text = "Screenshots: ${video.localVideo?.screenshots}")
+                            Text(text = "descriptions: ${video.localVideo?.descriptions}")
+                            Text(text = "descriptionContext: ${video.localVideo?.descriptionContext}")
                             Text(text = "CreatedAt: ${video.localVideo?.createdAt?.pretty()}")
                             Column(
                                 modifier = Modifier.padding(start = 16.dp)
                             ) {
                                 video.localVideo?.localizations?.forEach { (s, pair) ->
-                                    Text(text = "Path: $s")
-                                    Text(text = "Path: ${pair.first}")
-                                    Text(text = "Path: ${pair.second}")
+                                    Text(text = "Language code: $s")
+                                    Text(text = "Title: ${pair.first}")
+                                    Text(text = "Descriptions: ${pair.second}")
                                 }
                             }
                         }
@@ -295,16 +301,16 @@ internal fun VideoDetailContent(
                         Button(
                             onClick = {
                                 scope.launch {
-                                    launch(Dispatchers.Default) {
-                                        videoService.generateTitle()?.let {
-                                            newTitle = it
-                                        }
+                                    val tit = async(Dispatchers.Default) {
+                                        videoService.generateTitle()
+                                    }.await()
+                                    val deferredDesc = async(Dispatchers.Default) {
+                                        videoService.generateDescription()
                                     }
-                                    launch(Dispatchers.Default) {
-                                        val (desc, tags) = videoService.generateDescription()
-                                        newDescription = desc
-                                        newTags = tags
-                                    }
+                                    val (desc, tags) = deferredDesc.await()
+                                    tit?.let { newTitle = it }
+                                    desc?.let { newDescription = desc }
+                                    if (tags.isNotEmpty()) { newTags = tags }
                                 }
                             },
                             enabled = true,
@@ -322,10 +328,10 @@ internal fun VideoDetailContent(
                                         }
                                     videoService.updateLiveVideo(
                                         video = video,
-                                        title = newTitle,
-                                        description = newDescription,
-                                        privacyStatus = privacy,
-                                        tags = newTags,
+                                        title = if (isTitleChanged) newTitle else null,
+                                        description = if (isDescriptionChanged) newDescription else null,
+                                        privacyStatus = if (isPrivacyChanged) privacy else null,
+                                        tags = if (isTagsChanged) newTags else null,
                                     )
                                 }
                             },

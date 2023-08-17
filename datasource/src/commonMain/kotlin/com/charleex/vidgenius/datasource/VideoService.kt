@@ -101,8 +101,9 @@ internal class VideoServiceImpl(
     private val _isGenerating = MutableStateFlow(false)
     override val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
 
-    override val videos: StateFlow<List<Video>> get() = flowOfVideos()
-        .stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
+    override val videos: StateFlow<List<Video>>
+        get() = flowOfVideos()
+            .stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _message = MutableStateFlow<String?>(null)
     override val message: StateFlow<String?> = _message.asStateFlow()
@@ -387,10 +388,19 @@ internal class VideoServiceImpl(
 
             val deferredList = languageCodes.map { code ->
                 async {
-                    val lngTitle = translateText(title ?: youTubeItem.title, code) ?: ""
-                    val lngDescription =
-                        translateText(description ?: youTubeItem.description, code) ?: ""
-                    code to Pair(lngTitle, lngDescription)
+                    val lngTitle = async {
+                        title?.let {
+                            translateText(it, code)
+                        } ?: youTubeItem.title
+                    }
+
+                    val lngDescription = async {
+                        description?.let {
+                            translateText(description, code)
+                        } ?: youTubeItem.description
+                    }
+
+                    code to Pair(lngTitle.await(), lngDescription.await())
                 }
             }
 

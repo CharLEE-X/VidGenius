@@ -14,12 +14,12 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(libs.koin.core)
-
                 implementation(libs.kotlin.coroutines)
                 implementation(libs.kotlin.kermit)
 
                 implementation(libs.java.javacv)
                 implementation(libs.java.ffmpeg)
+                implementation("com.google.guava:guava:32.1.1-jre")
             }
         }
         val commonTest by getting {
