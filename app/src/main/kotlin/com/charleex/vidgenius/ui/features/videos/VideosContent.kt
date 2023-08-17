@@ -77,6 +77,7 @@ fun VideosContent(
     ) {
         item {
             ListHeader(
+                videoService = videoService,
                 title = "YouTube videos",
                 count = videos.size,
                 isRefreshing = isFetchingUploads,
@@ -100,6 +101,7 @@ fun VideosContent(
         items(videos) { video ->
             AppListItem(
                 video = video,
+                videoService = videoService,
                 onClick = onItemClicked,
             )
         }

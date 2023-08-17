@@ -23,11 +23,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.charleex.vidgenius.datasource.VideoService
 import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import com.charleex.vidgenius.datasource.feature.youtube.model.privacyStatusFromString
 import com.charleex.vidgenius.ui.components.CounterAnimation
@@ -37,6 +39,7 @@ import com.charleex.vidgenius.ui.components.SegmentsGroup
 
 @Composable
 internal fun ListHeader(
+    videoService: VideoService,
     title: String,
     count: Int,
     isRefreshing: Boolean,
@@ -45,6 +48,9 @@ internal fun ListHeader(
     selectedPrivacyStatuses: List<PrivacyStatus>,
     onPrivacySelected: (PrivacyStatus) -> Unit,
 ) {
+    val selectedVideos by videoService.selectedVideos.collectAsState()
+    val isGenerating by videoService.isGenerating.collectAsState()
+
     val segmentsList = PrivacyStatus.values().map {
         val icon = when (it) {
             PrivacyStatus.PUBLIC -> Icons.Default.Visibility
@@ -104,6 +110,16 @@ internal fun ListHeader(
             )
             Spacer(modifier = Modifier.width(8.dp))
             StartStopButton(
+                startLabel = "${selectedVideos.size} Generate",
+                stopLabel = "${selectedVideos.size} Generating...",
+                onStart = {
+                    videoService.generateAndUpdateSelectedAsync()
+                },
+                onStop = {},
+                isStarted = isGenerating,
+                enabled = selectedVideos.isNotEmpty(),
+            )
+            StartStopButton(
                 startLabel = "Refresh",
                 stopLabel = "Stop",
                 onStart = startRefresh,
@@ -123,6 +139,7 @@ private fun StartStopButton(
     isStarted: Boolean,
     width: Dp = 160.dp,
     height: Dp = 40.dp,
+    enabled: Boolean = true,
 ) {
     val containerColor by animateColorAsState(
         targetValue = if (isStarted)
@@ -130,6 +147,7 @@ private fun StartStopButton(
     )
     FilledTonalButton(
         shape = CutCornerShape(8.dp),
+        enabled = enabled,
         onClick = {
             if (isStarted) onStop() else onStart()
         },

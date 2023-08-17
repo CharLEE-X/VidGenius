@@ -28,7 +28,6 @@ internal class YoutubeRepositoryImpl(
     private val youTubeService: YouTubeService,
 ) : YoutubeRepository {
     override suspend fun fetchUploads(config: String): Flow<List<YouTubeItem>> {
-        logger.d { "Getting channel uploads" }
         return youTubeService.getUploadList(config)
             .map { it.map { it.toYouTubeItem() } }
     }

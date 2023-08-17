@@ -7,10 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +39,7 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import com.charleex.vidgenius.datasource.VideoService
 import com.charleex.vidgenius.datasource.db.Video
 import com.charleex.vidgenius.datasource.feature.youtube.model.PrivacyStatus
 import com.charleex.vidgenius.ui.util.pretty
@@ -47,6 +49,7 @@ import com.lt.load_the_image.rememberImagePainter
 @Composable
 fun AppListItem(
     video: Video,
+    videoService: VideoService,
     onClick: (String) -> Unit,
 ) {
     video.ytVideo?.let { ytVideo ->
@@ -99,17 +102,27 @@ fun AppListItem(
                     eventType = PointerEventType.Exit,
                     onEvent = { isHovered = false },
                 )
-                .clickable(
-                    indication = null,
-                    interactionSource = interactionSource,
-                    onClick = { onClick(video.id) }
-                )
                 .graphicsLayer(
                     scaleX = scale,
                     scaleY = scale,
                 )
         ) {
-            Column {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp)
+            ) {
+                Checkbox(
+                    checked = video.id in videoService.selectedVideos.value.map { it.id },
+                    onCheckedChange = {
+                        videoService.onSelection(video)
+                    },
+                    modifier = Modifier
+                        .width(24.dp)
+                        .height(24.dp)
+                )
                 ListItem(
                     headlineContent = {
                         Text(video.ytVideo?.title ?: video.localVideo?.name ?: "Unknown")
@@ -157,6 +170,11 @@ fun AppListItem(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable(
+                            indication = null,
+                            interactionSource = interactionSource,
+                            onClick = { onClick(video.id) }
+                        )
                 )
             }
         }

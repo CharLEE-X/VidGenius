@@ -55,7 +55,6 @@ internal class YouTubeServiceImpl(
     override suspend fun getUploadList(
         config: String,
     ): Flow<List<PlaylistItem>> = flow {
-        logger.d { "Getting upload list" }
         val channel = getChannel(config)
         val uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads
             ?: error("Unable to find upload playlist for channel.")
@@ -86,8 +85,6 @@ internal class YouTubeServiceImpl(
             playlistItemRequest.pageToken = nextToken
             val playlistItemResult = playlistItemRequest.execute()
             val items = playlistItemResult.items
-
-            logger.d { "Uploads chunk: $items" }
             emit(items)
 
             nextToken = playlistItemResult.nextPageToken
@@ -95,7 +92,6 @@ internal class YouTubeServiceImpl(
     }
 
     private fun withYouTube(config: String): YouTube {
-        logger.d { "Getting YouTube" }
         if (youtube != null) return youtube!!
 
         val credential = googleAuth.authorizeYouTube(config)
@@ -108,7 +104,6 @@ internal class YouTubeServiceImpl(
     }
 
     override fun getChannel(config: String): Channel {
-        logger.d { "Getting upload list" }
         val credential = googleAuth.authorizeYouTube(config)
 
         youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
@@ -124,14 +119,10 @@ internal class YouTubeServiceImpl(
             ?: error("Unable to get channel result.")
 
         val channelsList = channelResult.items ?: error("No channels found.")
-        logger.d { "Channels: $channelsList" }
-
         return channelsList[0] ?: error("Unable to get channel.")
     }
 
     override suspend fun getVideoDetail(videoId: String, config: String): Video? {
-        logger.d { "Getting video details for videoId: $videoId" }
-
         val requestItems = listOf(
             "id",
             "snippet/title",
@@ -179,7 +170,6 @@ internal class YouTubeServiceImpl(
         localizations: Map<String, Pair<String, String>>,
         privacyStatus: String,
     ): Video? {
-        logger.d { "Updating video $ytId" }
         return try {
             val listResponse = withYouTube(config).videos()
                 .list(listOf("snippet", "status", "localizations", "statistics"))
@@ -274,7 +264,6 @@ internal class YouTubeServiceImpl(
         youTubeItem: YouTubeItem,
     ): Video? {
         return try {
-        logger.d { "Updating live video $youtubeId" }
             val credential = googleAuth.authorizeYouTube(config)
 
             youtube = YouTube.Builder(httpTransport, jsonFactory, credential)
@@ -299,6 +288,13 @@ internal class YouTubeServiceImpl(
             println("  - Tags: " + video.snippet.tags)
             println("  - PrivacyStatus: " + video.status.privacyStatus)
             println("  - Localizations: " + video.localizations)
+            println("  - Channel title: " + video.snippet.channelTitle)
+            println("  - RejectionReason: " + video.status.rejectionReason)
+            println("  - LikeCount: " + video.statistics.likeCount)
+            println("  - DislikeCount: " + video.statistics.dislikeCount)
+            println("  - ViewCount: " + video.statistics.viewCount)
+            println("  - CommentCount: " + video.statistics.commentCount)
+            println("  - FavoriteCount: " + video.statistics.favoriteCount)
 
             video.status.privacyStatus = youTubeItem.privacyStatus
 
@@ -322,15 +318,20 @@ internal class YouTubeServiceImpl(
                 .execute()
                 ?: error("Can't update video with ID: $youtubeId")
 
-            logger.d { "Updated video $youtubeId" }
-
             println("\n================== Returned Video ==================\n")
-            println("  - ID: " + videoResponse.id)
-            println("  - Title: " + videoResponse.snippet.title)
-            println("  - Description: " + videoResponse.snippet.description)
-            println("  - Tags: " + videoResponse.snippet.tags)
-            println("  - PrivacyStatus: " + videoResponse.status.privacyStatus)
-            println("  - Localizations: " + videoResponse.localizations)
+            println("  - ID: " + video.id)
+            println("  - Title: " + video.snippet.title)
+            println("  - Description: " + video.snippet.description)
+            println("  - Tags: " + video.snippet.tags)
+            println("  - PrivacyStatus: " + video.status.privacyStatus)
+            println("  - Localizations: " + video.localizations)
+            println("  - Channel title: " + video.snippet.channelTitle)
+            println("  - RejectionReason: " + video.status.rejectionReason)
+            println("  - LikeCount: " + video.statistics.likeCount)
+            println("  - DislikeCount: " + video.statistics.dislikeCount)
+            println("  - ViewCount: " + video.statistics.viewCount)
+            println("  - CommentCount: " + video.statistics.commentCount)
+            println("  - FavoriteCount: " + video.statistics.favoriteCount)
             videoResponse.localizations.forEach {
                 println("  - ${it.key} ${it.value}")
             }

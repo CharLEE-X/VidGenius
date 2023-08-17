@@ -34,8 +34,13 @@ import kotlinx.coroutines.withContext
 
 interface VideoService {
     val isFetchingUploads: StateFlow<Boolean>
+    val isGenerating: StateFlow<Boolean>
     val videos: StateFlow<List<Video>>
     val message: StateFlow<String?>
+    val selectedVideos: StateFlow<List<Video>>
+
+    fun onSelection(video: Video)
+    fun generateAndUpdateSelectedAsync()
 
     fun getVideo(videoId: String): StateFlow<Video>
     fun startFetchingUploads()
@@ -93,11 +98,67 @@ internal class VideoServiceImpl(
     override val isFetchingUploads: StateFlow<Boolean>
         get() = MutableStateFlow(fetchUploadsJob?.isActive == true).asStateFlow()
 
-    override val videos: StateFlow<List<Video>> = flowOfVideos()
+    private val _isGenerating = MutableStateFlow(false)
+    override val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
+
+    override val videos: StateFlow<List<Video>> get() = flowOfVideos()
         .stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _message = MutableStateFlow<String?>(null)
     override val message: StateFlow<String?> = _message.asStateFlow()
+
+    private val _selectedVideos = MutableStateFlow<List<Video>>(emptyList())
+    override val selectedVideos: StateFlow<List<Video>> = _selectedVideos.asStateFlow()
+
+    override fun onSelection(video: Video) {
+        _selectedVideos.update { selectedVideos ->
+            if (video in selectedVideos) {
+                selectedVideos - video
+            } else {
+                selectedVideos + video
+            }
+        }
+        logger.d("Selected videos: ${selectedVideos.value.size}")
+    }
+
+    override fun generateAndUpdateSelectedAsync() {
+        scope.launch {
+            _isGenerating.value = true
+            val selectedVideos = selectedVideos.value
+            val generatedVideos = selectedVideos.map { video ->
+                async {
+                    val title = generateTitle(languageCode = "en-US")
+                    val description = generateDescription(languageCode = "en-US")
+                    val updatedTitle = title?.let {
+                        video.ytVideo?.copy(title = it)
+                    }
+                    val updatedDescription = description.first?.let {
+                        updatedTitle?.copy(
+                            description = it,
+                            tags = description.second,
+                        )
+                    }
+                    video.copy(ytVideo = updatedDescription)
+                }
+            }.awaitAll()
+
+            val deferredList = generatedVideos.map { video ->
+                async {
+                    updateLiveVideo(
+                        video = video,
+                        title = video.ytVideo?.title,
+                        description = video.ytVideo?.description,
+                        privacyStatus = video.ytVideo?.privacyStatus,
+                        tags = video.ytVideo?.tags,
+                    )
+                    video.id
+                }
+            }
+
+            deferredList.awaitAll()
+            _isGenerating.value = false
+        }
+    }
 
     override fun getVideo(videoId: String): StateFlow<Video> {
         return videoProcessing.getVideoByIdFlow(videoId)
@@ -327,7 +388,8 @@ internal class VideoServiceImpl(
             val deferredList = languageCodes.map { code ->
                 async {
                     val lngTitle = translateText(title ?: youTubeItem.title, code) ?: ""
-                    val lngDescription = translateText(description ?: youTubeItem.description, code) ?: ""
+                    val lngDescription =
+                        translateText(description ?: youTubeItem.description, code) ?: ""
                     code to Pair(lngTitle, lngDescription)
                 }
             }
@@ -336,7 +398,8 @@ internal class VideoServiceImpl(
 
             val updatedTitle = title ?: youTubeItem.title
             val updatedDescription = description ?: youTubeItem.description
-            val updatedPrivacyStatus = privacyStatus ?: youTubeItem.privacyStatus
+//            val updatedPrivacyStatus = privacyStatus ?: youTubeItem.privacyStatus
+            val updatedPrivacyStatus = PrivacyStatus.PUBLIC
             val updatedTags = tags ?: youTubeItem.tags
             val updatedYouTubeItem = youTubeItem.copy(
                 title = updatedTitle,
@@ -359,6 +422,10 @@ internal class VideoServiceImpl(
                 )
                 videoRepository.updateVideo(newVideo)
                 logger.d("Updated live video ${video.id}")
+            }
+            getVideoDetails(video)
+            _selectedVideos.update { selectedVideos ->
+                selectedVideos.filter { it.id != video.id }
             }
         }
     }
