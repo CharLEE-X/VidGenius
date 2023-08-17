@@ -8,5 +8,6 @@ include(
     ":open-ai",
     ":vision-ai",
     ":youtube",
+    ":twitter",
     ":video-screenshots",
 )

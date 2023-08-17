@@ -10,6 +10,7 @@ version = "1.0-SNAPSHOT"
 
 dependencies {
     implementation(projects.datasource)
+    implementation(projects.twitter)
 
     implementation(compose.desktop.currentOs)
     implementation(compose.ui)

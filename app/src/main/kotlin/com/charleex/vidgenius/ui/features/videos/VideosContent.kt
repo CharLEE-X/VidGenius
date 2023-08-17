@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -20,6 +22,7 @@ import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.VideoService
 import com.charleex.vidgenius.datasource.feature.ConfigManager
+import com.charleex.vidgenius.twitter.createNewTweet
 import com.charleex.vidgenius.ui.components.DropTarget
 import com.charleex.vidgenius.ui.components.list.AppListItem
 import com.charleex.vidgenius.ui.components.list.ListHeader
@@ -99,6 +102,13 @@ fun VideosContent(
             NoVideos(videos.isEmpty())
         }
         items(videos) { video ->
+            Button(
+                onClick = {
+                    createNewTweet()
+                }
+            ) {
+                Text("Create new tweet")
+            }
             AppListItem(
                 video = video,
                 videoService = videoService,
