@@ -1,6 +1,6 @@
 package com.charleex.vidgenius.ui.features.router
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.VideoService
 import com.charleex.vidgenius.datasource.feature.ConfigManager
 import com.charleex.vidgenius.ui.components.AppVerticalScrollbar
+import com.charleex.vidgenius.ui.components.NavigationSheet
 import com.charleex.vidgenius.ui.components.TopBar
 import com.charleex.vidgenius.ui.components.TopBarState
 import com.charleex.vidgenius.ui.features.video_detail.VideoDetailContent
@@ -28,6 +29,8 @@ import com.charleex.vidgenius.ui.features.videos.VideosContent
 import com.copperleaf.ballast.navigation.routing.Backstack
 import com.copperleaf.ballast.navigation.routing.RouterContract
 import com.copperleaf.ballast.navigation.routing.build
+import com.copperleaf.ballast.navigation.routing.currentRouteOrNull
+import com.copperleaf.ballast.navigation.routing.currentRouteOrThrow
 import com.copperleaf.ballast.navigation.routing.directions
 import com.copperleaf.ballast.navigation.routing.pathParameter
 import com.copperleaf.ballast.navigation.routing.renderCurrentDestination
@@ -63,81 +66,102 @@ internal fun RouterContent(
     Surface(
         tonalElevation = 1.dp
     ) {
-        Box(
-            contentAlignment = Alignment.TopCenter,
+        Row(
             modifier = Modifier.fillMaxSize()
         ) {
-            routerState.renderCurrentDestination(
-                route = { routerScreen: RouterScreen ->
-                    when (routerScreen) {
-                        RouterScreen.Dashboard -> {
+            NavigationSheet(
+                routerScreen = routerState.currentRouteOrNull ?: RouterScreen.Videos,
+                onGoToDashboard = {
+                    router.trySend(
+                        RouterContract.Inputs.GoToDestination(
+                            RouterScreen.Dashboard
+                                .directions()
+                                .build()
+                        )
+                    )
+                },
+                onGoToGeneration = {
+                    router.trySend(
+                        RouterContract.Inputs.GoToDestination(
+                            RouterScreen.Videos
+                                .directions()
+                                .build()
+                        )
+                    )
+                },
+            ) {
+                routerState.renderCurrentDestination(
+                    route = { routerScreen: RouterScreen ->
+                        when (routerScreen) {
+                            RouterScreen.Dashboard -> {
 
-                        }
+                            }
 
-                        RouterScreen.Videos -> {
-                            title = null
-                            topBarState = TopBarState.VideoList
+                            RouterScreen.Videos -> {
+                                title = null
+                                topBarState = TopBarState.VideoList
 
-                            VideosContent(
-                                videoService = videoService,
-                                configManager = configManager,
-                                window = window,
-                                displayMessage = displayMessage,
-                                onItemClicked = { videoId ->
-                                    router.trySend(
-                                        RouterContract.Inputs.GoToDestination(
-                                            RouterScreen.VideoDetail
-                                                .directions()
-                                                .pathParameter("videoId", videoId)
-                                                .build()
+                                VideosContent(
+                                    videoService = videoService,
+                                    configManager = configManager,
+                                    window = window,
+                                    displayMessage = displayMessage,
+                                    onItemClicked = { videoId ->
+                                        router.trySend(
+                                            RouterContract.Inputs.GoToDestination(
+                                                RouterScreen.VideoDetail
+                                                    .directions()
+                                                    .pathParameter("videoId", videoId)
+                                                    .build()
+                                            )
                                         )
-                                    )
-                                },
-                                scroll = { lazyListState = it },
-                            )
+                                    },
+                                    scroll = { lazyListState = it },
+                                )
+                            }
+
+                            RouterScreen.VideoDetail -> {
+                                val videoId by stringPath("videoId")
+                                val video by videoService.getVideo(videoId).collectAsState()
+                                videoService.getVideoDetails(video)
+                                title = video.ytVideo?.id
+                                topBarState = TopBarState.VideoDetail
+                                likeCount = video.ytVideo?.likeCount
+                                dislikeCount = video.ytVideo?.dislikeCount
+                                viewCount = video.ytVideo?.viewCount
+                                commentCount = video.ytVideo?.commentCount
+
+                                VideoDetailContent(
+                                    video = video,
+                                    videoService = videoService,
+                                    scroll = { lazyListState = it },
+                                )
+                            }
                         }
+                    },
+                    notFound = { },
+                )
+                TopBar(
+                    title = title,
+                    likeCount = likeCount,
+                    dislikeCount = dislikeCount,
+                    viewCount = viewCount,
+                    commentCount = commentCount,
+                    configManager = configManager,
+                    onBackClicked = {
+                        router.trySend(RouterContract.Inputs.GoBack())
+                    },
+                    topBarState = topBarState,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
 
-                        RouterScreen.VideoDetail -> {
-                            val videoId by stringPath("videoId")
-                            val video by videoService.getVideo(videoId).collectAsState()
-                            videoService.getVideoDetails(video)
-                            title = video.ytVideo?.id
-                            topBarState = TopBarState.VideoDetail
-                            likeCount = video.ytVideo?.likeCount
-                            dislikeCount = video.ytVideo?.dislikeCount
-                            viewCount = video.ytVideo?.viewCount
-                            commentCount = video.ytVideo?.commentCount
-
-                            VideoDetailContent(
-                                video = video,
-                                videoService = videoService,
-                                scroll = { lazyListState = it },
-                            )
-                        }
-                    }
-                },
-                notFound = { },
-            )
-            TopBar(
-                title = title,
-                likeCount = likeCount,
-                dislikeCount = dislikeCount,
-                viewCount = viewCount,
-                commentCount = commentCount,
-                configManager = configManager,
-                onBackClicked = {
-                    router.trySend(RouterContract.Inputs.GoBack())
-                },
-                topBarState = topBarState,
-                modifier = Modifier.align(Alignment.TopCenter)
-            )
-
-            AppVerticalScrollbar(
-                adapter = rememberScrollbarAdapter(lazyListState),
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .fillMaxHeight(),
-            )
+                AppVerticalScrollbar(
+                    adapter = rememberScrollbarAdapter(lazyListState),
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .fillMaxHeight(),
+                )
+            }
         }
     }
 }

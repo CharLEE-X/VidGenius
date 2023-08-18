@@ -251,19 +251,6 @@ private fun TopBarVideoList(
             .padding(vertical = paddingVertical)
             .animateContentSize()
     ) {
-        Row {
-            Text(
-                text = "VID",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.secondary,
-            )
-            Text(
-                text = "GENIUS",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-
         Spacer(modifier = Modifier.weight(1f))
         SettingsButton(
             onShowConfig = onShowConfig,

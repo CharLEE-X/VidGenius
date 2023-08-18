@@ -5,7 +5,6 @@ import twitter4j.conf.ConfigurationBuilder
 import twitter4j.v2
 
 // https://github.com/takke/twitter4j-v2
-// https://github.com/takke/twitter4j-v2
 
 // Consumer keys
 val consumerKey = "HYTitwAjrNvdXO0hxb1i02MWw"
@@ -36,14 +35,7 @@ fun createNewTweet() {
 
     val twitter = TwitterFactory(conf).instance
 
-    // get my id
-    val myUser = twitter.v2
-//        .verifyCredentials()
-//    val myId = myUser.id
-
-//    val createTweetResponse = twitter.createBlock(myId)
-
-        .createTweet(
+    val createTweetResponse = twitter.v2.createTweet(
         text = """
             🐾📹 Love funny animal moments? Join the laughter on my YouTube channel! 🤣🐶🐱
             Hey friends! 🌟 If you're all about adorable animals and hilarious antics, you're in for a treat. 🎉🐾 I've started a YouTube channel to share the funniest clips of our furry pals.
@@ -56,5 +48,5 @@ fun createNewTweet() {
         """.trimIndent(),
     )
 
-    println("Response: $myUser")
+    println("Response: $createTweetResponse")
 }
