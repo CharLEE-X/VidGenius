@@ -1,5 +1,6 @@
 package com.charleex.vidgenius.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -33,6 +34,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.loadImageBitmap
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.ui.features.router.RouterScreen
@@ -40,8 +43,9 @@ import com.charleex.vidgenius.ui.features.router.RouterScreen
 @Composable
 fun NavigationSheet(
     routerScreen: RouterScreen,
-    onGoToGeneration: () -> Unit,
     onGoToDashboard: () -> Unit,
+    onGoToGeneration: () -> Unit,
+    onGoToTwits: () -> Unit,
     block: @Composable BoxScope.() -> Unit,
 ) {
     Surface(
@@ -156,14 +160,16 @@ fun NavigationSheet(
                             Spacer(modifier = Modifier.size(12.dp))
                             NavigationDrawerItem(
                                 icon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Psychology,
-                                        contentDescription = null
+                                    Image(
+                                        painter = painterResource("twitter.png"),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(24.dp)
                                     )
                                 },
                                 label = { Text("Tweets") },
-                                selected = routerScreen == RouterScreen.Videos,
-                                onClick = onGoToGeneration,
+                                selected = routerScreen == RouterScreen.Twits,
+                                onClick = onGoToTwits,
                                 colors = NavigationDrawerItemDefaults.colors(
                                     selectedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
                                 ),

@@ -1,14 +1,14 @@
 package com.charleex.vidgenius.ui.features.videos
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -22,10 +22,9 @@ import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.unit.dp
 import com.charleex.vidgenius.datasource.VideoService
 import com.charleex.vidgenius.datasource.feature.ConfigManager
-import com.charleex.vidgenius.twitter.createNewTweet
 import com.charleex.vidgenius.ui.components.DropTarget
 import com.charleex.vidgenius.ui.components.list.AppListItem
-import com.charleex.vidgenius.ui.components.list.ListHeader
+import com.charleex.vidgenius.ui.components.list.ListHeaderYT
 import com.charleex.vidgenius.ui.components.list.NoVideos
 import kotlinx.coroutines.launch
 
@@ -65,55 +64,52 @@ fun VideosContent(
             }
         }
     )
-
-    LazyColumn(
-        state = layColumnState,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        contentPadding = PaddingValues(
-            top = 100.dp,
-            start = 32.dp,
-            end = 32.dp,
-            bottom = 32.dp
-        ),
+    Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(
+                PaddingValues(
+                    top = 100.dp,
+                    start = 32.dp,
+                    end = 32.dp,
+                    bottom = 32.dp
+                )
+            )
     ) {
-        item {
-            ListHeader(
-                videoService = videoService,
-                title = "YouTube videos",
-                count = videos.size,
-                isRefreshing = isFetchingUploads,
-                startRefresh = {
-                    scope.launch {
-                        videoService.startFetchingUploads()
-                    }
-                },
-                stopRefresh = {
-                    videoService.stopFetchingUploads()
-                },
-                selectedPrivacyStatuses = selectedPrivacyStatuses,
-                onPrivacySelected = {
-                    configManager.setPrivacyStatus(it)
+        ListHeaderYT(
+            videoService = videoService,
+            title = "YouTube videos",
+            count = videos.size,
+            isRefreshing = isFetchingUploads,
+            startRefresh = {
+                scope.launch {
+                    videoService.startFetchingUploads()
                 }
-            )
-        }
-        item {
-            NoVideos(videos.isEmpty())
-        }
-        items(videos) { video ->
-            Button(
-                onClick = {
-                    createNewTweet()
-                }
-            ) {
-                Text("Create new tweet")
+            },
+            stopRefresh = {
+                videoService.stopFetchingUploads()
+            },
+            selectedPrivacyStatuses = selectedPrivacyStatuses,
+            onPrivacySelected = {
+                configManager.setPrivacyStatus(it)
             }
-            AppListItem(
-                video = video,
-                videoService = videoService,
-                onClick = onItemClicked,
-            )
+        )
+        LazyColumn(
+            state = layColumnState,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            item {
+                NoVideos(videos.isEmpty())
+            }
+            items(videos) { video ->
+                AppListItem(
+                    video = video,
+                    videoService = videoService,
+                    onClick = onItemClicked,
+                )
+            }
         }
     }
 }

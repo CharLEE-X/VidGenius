@@ -24,6 +24,7 @@ import com.charleex.vidgenius.ui.components.AppVerticalScrollbar
 import com.charleex.vidgenius.ui.components.NavigationSheet
 import com.charleex.vidgenius.ui.components.TopBar
 import com.charleex.vidgenius.ui.components.TopBarState
+import com.charleex.vidgenius.ui.features.twitter.TwitsContent
 import com.charleex.vidgenius.ui.features.video_detail.VideoDetailContent
 import com.charleex.vidgenius.ui.features.videos.VideosContent
 import com.copperleaf.ballast.navigation.routing.Backstack
@@ -89,6 +90,15 @@ internal fun RouterContent(
                         )
                     )
                 },
+                onGoToTwits = {
+                    router.trySend(
+                        RouterContract.Inputs.GoToDestination(
+                            RouterScreen.Twits
+                                .directions()
+                                .build()
+                        )
+                    )
+                },
             ) {
                 routerState.renderCurrentDestination(
                     route = { routerScreen: RouterScreen ->
@@ -137,6 +147,9 @@ internal fun RouterContent(
                                     scroll = { lazyListState = it },
                                 )
                             }
+
+                            RouterScreen.Twits -> TwitsContent()
+                            RouterScreen.TwitDetail -> TwitsContent()
                         }
                     },
                     notFound = { },
